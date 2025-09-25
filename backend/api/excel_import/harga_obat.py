@@ -1,11 +1,12 @@
-# extract_grouped_tables.py
+from __future__ import annotations
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 from openpyxl import load_workbook
 from openpyxl.utils import column_index_from_string
 import datetime, json
+from sqlalchemy.orm import Session
 
-SRC = Path("harga obat 2025.xlsx")   # <-- adjust
 HEADER_ROW = 3                       # Excel row with headers
 BLOCKS = {
     "grouped": ("B", "E"),           # B3..E3
@@ -184,8 +185,11 @@ def extract_sheet(ws) -> Dict[str, Any]:
             out[name] = flat
     return out
 
-def main():
-    wb = load_workbook(SRC, data_only=True, keep_links=False)
+def run(
+    contents: bytes,
+    db: Session,
+):
+    wb = load_workbook(BytesIO(contents), data_only=True, keep_links=False)
     # optional cleanup of junk defined names
     try:
         wb.defined_names.clear()
@@ -198,14 +202,11 @@ def main():
             ws = wb[sheet]
             result[sheet] = extract_sheet(ws)
 
-    out_path = SRC.with_suffix(".json")
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+    # out_path = SRC.with_suffix(".json")
+    # with open(out_path, "w", encoding="utf-8") as f:
+    #     json.dump(result, f, ensure_ascii=False, indent=2, default=str)
 
-    # tiny summary
-    for sh, blocks in result.items():
-        print(f"{sh}: " + ", ".join(f"{b}={len(v)} cats" for b, v in blocks.items()))
-    print(f"✅ Wrote {out_path}")
-
-if __name__ == "__main__":
-    main()
+    # # tiny summary
+    # for sh, blocks in result.items():
+    #     print(f"{sh}: " + ", ".join(f"{b}={len(v)} cats" for b, v in blocks.items()))
+    # print(f"✅ Wrote {out_path}")
