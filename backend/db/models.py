@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from enum import LedgerRef, LedgerLocation
+from models.enum import LedgerRef, LedgerLocation, DesignKainType
 
 Base = declarative_base()
 
@@ -32,6 +32,15 @@ class Product(Base):
 
     details = relationship("PurchasingDetail", back_populates="product")
     ledger_entries = relationship("Ledger", back_populates="product")
+
+class Design(Base):
+    __tablename__ = 'designs'
+    
+    id = Column(Integer, primary_key=True)
+    code = Column(String, nullable=False)
+    type = Column(SQLAlchemyEnum(DesignKainType), nullable=False)
+
+    color_kitchen_entries = relationship("ColorKitchenEntry", back_populates="design")
 #endregion Master Data
 
 #region Types
@@ -67,9 +76,13 @@ class Purchasing(Base):
     
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
-    
+    code = Column(String, nullable=False) # No Bukti
+    purchase_order = Column(String, nullable=False) # PO Number
+
     supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False)
     supplier = relationship("Supplier", back_populates="purchasings")
+
+    # purchase_order_id = Column(Intege) # Future relation to PurchaseOrder if needed
 
     details = relationship("PurchasingDetail", back_populates="purchasing")
 
@@ -79,7 +92,11 @@ class PurchasingDetail(Base):
     
     id = Column(Integer, primary_key=True)
     quantity = Column(Float, nullable=False)
-    price_per_unit = Column(Float, nullable=False)
+    price = Column(Float, nullable=False)
+    discount = Column(Float, default=0.0)
+    tax = Column(Float, default=0.0)
+    tax_no = Column(String, nullable=True) # No Faktur Pajak
+    exchange_rate = Column(Float, default=0.0)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="details")
@@ -117,8 +134,13 @@ class ColorKitchenEntry(Base):
     
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
-    code = Column(String, nullable=False)
-    
+    code = Column(String, nullable=False) # NO OPJ
+    quantity = Column(Float, nullable=False)
+    paste_quantity = Column(Float, nullable=False)
+
+    design_id = Column(Integer, ForeignKey('designs.id'), nullable=False)
+    design = relationship("Design", back_populates="color_kitchen_entries")
+
     details = relationship("ColorKitchenDetail", back_populates="color_kitchen_entry")
 
 class ColorKitchenDetail(Base):

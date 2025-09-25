@@ -11,3 +11,13 @@ class LedgerLocation(str, Enum):
     Kitchen = 'kitchen'
     Usage = 'usage'
     Opname = 'opname'
+
+class DesignKainType(str, Enum):
+    Hyget = 'Hyget'
+    DkPe40 = "DK PE' 40"
+    Billabong = 'Billabong'
+    BbTr = 'BB TR'
+    Rasfur = 'RASFUR'
+    Rib = 'Rib'
+    PolyHanduk = 'Poly Handuk'
+    Tc25 = "TC' 25"
