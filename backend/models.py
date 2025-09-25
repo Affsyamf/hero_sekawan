@@ -4,6 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
+from enum import LedgerRef, LedgerLocation
+
 Base = declarative_base()
 
 #region Master Data
@@ -29,6 +31,7 @@ class Product(Base):
     account = relationship("Account", back_populates="products")
 
     details = relationship("PurchasingDetail", back_populates="product")
+    ledger_entries = relationship("Ledger", back_populates="product")
 #endregion Master Data
 
 #region Types
@@ -41,6 +44,22 @@ class Account(Base):
 
     products = relationship("Product", back_populates="account")
 #endregion Types
+
+#region Ledger
+class Ledger(Base):
+    __tablename__ = 'ledgers'
+    
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, default=datetime.utcnow)
+    ref = Column(SQLAlchemyEnum(LedgerRef), nullable=False)
+    ref_code = Column(String, nullable=False)
+    location = Column(SQLAlchemyEnum(LedgerLocation), nullable=False)
+    qty_in = Column(Float, default=0.0)
+    qty_out = Column(Float, default=0.0)
+
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    product = relationship("Product", back_populates="ledger_entries")
+#endregion Ledger
 
 #region Purchasing
 class Purchasing(Base):
