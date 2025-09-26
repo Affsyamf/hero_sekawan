@@ -12,36 +12,34 @@ export default function NotificationDropdown() {
   return (
     <Dropdown
       trigger={
-        <button className="relative p-2 rounded-lg hover:bg-background text-secondary-text hover:text-primary-text">
+        <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-900">
           <Bell size={20} />
           {unreadCount > 0 && (
-            <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-medium text-white rounded-full -top-1 -right-1 bg-danger">
+            <span className="absolute flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-red-500 rounded-full -top-1 -right-1">
               {unreadCount}
             </span>
           )}
         </button>
       }
     >
-      <div className="p-4 border-b border-light">
-        <h3 className="text-sm font-semibold text-primary-text">
-          Notifications
-        </h3>
+      <div className="p-4 border-b border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
       </div>
       <div className="overflow-y-auto max-h-64">
         {notifications.map((n) => (
           <div
             key={n.id}
-            className={`p-4 border-b border-light hover:bg-background transition-colors ${
-              n.unread ? "bg-primary/5" : ""
+            className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+              n.unread ? "bg-blue-50" : ""
             }`}
           >
-            <p className="text-sm font-medium text-primary-text">{n.title}</p>
-            <p className="mt-1 text-xs text-secondary-text">{n.time}</p>
+            <p className="text-sm font-medium text-gray-900">{n.title}</p>
+            <p className="mt-1 text-xs text-gray-500">{n.time}</p>
           </div>
         ))}
       </div>
-      <div className="p-3 border-t border-light">
-        <button className="w-full text-sm font-medium text-primary hover:text-primary/80">
+      <div className="p-3 border-t border-gray-200">
+        <button className="w-full text-sm font-medium text-blue-600 hover:text-blue-700">
           View all notifications
         </button>
       </div>

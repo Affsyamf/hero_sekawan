@@ -70,7 +70,6 @@ export default function Table({
         className="flex flex-wrap items-center justify-between gap-4 p-4 border-b"
         style={{ borderColor: colors.border.primary }}
       >
-        {/* Search */}
         <Input
           placeholder="Search..."
           value={search}
@@ -81,7 +80,6 @@ export default function Table({
           className="max-w-xs"
         />
 
-        {/* Date range filter */}
         <div className="flex items-center gap-2">
           <input
             type="date"
@@ -90,6 +88,7 @@ export default function Table({
               setDateRange((prev) => ({ ...prev, start: e.target.value }))
             }
             className="px-2 py-1 text-sm border rounded"
+            style={{ borderColor: colors.border.primary }}
           />
           <span>-</span>
           <input
@@ -99,10 +98,10 @@ export default function Table({
               setDateRange((prev) => ({ ...prev, end: e.target.value }))
             }
             className="px-2 py-1 text-sm border rounded"
+            style={{ borderColor: colors.border.primary }}
           />
         </div>
 
-        {/* Create button */}
         {onCreate && <Button icon={Plus} label="Create" onClick={onCreate} />}
       </div>
 
@@ -127,8 +126,8 @@ export default function Table({
                     })
                   }
                   className={cn(
-                    "px-4 py-2 text-left cursor-pointer select-none",
-                    col.sortable && "hover:text-primary"
+                    "px-4 py-3 text-left cursor-pointer select-none font-medium bg-gray-50",
+                    col.sortable && "hover:text-blue-600"
                   )}
                   style={{ color: colors.text.secondary }}
                 >
@@ -144,61 +143,38 @@ export default function Table({
                   </div>
                 </th>
               ))}
-              {actions && <th className="px-4 py-2">Actions</th>}
-            </tr>
-
-            {/* Column filters */}
-            <tr>
-              {columns.map((col) => (
-                <th key={col.key} className="px-4 py-2">
-                  {col.filterType === "text" && (
-                    <Input
-                      placeholder={`Filter ${col.label}`}
-                      value={filters[col.key] || ""}
-                      onChange={(e) => {
-                        setPage(1);
-                        setFilters({ ...filters, [col.key]: e.target.value });
-                      }}
-                    />
-                  )}
-                </th>
-              ))}
-              {actions && <th />}
+              {actions && <th className="px-4 py-3 bg-gray-50">Actions</th>}
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="divide-y divide-gray-200">
             {loading ? (
               <tr>
                 <td
                   colSpan={columns.length + (actions ? 1 : 0)}
-                  className="py-6 text-center text-secondary-text"
+                  className="py-8 text-center text-gray-500"
                 >
                   Loading...
                 </td>
               </tr>
             ) : rows.length > 0 ? (
               rows.map((row, i) => (
-                <tr
-                  key={i}
-                  className="border-t"
-                  style={{ borderColor: colors.border.primary }}
-                >
+                <tr key={i} className="hover:bg-gray-50">
                   {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-2">
+                    <td key={col.key} className="px-4 py-3">
                       {col.render
                         ? col.render(row[col.key], row)
                         : row[col.key]}
                     </td>
                   ))}
-                  {actions && <td className="px-4 py-2">{actions(row)}</td>}
+                  {actions && <td className="px-4 py-3">{actions(row)}</td>}
                 </tr>
               ))
             ) : (
               <tr>
                 <td
                   colSpan={columns.length + (actions ? 1 : 0)}
-                  className="py-6 text-center text-secondary-text"
+                  className="py-8 text-center text-gray-500"
                 >
                   No data found
                 </td>
@@ -236,18 +212,18 @@ export default function Table({
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className="px-2 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 text-sm border rounded disabled:opacity-50 hover:bg-gray-50"
             style={{ borderColor: colors.border.primary }}
           >
             Prev
           </button>
-          <span className="text-sm">
+          <span className="text-sm text-gray-600">
             {page} / {totalPages || 1}
           </span>
           <button
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="px-2 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 text-sm border rounded disabled:opacity-50 hover:bg-gray-50"
             style={{ borderColor: colors.border.primary }}
           >
             Next

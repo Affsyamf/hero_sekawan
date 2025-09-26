@@ -22,8 +22,8 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
         className={`w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group
         ${
           isActive
-            ? "bg-primary/10 border border-primary/20 text-primary font-semibold"
-            : "text-secondary-text hover:bg-background hover:text-primary hover:translate-x-[2px]"
+            ? "bg-blue-50 border border-blue-200 text-blue-600 font-semibold"
+            : "text-gray-600 hover:bg-gray-100 hover:text-blue-600 hover:translate-x-[2px]"
         }`}
       >
         <div className="flex items-center gap-3">
@@ -31,8 +31,8 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
             size={18}
             className={`${
               isActive || isParentActive
-                ? "text-primary"
-                : "text-secondary-text group-hover:text-primary"
+                ? "text-blue-600"
+                : "text-gray-600 group-hover:text-blue-600"
             }`}
           />
           <span>{item.label}</span>
@@ -42,7 +42,7 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
       </button>
 
       {item.children && open && (
-        <div className="mt-1 ml-2 space-y-1 border-l border-default">
+        <div className="mt-1 ml-2 space-y-1 border-l border-gray-200">
           {item.children.map((sub, i) => {
             const isSubActive = location.pathname === sub.path;
             return (
@@ -52,8 +52,8 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
                 className={`w-full pl-8 py-2.5 text-sm rounded-md transition-all duration-200
                 ${
                   isSubActive
-                    ? "bg-primary/10 border border-primary/20 text-primary font-semibold"
-                    : "text-secondary-text hover:bg-background hover:text-primary hover:translate-x-[2px]"
+                    ? "bg-blue-50 border border-blue-200 text-blue-600 font-semibold"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-blue-600 hover:translate-x-[2px]"
                 }`}
               >
                 {sub.label}

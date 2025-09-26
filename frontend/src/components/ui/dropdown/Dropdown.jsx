@@ -17,7 +17,7 @@ export default function Dropdown({ trigger, children, align = "right" }) {
       <div onClick={() => setOpen(!open)}>{trigger}</div>
       {open && (
         <div
-          className={`absolute z-50 mt-2 w-64 border rounded-lg shadow-lg bg-surface border-default ${
+          className={`absolute z-50 mt-2 w-64 rounded-lg shadow-lg bg-white border border-gray-200 border-default ${
             align === "right" ? "right-0" : "left-0"
           }`}
         >

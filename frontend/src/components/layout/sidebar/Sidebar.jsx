@@ -1,3 +1,4 @@
+//Sidebar.jsx
 import {
   ShoppingBag,
   Home,
@@ -77,36 +78,34 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Overlay mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - FIXED POSITION */}
       <aside
-        className={`fixed z-40 flex flex-col justify-between w-64 h-screen border-r bg-surface border-default
+        className={`fixed top-0 left-0 z-50 flex flex-col justify-between w-64 h-screen border-r bg-white border-gray-200
           transform transition-transform duration-300
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0`}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 mt-6 mb-8">
-          <div className="flex items-center justify-center w-8 h-8 text-white rounded-lg bg-primary">
+        <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+          <div className="flex items-center justify-center w-8 h-8 text-white bg-blue-600 rounded-lg">
             <ShoppingBag size={16} />
           </div>
-          <h1 className="text-xl font-semibold text-primary-text">
-            Hero Sekawan
-          </h1>
+          <h1 className="text-xl font-semibold text-gray-900">Hero Sekawan</h1>
         </div>
 
-        {/* Menu */}
+        {/* Menu - Scrollable area */}
         <div className="flex-1 px-6 overflow-y-auto">
-          <nav className="space-y-1" role="navigation">
+          <nav className="pb-4 space-y-1" role="navigation">
             {menuItems.map((item, idx) =>
               item.isHeader ? (
                 <div
                   key={idx}
-                  className="px-2 pt-2 text-xs font-semibold text-gray-400 uppercase"
+                  className="px-2 pt-4 pb-2 text-xs font-semibold tracking-wider text-gray-400 uppercase"
                 >
                   {item.text}
                 </div>
@@ -122,8 +121,10 @@ export default function Sidebar({ isOpen, onClose }) {
           </nav>
         </div>
 
-        {/* Footer */}
-        <SidebarFooter user={{ name: "MarcelE", role: "Admin" }} />
+        {/* Footer - Fixed at bottom */}
+        <div className="flex-shrink-0">
+          <SidebarFooter user={{ name: "MarcelE", role: "Admin" }} />
+        </div>
       </aside>
     </>
   );

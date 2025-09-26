@@ -2,6 +2,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import Card from "../components/ui/card/Card";
 import Button from "../components/ui/button/Button";
 import Table from "../components/ui/table/Table";
+import Chart from "../components/ui/chart/Chart";
 import { Eye, DollarSign, Activity, Filter, Download } from "lucide-react";
 import { MainLayout } from "../layouts";
 
@@ -33,92 +34,106 @@ export default function Dashboard() {
     { key: "profit", label: "Profit" },
   ];
 
+  // Sample data for charts
+  const salesData = [
+    { month: "Jan", value: 20, type: "actual", label: "$20k" },
+    { month: "Feb", value: 35, type: "actual", label: "$35k" },
+    { month: "Mar", value: 25, type: "actual", label: "$25k" },
+    { month: "Apr", value: 45, type: "actual", label: "$45k" },
+    { month: "May", value: 30, type: "actual", label: "$30k" },
+    { month: "Jun", value: 55, type: "actual", label: "$55k" },
+    { month: "Jul", value: 40, type: "actual", label: "$40k" },
+    { month: "Aug", value: 65, type: "actual", label: "$65k" },
+    { month: "Sep", value: 50, type: "projection", label: "$50k" },
+    { month: "Oct", value: 70, type: "projection", label: "$70k" },
+    { month: "Nov", value: 60, type: "projection", label: "$60k" },
+    { month: "Dec", value: 80, type: "projection", label: "$80k" },
+  ];
+
+  const subscribersData = [12, 19, 25, 30, 35, 28, 42, 38, 45, 52, 48, 55];
+
+  const salesDistributionData = [
+    { label: "Delivered", value: 35 },
+    { label: "In Progress", value: 48 },
+    { label: "To-do", value: 17 },
+  ];
+
+  const performanceData = [
+    { label: "CPU", value: 46, maxValue: 100, color: "info" },
+    { label: "Entertainment", value: 37, maxValue: 100, color: "primary" },
+    { label: "Productivity", value: 45, maxValue: 100, color: "success" },
+    { label: "Games", value: 24, maxValue: 100, color: "warning" },
+  ];
+
   return (
-    // <div className="p-10 text-xl font-bold">Hello from Dashboard 🚀</div>
-    
     <MainLayout>
-      <div className="space-y-6">
+      <div className="max-w-full space-y-6">
         {/* Header Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-primary-text">
-            Dashboard
-          </h1>
-          <div className="flex items-center gap-2">
-            <input type="date" className="px-2 py-1 text-sm border rounded" />
-            <select className="px-2 py-1 text-sm border rounded">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="date"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue="2024-01-01"
+            />
+            <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option>Monthly</option>
               <option>Weekly</option>
             </select>
             <Button icon={Filter} label="Filter" variant="secondary" />
-            <Button icon={Download} label="Export" variant="secondary" />
+            <Button icon={Download} label="Export" variant="primary" />
           </div>
         </div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-secondary-text">Page Views</p>
-                <h2 className="text-2xl font-semibold text-primary-text">
-                  12,450
-                </h2>
-                <p className="text-xs text-green-500">+15.8%</p>
-              </div>
-              <Eye className="text-primary" />
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-secondary-text">Total Revenue</p>
-                <h2 className="text-2xl font-semibold text-primary-text">
-                  $363.95
-                </h2>
-                <p className="text-xs text-red-500">-34.0%</p>
-              </div>
-              <DollarSign className="text-primary" />
-            </div>
-          </Card>
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-secondary-text">Bounce Rate</p>
-                <h2 className="text-2xl font-semibold text-primary-text">
-                  86.5%
-                </h2>
-                <p className="text-xs text-green-500">+24.2%</p>
-              </div>
-              <Activity className="text-primary" />
-            </div>
-          </Card>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Chart.Metric
+            title="Page Views"
+            value="12,450"
+            trend="+15.8%"
+            icon={Eye}
+          />
+
+          <Chart.Metric
+            title="Total Revenue"
+            value="$363.95"
+            trend="-34.0%"
+            icon={DollarSign}
+          />
+
+          <Chart.Metric
+            title="Bounce Rate"
+            value="86.5%"
+            trend="+24.2%"
+            icon={Activity}
+          />
         </div>
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Sales Overview</h3>
-              <div className="flex gap-2">
-                <Button icon={Filter} label="Filter" variant="secondary" />
-              </div>
+              <h3 className="font-semibold text-gray-900">Sales Overview</h3>
+              <Button icon={Filter} label="Filter" variant="secondary" />
             </div>
-            <div className="flex items-center justify-center h-48 text-secondary-text">
-              [Bar Chart Here]
-            </div>
+            <Chart.Bar data={salesData} showTrend={true} />
           </Card>
 
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Total Subscribers</h3>
-              <select className="px-2 py-1 text-sm border rounded">
+              <h3 className="font-semibold text-gray-900">Total Subscribers</h3>
+              <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
                 <option>Weekly</option>
                 <option>Monthly</option>
               </select>
             </div>
-            <div className="flex items-center justify-center h-48 text-secondary-text">
-              [Column Chart Here]
-            </div>
+            <Chart.Line
+              data={subscribersData}
+              value="$12,100"
+              trend={50}
+              title="Total revenue"
+            />
           </Card>
         </div>
 
@@ -126,21 +141,31 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Sales Distribution</h3>
-              <select className="px-2 py-1 text-sm border rounded">
+              <h3 className="font-semibold text-gray-900">
+                Sales Distribution
+              </h3>
+              <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
                 <option>Monthly</option>
                 <option>Weekly</option>
               </select>
             </div>
-            <div className="flex items-center justify-center h-48 text-secondary-text">
-              [Pie Chart Here]
-            </div>
+            <Chart.Donut
+              data={salesDistributionData}
+              centerText={{
+                value: "100%",
+                label: "orders",
+              }}
+            />
           </Card>
 
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">List of Integration</h3>
-              <button className="text-sm text-primary">See All</button>
+              <h3 className="font-semibold text-gray-900">
+                List of Integration
+              </h3>
+              <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                See All
+              </button>
             </div>
             <Table
               columns={columns}
@@ -149,6 +174,24 @@ export default function Dashboard() {
             />
           </Card>
         </div>
+
+        {/* Performance Metrics */}
+        <Card>
+          <h3 className="mb-6 font-semibold text-gray-900">
+            Performance Metrics
+          </h3>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {performanceData.map((item, index) => (
+              <Chart.Progress
+                key={index}
+                label={`${item.label} ${item.value}%`}
+                value={item.value}
+                maxValue={item.maxValue}
+                color={item.color}
+              />
+            ))}
+          </div>
+        </Card>
       </div>
     </MainLayout>
   );
