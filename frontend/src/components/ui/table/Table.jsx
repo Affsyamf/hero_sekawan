@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Plus } from "lucide-react";
 import { cn } from "../../../utils/cn";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 import Input from "../input/Input";
 import Button from "../button/Button";
 

@@ -2,8 +2,9 @@
 export default {
   darkMode: "class",
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}", // scan semua komponen
+    "./index.html", 
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/assets/styles/**/*.{css}",
   ],
   theme: {
     extend: {},

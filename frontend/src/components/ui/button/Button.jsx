@@ -1,4 +1,4 @@
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function Button({
   icon: Icon, // komponen icon (ex: Plus)

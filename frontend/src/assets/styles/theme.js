@@ -1,3 +1,4 @@
+//src/assets/styles/theme.js
 export const lightTheme = {
   // Primary Colors
   primary: "#3498db",

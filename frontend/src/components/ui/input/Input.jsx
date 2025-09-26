@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
 
 const Input = forwardRef(

@@ -1,5 +1,5 @@
 import { LogOut, Sun, Moon } from "lucide-react";
-import { useTheme } from "../../../context/ThemeContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function SidebarFooter({ user }) {
   const { isDark, toggleTheme } = useTheme();

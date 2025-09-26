@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navbar, Sidebar, Footer } from "../../components/layout";
-import { useTheme } from "../../context/ThemeContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export default function MainLayout({ children }) {
   const { colors } = useTheme();

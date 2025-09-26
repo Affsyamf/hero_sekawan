@@ -1,14 +1,8 @@
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../contexts/ThemeContext";
 import Card from "../components/ui/card/Card";
 import Button from "../components/ui/button/Button";
 import Table from "../components/ui/table/Table";
-import {
-  Eye,
-  DollarSign,
-  Activity,
-  Filter,
-  Download,
-} from "lucide-react";
+import { Eye, DollarSign, Activity, Filter, Download } from "lucide-react";
 import { MainLayout } from "../layouts";
 
 export default function Dashboard() {
@@ -40,6 +34,8 @@ export default function Dashboard() {
   ];
 
   return (
+    // <div className="p-10 text-xl font-bold">Hello from Dashboard 🚀</div>
+    
     <MainLayout>
       <div className="space-y-6">
         {/* Header Toolbar */}
