@@ -30,6 +30,8 @@ def run(
                 .to_dict(orient="records")
         for sheet, df in dfs.items()
     }
+    
+    print(json_data)
 
     # # Save to file
     # with open("pembelian_2025.json", "w", encoding="utf-8") as f:
