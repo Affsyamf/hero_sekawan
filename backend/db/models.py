@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime, Text, Numeric
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -48,9 +48,10 @@ class Account(Base):
     __tablename__ = 'accounts'
     
     id = Column(Integer, primary_key=True)
-    code = Column(String, nullable=False)
     name = Column(String, nullable=False)
-
+    account_no = Column(Numeric, nullable=False)
+    alias = Column(String, nullable=True)
+    
     products = relationship("Product", back_populates="account")
 #endregion Types
 
@@ -87,7 +88,7 @@ class Purchasing(Base):
     details = relationship("PurchasingDetail", back_populates="purchasing")
 
 
-class PurchasingDetail(Base):
+class Purchasing_Detail(Base):
     __tablename__ = 'purchasing_details'
     
     id = Column(Integer, primary_key=True)
@@ -106,7 +107,7 @@ class PurchasingDetail(Base):
 #endregion Purchasing
 
 #region Stock
-class StockMovement(Base):
+class Stock_Movement(Base):
     __tablename__ = 'stock_movements'
     
     id = Column(Integer, primary_key=True)
@@ -115,7 +116,7 @@ class StockMovement(Base):
 
     details = relationship("StockMovementDetail", back_populates="stock_movement")
 
-class StockMovementDetail(Base):
+class Stock_Movement_Detail(Base):
     __tablename__ = 'stock_movement_details'
     
     id = Column(Integer, primary_key=True)
@@ -129,7 +130,7 @@ class StockMovementDetail(Base):
 #endregion Stock
 
 #region Color Kitchen
-class ColorKitchenEntry(Base):
+class Color_Kitchen_Entry(Base):
     __tablename__ = 'color_kitchen_entries'
     
     id = Column(Integer, primary_key=True)
@@ -143,7 +144,7 @@ class ColorKitchenEntry(Base):
 
     details = relationship("ColorKitchenDetail", back_populates="color_kitchen_entry")
 
-class ColorKitchenDetail(Base):
+class Color_Kitchen_Detail(Base):
     __tablename__ = 'color_kitchen_details'
     
     id = Column(Integer, primary_key=True)

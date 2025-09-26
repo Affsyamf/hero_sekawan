@@ -14,8 +14,6 @@ PORT = os.getenv("POSTGRES_PORT", "5432")
 DB_NAME = os.getenv("POSTGRES_DB")
 SSL_MODE = os.getenv("POSTGRES_SSLMODE")
 
-print(PASSWORD)
-
 # Build DSN string
 dsn = f"postgresql+psycopg2://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
 if SSL_MODE:
