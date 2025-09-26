@@ -43,9 +43,9 @@ def run(contents: bytes, db: Session):
             }
 
     # Insert into DB
-    # for acc in unique_accounts.values():
-    #     obj = Account(**acc)
-    #     db.merge(obj)  # merge avoids duplicates
-    # db.commit()
+    for acc in unique_accounts.values():
+        obj = Account(**acc)
+        db.merge(obj)  # merge avoids duplicates
+    db.commit()
 
     return list(unique_accounts.values())
