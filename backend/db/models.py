@@ -23,8 +23,8 @@ class Product(Base):
     __tablename__ = 'products'
     
     id = Column(Integer, primary_key=True)
-    code = Column(String, nullable=False)
-    name = Column(String, nullable=False)
+    code = Column(String, nullable=True, unique=True)
+    name = Column(String, nullable=False, unique=True)
     unit = Column(String, nullable=True)
 
     account_id = Column(Integer, ForeignKey('accounts.id'))
