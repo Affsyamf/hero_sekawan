@@ -24,9 +24,12 @@ def run(contents: bytes, db: Session):
 
     all_data = pd.concat(frames, ignore_index=True)
 
-    # Extract unique accounts
+    # Make sure columns exist
+    has_keterangan = "KETERANGAN" in all_data.columns
+    required_cols = ["NO.ACC", "ACCOUNT"] + (["KETERANGAN"] if has_keterangan else [])
+
     account_df = (
-        all_data[["KETERANGAN", "NO.ACC", "ACCOUNT"]]
+        all_data[required_cols]
         .dropna()
         .drop_duplicates()
     )
@@ -36,16 +39,19 @@ def run(contents: bytes, db: Session):
     for _, row in account_df.iterrows():
         acc_no = int(row["NO.ACC"])
         if acc_no not in unique_accounts:
+            # use KETERANGAN if exists, otherwise fall back to ACCOUNT
+            alias_value = row["KETERANGAN"] if has_keterangan else row["ACCOUNT"]
+
             unique_accounts[acc_no] = {
                 "account_no": acc_no,
                 "name": normalize(row["ACCOUNT"]),
-                "alias": normalize(row["KETERANGAN"]),
+                "alias": normalize(alias_value),
             }
 
-    # Insert into DB
+    # Insert/update DB (merge will upsert by primary key or unique constraints)
     for acc in unique_accounts.values():
         obj = Account(**acc)
-        db.merge(obj)  # merge avoids duplicates
+        db.merge(obj)
     db.commit()
 
     return list(unique_accounts.values())

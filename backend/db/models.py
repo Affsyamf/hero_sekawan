@@ -51,7 +51,7 @@ class Account(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    account_no = Column(Numeric, nullable=False)
+    account_no = Column(Numeric, nullable=False, unique=True, index=True)
     alias = Column(String, nullable=True)
     
     products = relationship("Product", back_populates="account")
