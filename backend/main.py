@@ -19,6 +19,7 @@ app.add_middleware(
 def read_root():
     return {"Hello": "World"}
 
-from routers import import_routers
+from routers import import_routers, tmp_routers
 
 app.include_router(import_routers.excel_import_router)
+app.include_router(tmp_routers.tmp_router)
