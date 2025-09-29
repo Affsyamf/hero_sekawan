@@ -13,7 +13,7 @@ class Supplier(Base):
     __tablename__ = 'suppliers'
     
     id = Column(Integer, primary_key=True)
-    code = Column(String, nullable=False)
+    code = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)
     contact_info = Column(Text, nullable=True)
 
