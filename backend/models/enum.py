@@ -12,12 +12,14 @@ class LedgerLocation(str, Enum):
     Usage = 'usage'
     Opname = 'opname'
 
-class DesignKainType(str, Enum):
-    Hyget = 'Hyget'
-    DkPe40 = "DK PE' 40"
-    Billabong = 'Billabong'
-    BbTr = 'BB TR'
-    Rasfur = 'RASFUR'
-    Rib = 'Rib'
-    PolyHanduk = 'Poly Handuk'
-    Tc25 = "TC' 25"
+# class DesignKainType(str, Enum):
+#     Hyget = 'Hyget'
+#     DkPe40 = "DK PE 40"
+#     Billabong = 'Billabong'
+#     BbTr = 'BB TR'
+#     Rasfur = 'RASFUR'
+#     Rib = 'Rib'
+#     PolyHanduk = 'POLY HANDUK'
+#     Tc25 = "TC 25"
+#     Pe30 = "PE 30"
+#     Pe20 = "PE 20"

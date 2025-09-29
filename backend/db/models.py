@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from models.enum import LedgerRef, LedgerLocation, DesignKainType
+from models.enum import LedgerRef, LedgerLocation
 
 Base = declarative_base()
 
@@ -39,8 +39,10 @@ class Design(Base):
     __tablename__ = 'designs'
     
     id = Column(Integer, primary_key=True)
-    code = Column(String, nullable=False)
-    type = Column(SQLAlchemyEnum(DesignKainType), nullable=False)
+    code = Column(String, nullable=False, unique=True)
+    
+    type_id = Column(Integer, ForeignKey("design_types.id"), nullable=False)
+    type = relationship("Design_Type", back_populates="designs")
 
     color_kitchen_entries = relationship("Color_Kitchen_Entry", back_populates="design")
 #endregion Master Data
@@ -55,6 +57,14 @@ class Account(Base):
     alias = Column(String, nullable=True)
     
     products = relationship("Product", back_populates="account")
+    
+class Design_Type(Base):
+    __tablename__ = "design_types"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    
+    designs = relationship("Design", back_populates="type")
 #endregion Types
 
 #region Ledger
