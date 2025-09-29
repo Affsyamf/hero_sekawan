@@ -146,18 +146,6 @@ def run(contents: bytes, db: Session):
             db.add(detail)
             db.flush()
             
-            # --- Ledger entry for this purchase ---
-            ledger = Ledger(
-                date=purchasing.date,
-                ref=LedgerRef.Purchasing,
-                ref_code=purchasing.code or "",
-                location=LedgerLocation.Gudang,
-                qty_in=detail.quantity,
-                qty_out=0.0,
-                product_id=product.id,
-            )
-            db.add(ledger)
-            
             count[sheet] += 1
     db.commit()
 
