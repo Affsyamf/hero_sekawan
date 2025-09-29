@@ -5,8 +5,9 @@ from openpyxl import load_workbook
 from io import BytesIO
 import math
 import re
+from models.enum import LedgerLocation, LedgerRef
 
-from db.models import Supplier, Product, Purchasing, Purchasing_Detail
+from db.models import Supplier, Product, Purchasing, Purchasing_Detail, Ledger
 
 
 def safe_str(value):
@@ -144,6 +145,19 @@ def run(contents: bytes, db: Session):
             )
             db.add(detail)
             db.flush()
+            
+            # --- Ledger entry for this purchase ---
+            ledger = Ledger(
+                date=purchasing.date,
+                ref=LedgerRef.Purchasing,
+                ref_code=purchasing.code or "",
+                location=LedgerLocation.Gudang,
+                qty_in=detail.quantity,
+                qty_out=0.0,
+                product_id=product.id,
+            )
+            db.add(ledger)
+            
             count[sheet] += 1
     db.commit()
 

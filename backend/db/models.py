@@ -99,7 +99,6 @@ class Purchasing(Base):
 
     details = relationship("Purchasing_Detail", back_populates="purchasing")
 
-
 class Purchasing_Detail(Base):
     __tablename__ = 'purchasing_details'
     
