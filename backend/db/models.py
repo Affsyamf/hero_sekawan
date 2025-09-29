@@ -89,8 +89,8 @@ class Purchasing(Base):
     
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
-    code = Column(String, nullable=False) # No Bukti
-    purchase_order = Column(String, nullable=False) # PO Number
+    code = Column(String, nullable=True) # No Bukti
+    purchase_order = Column(String, nullable=True) # PO Number
 
     supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False)
     supplier = relationship("Supplier", back_populates="purchasings")
@@ -107,7 +107,8 @@ class Purchasing_Detail(Base):
     quantity = Column(Float, nullable=False)
     price = Column(Float, nullable=False)
     discount = Column(Float, default=0.0)
-    tax = Column(Float, default=0.0)
+    ppn = Column(Float, default=0.0)
+    dpp = Column(Float, default=0.0)
     tax_no = Column(String, nullable=True) # No Faktur Pajak
     exchange_rate = Column(Float, default=0.0)
 
