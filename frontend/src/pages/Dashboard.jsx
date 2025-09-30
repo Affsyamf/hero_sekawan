@@ -87,7 +87,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Chart.Metric
             title="Page Views"
             value="12,450"
@@ -108,39 +108,73 @@ export default function Dashboard() {
             trend="+24.2%"
             icon={Activity}
           />
+          <Chart.Metric
+            title="Bounce Rate"
+            value="86.5%"
+            trend="+24.2%"
+            icon={Activity}
+          />
         </div>
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
-            <div className="flex items-center justify-between mb-4">
+            {/* <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">Sales Overview</h3>
               <Button icon={Filter} label="Filter" variant="secondary" />
-            </div>
-            <Chart.Bar data={salesData} showTrend={true} />
+            </div> */}
+            <Chart.Bar
+              initialData={[
+                { label: "Jan", productIn: 1000000, productOut: 800000 },
+                { label: "Feb", productIn: 1200000, productOut: 950000 },
+                { label: "Mar", productIn: 1100000, productOut: 900000 },
+              ]}
+              title="Product In vs Out Comparison"
+              subtitle="Compare your product flow"
+              datasets={[
+                { key: "productIn", label: "Product In", color: "success" },
+                { key: "productOut", label: "Product Out", color: "error" },
+              ]}
+              periods={["Q2 2024", "Q1 2024", "Q4 2023"]}
+              onFetchData={salesData}
+              showSummary={true}
+            />
+            {/* <Chart.Bar
+              data={salesData}
+              showTrend={true}
+              periods={[
+                "Jun 2024",
+                "May 2024",
+                "Apr 2024",
+                "Mar 2024",
+                "Feb 2024",
+                "Jan 2024",
+              ]}
+              defaultPeriod="Jun 2024"
+            /> */}
           </Card>
 
-          <Card>
-            <div className="flex items-center justify-between mb-4">
+          {/* <Card> */}
+          {/* <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">Total Subscribers</h3>
               <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
                 <option>Weekly</option>
                 <option>Monthly</option>
               </select>
-            </div>
-            <Chart.Line
-              data={subscribersData}
-              value="$12,100"
-              trend={50}
-              title="Total revenue"
-            />
-          </Card>
+            </div> */}
+          <Chart.Line
+            data={subscribersData}
+            value="$12,100"
+            trend={50}
+            title="Total revenue"
+          />
+          {/* </Card> */}
         </div>
 
         {/* Bottom Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
+          {/* <Card> */}
+          {/* <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">
                 Sales Distribution
               </h3>
@@ -148,15 +182,15 @@ export default function Dashboard() {
                 <option>Monthly</option>
                 <option>Weekly</option>
               </select>
-            </div>
-            <Chart.Donut
-              data={salesDistributionData}
-              centerText={{
-                value: "100%",
-                label: "orders",
-              }}
-            />
-          </Card>
+            </div> */}
+          <Chart.Donut
+            data={salesDistributionData}
+            centerText={{
+              value: "100%",
+              label: "orders",
+            }}
+          />
+          {/* </Card> */}
 
           <Card>
             <div className="flex items-center justify-between mb-4">
