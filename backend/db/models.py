@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from models.enum import LedgerRef, LedgerLocation, DesignKainType
+from models.enum import LedgerRef, LedgerLocation
 
 Base = declarative_base()
 
@@ -13,7 +13,7 @@ class Supplier(Base):
     __tablename__ = 'suppliers'
     
     id = Column(Integer, primary_key=True)
-    code = Column(String, nullable=False)
+    code = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)
     contact_info = Column(Text, nullable=True)
 
@@ -39,8 +39,10 @@ class Design(Base):
     __tablename__ = 'designs'
     
     id = Column(Integer, primary_key=True)
-    code = Column(String, nullable=False)
-    type = Column(SQLAlchemyEnum(DesignKainType), nullable=False)
+    code = Column(String, nullable=False, unique=True)
+    
+    type_id = Column(Integer, ForeignKey("design_types.id"), nullable=False)
+    type = relationship("Design_Type", back_populates="designs")
 
     color_kitchen_entries = relationship("Color_Kitchen_Entry", back_populates="design")
 #endregion Master Data
@@ -55,6 +57,14 @@ class Account(Base):
     alias = Column(String, nullable=True)
     
     products = relationship("Product", back_populates="account")
+    
+class Design_Type(Base):
+    __tablename__ = "design_types"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    
+    designs = relationship("Design", back_populates="type")
 #endregion Types
 
 #region Ledger
@@ -79,8 +89,8 @@ class Purchasing(Base):
     
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
-    code = Column(String, nullable=False) # No Bukti
-    purchase_order = Column(String, nullable=False) # PO Number
+    code = Column(String, nullable=True) # No Bukti
+    purchase_order = Column(String, nullable=True) # PO Number
 
     supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False)
     supplier = relationship("Supplier", back_populates="purchasings")
@@ -89,7 +99,6 @@ class Purchasing(Base):
 
     details = relationship("Purchasing_Detail", back_populates="purchasing")
 
-
 class Purchasing_Detail(Base):
     __tablename__ = 'purchasing_details'
     
@@ -97,7 +106,8 @@ class Purchasing_Detail(Base):
     quantity = Column(Float, nullable=False)
     price = Column(Float, nullable=False)
     discount = Column(Float, default=0.0)
-    tax = Column(Float, default=0.0)
+    ppn = Column(Float, default=0.0)
+    dpp = Column(Float, default=0.0)
     tax_no = Column(String, nullable=True) # No Faktur Pajak
     exchange_rate = Column(Float, default=0.0)
 
