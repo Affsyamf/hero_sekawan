@@ -8,6 +8,9 @@ import {
   ReceiptText,
   FileBarChart2,
   Settings,
+  Package,
+  FlaskConical,
+  ClipboardCheck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -32,12 +35,12 @@ const menuItems = [
       { label: "Design Type", path: "/design-types" },
     ],
   },
-  
+
   { isHeader: true, text: "Transactions" },
   { label: "Purchasing", icon: ShoppingCart, path: "/purchasings" },
-  { label: "Stock Movement", icon: ReceiptText, path: "/stock-movements" },
-  { label: "Color Kitchen", icon: ReceiptText, path: "/color-kitchens" },
-  { label: "Stock Opname", icon: ReceiptText, path: "/stock-opnames" },
+  { label: "Stock Movement", icon: Package, path: "/stock-movements" }, 
+  { label: "Color Kitchen", icon: FlaskConical, path: "/color-kitchens" }, 
+  { label: "Stock Opname", icon: ClipboardCheck, path: "/stock-opnames" },
 
   { isHeader: true, text: "Reports" },
   { label: "Reports", icon: FileBarChart2, path: "/reports" },
