@@ -1,0 +1,179 @@
+import MainLayout from "../layouts/MainLayout/MainLayout";
+import Table from "../components/ui/table/Table";
+import AccountForm from "../components/features/account/AccountForm";
+import { useState } from "react";
+import { Edit2, Trash2, Eye } from "lucide-react";
+import { useTemp } from "../hooks/useTemp";
+
+const SAMPLE_ACCOUNTS = [];
+
+export default function AccountsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+  const { value: accounts = SAMPLE_ACCOUNTS, set: setAccounts } = useTemp(
+    "accounts:working-list",
+    SAMPLE_ACCOUNTS
+  );
+
+  const fetchAccounts = async (params) => {
+    const { page, pageSize, search, sortBy, sortDir } = params;
+
+    let filtered = [...accounts];
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        (a) =>
+          a.name?.toLowerCase().includes(searchLower) ||
+          a.account_no?.toString().includes(searchLower) ||
+          a.alias?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (sortBy) {
+      filtered.sort((a, b) => {
+        let aVal = a[sortBy] || "";
+        let bVal = b[sortBy] || "";
+
+        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    const total = filtered.length;
+    const start = (page - 1) * pageSize;
+    const rows = filtered.slice(start, start + pageSize);
+
+    return { rows, total };
+  };
+
+  const columns = [
+    {
+      key: "account_no",
+      label: "Account No",
+      sortable: true,
+      render: (value) => (
+        <span className="font-medium text-primary-text">{value}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Account Name",
+      sortable: true,
+      render: (value) => (
+        <span className="font-medium text-primary-text">{value}</span>
+      ),
+    },
+    {
+      key: "alias",
+      label: "Alias",
+      sortable: true,
+      render: (value) => (
+        <span className="text-secondary-text">{value || "-"}</span>
+      ),
+    },
+  ];
+
+  const handleAdd = () => {
+    setSelectedAccount(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (row) => {
+    setSelectedAccount(row);
+    setIsModalOpen(true);
+  };
+
+  const handleDetail = (row) => {
+    setSelectedAccount(row);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (row) => {
+    if (
+      window.confirm(`Are you sure you want to delete account ${row.name}?`)
+    ) {
+      setAccounts((prev) => prev.filter((a) => a.id !== row.id));
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAccount(null);
+  };
+
+  const handleSave = (accountData) => {
+    const nextId = (arr) =>
+      arr.length ? Math.max(...arr.map((a) => a.id || 0)) + 1 : 1;
+
+    setAccounts((prev) => {
+      const current = Array.isArray(prev) ? prev : [];
+      if (accountData.id) {
+        return current.map((a) =>
+          a.id === accountData.id ? { ...a, ...accountData } : a
+        );
+      }
+      return [...current, { ...accountData, id: nextId(current) }];
+    });
+
+    handleCloseModal();
+  };
+
+  const renderActions = (row) => (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => handleDetail(row)}
+        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200"
+        title="View Details"
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleEdit(row)}
+        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all duration-200"
+        title="Edit"
+      >
+        <Edit2 className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleDelete(row)}
+        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all duration-200"
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+
+  return (
+    <MainLayout>
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="mb-1 text-2xl font-bold text-primary-text">
+            Account Management
+          </h1>
+          <p className="mb-6 text-secondary-text">
+            Manage chart of accounts with account numbers and aliases.
+          </p>
+
+          <Table
+            columns={columns}
+            fetchData={fetchAccounts}
+            actions={renderActions}
+            onCreate={handleAdd}
+            pageSizeOptions={[10, 20, 50, 100]}
+          />
+
+          <AccountForm
+            account={selectedAccount}
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onSave={handleSave}
+          />
+        </div>
+      </div>
+    </MainLayout>
+  );
+}

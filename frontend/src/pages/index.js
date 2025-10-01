@@ -1,0 +1,9 @@
+export { default as Dashboard } from './Dashboard';
+export { default as ProductsPage } from './ProductsPage';
+export { default as AccountsPage } from './AccountsPage';
+export { default as ColorKitchensPage } from './ColorKitchensPage';
+export { default as DesignsPage } from './DesignsPage';
+export { default as DesignTypesPage } from './DesignTypesPage';
+export { default as PurchasingsPage } from './PurchasingsPage';
+export { default as StockMovementsPage } from './StockMovementsPage';
+export { default as SuppliersPage } from './SuppliersPage';
