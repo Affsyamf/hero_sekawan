@@ -1,4 +1,3 @@
-//Sidebar.jsx
 import {
   ShoppingBag,
   Home,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useTheme } from "../../../contexts/ThemeContext";
 import SidebarItem from "./SidebarItem";
 import SidebarFooter from "./SidebarFooter";
 
@@ -26,16 +26,18 @@ const menuItems = [
     icon: Bag,
     children: [
       { label: "Products", path: "/products" },
-      { label: "Warehouses", path: "/warehouses" },
-      { label: "Customers", path: "/customers" },
+      { label: "Suppliers", path: "/suppliers" },
+      { label: "Accounts", path: "/accounts" },
+      { label: "Design", path: "/designs" },
+      { label: "Design Type", path: "/design-types" },
     ],
   },
-
-  { isHeader: true, text: "Purchasing" },
-  { label: "Purchasing", icon: ShoppingCart, path: "/purchasing" },
-
+  
   { isHeader: true, text: "Transactions" },
-  { label: "Sales", icon: ReceiptText, path: "/transactions" },
+  { label: "Purchasing", icon: ShoppingCart, path: "/purchasings" },
+  { label: "Stock Movement", icon: ReceiptText, path: "/stock-movements" },
+  { label: "Color Kitchen", icon: ReceiptText, path: "/color-kitchens" },
+  { label: "Stock Opname", icon: ReceiptText, path: "/stock-opnames" },
 
   { isHeader: true, text: "Reports" },
   { label: "Reports", icon: FileBarChart2, path: "/reports" },
@@ -49,6 +51,7 @@ const menuItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
+  const { colors } = useTheme();
   const [openDropdowns, setOpenDropdowns] = useState({});
   const location = useLocation();
 
@@ -76,24 +79,39 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Overlay mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ backgroundColor: colors.background.overlay }}
           onClick={onClose}
         />
       )}
 
       {/* Sidebar - FIXED POSITION */}
       <aside
-        className={`fixed top-0 left-0 z-50 flex flex-col justify-between w-64 h-screen border-r bg-white border-gray-200
-          transform transition-transform duration-300
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0`}
+        className={`fixed top-0 left-0 z-50 flex flex-col justify-between w-64 h-screen border-r
+          transform transition-transform duration-300 lg:translate-x-0
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+        style={{
+          backgroundColor: colors.background.sidebar,
+          borderColor: colors.border.primary,
+        }}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-6 pt-6 pb-4">
-          <div className="flex items-center justify-center w-8 h-8 text-white bg-blue-600 rounded-lg">
+          <div
+            className="flex items-center justify-center w-8 h-8 rounded-lg"
+            style={{
+              backgroundColor: colors.primary,
+              color: colors.text.inverse,
+            }}
+          >
             <ShoppingBag size={16} />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900">Hero Sekawan</h1>
+          <h1
+            className="text-xl font-semibold"
+            style={{ color: colors.text.primary }}
+          >
+            Hero Sekawan
+          </h1>
         </div>
 
         {/* Menu - Scrollable area */}
@@ -103,7 +121,8 @@ export default function Sidebar({ isOpen, onClose }) {
               item.isHeader ? (
                 <div
                   key={idx}
-                  className="px-2 pt-4 pb-2 text-xs font-semibold tracking-wider text-gray-400 uppercase"
+                  className="px-2 pt-4 pb-2 text-xs font-semibold tracking-wider uppercase"
+                  style={{ color: colors.text.tertiary }}
                 >
                   {item.text}
                 </div>

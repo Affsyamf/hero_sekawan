@@ -1,6 +1,7 @@
 // components/ui/chart/DonutChart.jsx
 import { useState } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
+import Card from "../card/Card";
 
 export function DonutChart({
   data,
@@ -49,13 +50,14 @@ export function DonutChart({
   let cumulativePercentage = 0;
 
   return (
-    <div
-      className={`rounded-xl shadow-sm border p-6 ${className}`}
-      style={{
-        backgroundColor: colors.background.primary,
-        borderColor: colors.border.primary,
-      }}
-    >
+    // <div
+    //   className={`rounded-xl shadow-sm border p-4 ${className}`}
+    //   style={{
+    //     backgroundColor: colors.background.primary,
+    //     borderColor: colors.border.primary,
+    //   }}
+    // >
+    <Card>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -249,6 +251,7 @@ export function DonutChart({
           })}
         </div>
       </div>
-    </div>
+    {/* </div> */}
+    </Card>
   );
 }
