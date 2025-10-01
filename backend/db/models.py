@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from models.enum import LedgerRef, LedgerLocation
+from models.enum import LedgerRef, LedgerLocation, AccountType
 
 Base = declarative_base()
 
@@ -54,6 +54,7 @@ class Account(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     account_no = Column(Numeric, nullable=False, unique=True, index=True)
+    account_type = Column(SQLAlchemyEnum(AccountType, name='account_type_enum'), nullable=False)
     alias = Column(String, nullable=True)
     
     products = relationship("Product", back_populates="account")

@@ -11,6 +11,10 @@ class LedgerLocation(str, Enum):
     Kitchen = 'kitchen'
     Usage = 'usage'
     Opname = 'opname'
+    
+class AccountType(str, Enum):
+    Goods = 'goods'
+    Service = 'service'
 
 # class DesignKainType(str, Enum):
 #     Hyget = 'Hyget'

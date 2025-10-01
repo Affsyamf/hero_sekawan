@@ -3,6 +3,7 @@ import re
 from sqlalchemy.orm import Session
 from io import BytesIO
 from db.models import Product, Account, Supplier
+from models.enum import AccountType
 
 from utils.helpers import normalize_product_name
 
@@ -59,6 +60,7 @@ def run(contents: bytes, db: Session):
                     db.add(Account(
                         account_no=acc_no,
                         name=normalize_account_name(acc_name),
+                        account_type=AccountType.Goods.value,  # default to 'Goods'
                     ))
                     summary["accounts"]["inserted"] += 1
 
