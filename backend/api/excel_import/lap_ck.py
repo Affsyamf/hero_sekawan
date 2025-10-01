@@ -144,14 +144,6 @@ def save_to_db(parsed, db: Session):
 
         # entries
         for e in b.get("entries", []):
-            code_excel = e["design"]
-            code_normalized = normalize_design_name(e["design"])
-
-            print("Excel raw:     ", repr(code_excel))
-            print("Normalized:    ", repr(code_normalized))
-
-            designs = db.query(Design).all()
-            print("DB codes:      ", [repr(d.code) for d in designs][:3])
             design = db.query(Design).filter(Design.code == normalize_design_name(e["design"])).first()
             if not design:
                 missing_designs.add(e["design"])
@@ -257,7 +249,7 @@ def run(contents: bytes, db: Session):
 
         if current_batch is None:
             current_batch = {
-                "code": f"BATCH-{opj}",
+                "code": f"BATCH-{opj}-{tgl}",
                 "date": tgl.isoformat() if tgl else None,
                 "entries": [],
                 "details": [],
