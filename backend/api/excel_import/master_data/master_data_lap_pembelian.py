@@ -4,19 +4,14 @@ from sqlalchemy.orm import Session
 from io import BytesIO
 from db.models import Product, Account, Supplier
 
+from utils.helpers import normalize_product_name
+
 # ---------- Normalizers ----------
 def normalize_account_name(value: str) -> str:
     if not isinstance(value, str):
         value = str(value or "")
     value = value.replace(".", " ")               # remove dots
     value = re.sub(r"\s+", "_", value.strip())    # spaces → underscore
-    return value.upper()
-
-def normalize_product_name(value: str) -> str:
-    if not isinstance(value, str):
-        value = str(value or "")
-    value = value.strip()
-    value = re.sub(r"\s+", " ", value)            # collapse spaces
     return value.upper()
 
 def normalize_supplier_name(value: str) -> str:

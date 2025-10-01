@@ -32,7 +32,7 @@ class Product(Base):
 
     purchasing_details = relationship("Purchasing_Detail", back_populates="product")
     stock_movement_details = relationship("Stock_Movement_Detail", back_populates="product")
-    color_kitchen_details = relationship("Color_Kitchen_Detail", back_populates="product")
+    color_kitchen_entry_details = relationship("Color_Kitchen_Entry_Detail", back_populates="product")
     ledger_entries = relationship("Ledger", back_populates="product")
 
 class Design(Base):
@@ -107,6 +107,7 @@ class Purchasing_Detail(Base):
     price = Column(Float, nullable=False)
     discount = Column(Float, default=0.0)
     ppn = Column(Float, default=0.0)
+    pph = Column(Float, default=0.0)
     dpp = Column(Float, default=0.0)
     tax_no = Column(String, nullable=True) # No Faktur Pajak
     exchange_rate = Column(Float, default=0.0)
@@ -142,28 +143,56 @@ class Stock_Movement_Detail(Base):
 #endregion Stock
 
 #region Color Kitchen
-class Color_Kitchen_Entry(Base):
-    __tablename__ = 'color_kitchen_entries'
-    
+class Color_Kitchen_Batch(Base):
+    __tablename__ = "color_kitchen_batches"
+
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
-    code = Column(String, nullable=False) # NO OPJ
+    code = Column(String, nullable=False)  # Generated group code
+    
+    entries = relationship("Color_Kitchen_Entry", back_populates="batch")
+    details = relationship("Color_Kitchen_Batch_Detail", back_populates="batch")
+
+
+class Color_Kitchen_Batch_Detail(Base):
+    __tablename__ = "color_kitchen_batch_details"
+
+    id = Column(Integer, primary_key=True)
     quantity = Column(Float, nullable=False)
+
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    product = relationship("Product")
+
+    batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"), nullable=False)
+    batch = relationship("Color_Kitchen_Batch", back_populates="details")
+    
+class Color_Kitchen_Entry(Base):
+    __tablename__ = "color_kitchen_entries"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, default=datetime.utcnow)
+    code = Column(String, nullable=False)  # OPJ
+    rolls = Column(Integer)
     paste_quantity = Column(Float, nullable=False)
 
-    design_id = Column(Integer, ForeignKey('designs.id'), nullable=False)
+    design_id = Column(Integer, ForeignKey("designs.id"), nullable=False)
     design = relationship("Design", back_populates="color_kitchen_entries")
 
-    details = relationship("Color_Kitchen_Detail", back_populates="color_kitchen_entry")
+    # link to batch (shared dyestuff)
+    batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"))
+    batch = relationship("Color_Kitchen_Batch", back_populates="entries")
 
-class Color_Kitchen_Detail(Base):
-    __tablename__ = 'color_kitchen_details'
+    # auxiliaries (per OPJ)
+    details = relationship("Color_Kitchen_Entry_Detail", back_populates="color_kitchen_entry")
+
+class Color_Kitchen_Entry_Detail(Base):
+    __tablename__ = 'color_kitchen_entry_details'
     
     id = Column(Integer, primary_key=True)
     quantity = Column(Float, nullable=False)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="color_kitchen_details")
+    product = relationship("Product", back_populates="color_kitchen_entry_details")
 
     color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id'), nullable=False)
     color_kitchen_entry = relationship("Color_Kitchen_Entry", back_populates="details")
