@@ -163,14 +163,28 @@ def create_ledger_from_ck(mapper, connection, target):
     if not entry:
         return
 
+    # Kitchen OUT
+    connection.execute(
+        Ledger.__table__.insert().values(
+            date=entry.date,
+            ref=LedgerRef.Ck.value,
+            ref_code=entry.code or "",
+            location=LedgerLocation.Kitchen.value,
+            qty_in=0.0,
+            qty_out=target.quantity or 0.0,
+            product_id=target.product_id,
+        )
+    )
+
+    # Usage IN
     connection.execute(
         Ledger.__table__.insert().values(
             date=entry.date,
             ref=LedgerRef.Ck.value,
             ref_code=entry.code or "",
             location=LedgerLocation.Usage.value,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
+            qty_in=target.quantity or 0.0,
+            qty_out=0.0,
             product_id=target.product_id,
         )
     )
@@ -181,17 +195,24 @@ def update_ledger_from_ck(mapper, connection, target):
     if not entry:
         return
 
+    # Kitchen OUT
+    connection.execute(
+        Ledger.__table__.update()
+        .where(Ledger.ref == LedgerRef.Ck.value)
+        .where(Ledger.ref_code == (entry.code or ""))
+        .where(Ledger.product_id == target.product_id)
+        .where(Ledger.location == LedgerLocation.Kitchen.value)
+        .values(date=entry.date, qty_in=0.0, qty_out=target.quantity or 0.0)
+    )
+
+    # Usage IN
     connection.execute(
         Ledger.__table__.update()
         .where(Ledger.ref == LedgerRef.Ck.value)
         .where(Ledger.ref_code == (entry.code or ""))
         .where(Ledger.product_id == target.product_id)
         .where(Ledger.location == LedgerLocation.Usage.value)
-        .values(
-            date=entry.date,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
-        )
+        .values(date=entry.date, qty_in=target.quantity or 0.0, qty_out=0.0)
     )
 
 @event.listens_for(Color_Kitchen_Entry_Detail, "after_delete")
@@ -205,7 +226,7 @@ def delete_ledger_from_ck(mapper, connection, target):
         .where(Ledger.ref == LedgerRef.Ck.value)
         .where(Ledger.ref_code == (entry.code or ""))
         .where(Ledger.product_id == target.product_id)
-        .where(Ledger.location == LedgerLocation.Usage.value)
+        .where(Ledger.location.in_([LedgerLocation.Kitchen.value, LedgerLocation.Usage.value]))
     )
     
 def _get_ck_batch(connection, batch_id):
@@ -218,14 +239,29 @@ def create_ledger_from_ck_batch(mapper, connection, target):
     batch = _get_ck_batch(connection, target.batch_id)
     if not batch:
         return
+    
+    # Kitchen OUT
     connection.execute(
         Ledger.__table__.insert().values(
             date=batch.date,
             ref=LedgerRef.Ck.value,
             ref_code=batch.code or "",
-            location=LedgerLocation.Gudang.value,
+            location=LedgerLocation.Kitchen.value,
             qty_in=0.0,
             qty_out=target.quantity or 0.0,
+            product_id=target.product_id,
+        )
+    )
+
+    # Usage IN
+    connection.execute(
+        Ledger.__table__.insert().values(
+            date=batch.date,
+            ref=LedgerRef.Ck.value,
+            ref_code=batch.code or "",
+            location=LedgerLocation.Usage.value,
+            qty_in=target.quantity or 0.0,
+            qty_out=0.0,
             product_id=target.product_id,
         )
     )
@@ -235,17 +271,24 @@ def update_ledger_from_ck_batch(mapper, connection, target):
     batch = _get_ck_batch(connection, target.batch_id)
     if not batch:
         return
+    # Kitchen OUT
     connection.execute(
         Ledger.__table__.update()
         .where(Ledger.ref == LedgerRef.Ck.value)
         .where(Ledger.ref_code == (batch.code or ""))
         .where(Ledger.product_id == target.product_id)
-        .where(Ledger.location == LedgerLocation.Gudang.value)
-        .values(
-            date=batch.date,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
-        )
+        .where(Ledger.location == LedgerLocation.Kitchen.value)
+        .values(date=batch.date, qty_in=0.0, qty_out=target.quantity or 0.0)
+    )
+
+    # Usage IN
+    connection.execute(
+        Ledger.__table__.update()
+        .where(Ledger.ref == LedgerRef.Ck.value)
+        .where(Ledger.ref_code == (batch.code or ""))
+        .where(Ledger.product_id == target.product_id)
+        .where(Ledger.location == LedgerLocation.Usage.value)
+        .values(date=batch.date, qty_in=target.quantity or 0.0, qty_out=0.0)
     )
 
 @event.listens_for(Color_Kitchen_Batch_Detail, "after_delete")
@@ -258,6 +301,6 @@ def delete_ledger_from_ck_batch(mapper, connection, target):
         .where(Ledger.ref == LedgerRef.Ck.value)
         .where(Ledger.ref_code == (batch.code or ""))
         .where(Ledger.product_id == target.product_id)
-        .where(Ledger.location == LedgerLocation.Gudang.value)
+        .where(Ledger.location.in_([LedgerLocation.Kitchen.value, LedgerLocation.Usage.value]))
     )
 #endregion Color Kitchen
