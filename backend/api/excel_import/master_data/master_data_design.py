@@ -4,23 +4,7 @@ from io import BytesIO
 from db.models import Design, Design_Type
 import re
 
-def normalize_design_type(value: str) -> str:
-    if not isinstance(value, str):
-        return str(value or "")
-
-    # Uppercase + trim
-    value = value.strip().upper()
-
-    # Replace curly quotes/apostrophes with nothing
-    value = value.replace("’", "").replace("‘", "").replace("'", "")
-
-    # Remove all non-alphanumeric (except spaces)
-    value = re.sub(r"[^A-Z0-9 ]", "", value)
-
-    # Collapse multiple spaces → single space
-    value = re.sub(r"\s+", " ", value)
-
-    return value
+from utils.helpers import normalize_design_type, normalize_design_name
 
 def get_or_create_design_type(db: Session, raw_value: str):
     normalized = normalize_design_type(raw_value)
@@ -48,8 +32,8 @@ def run(contents: bytes, db: Session):
         if pd.isna(opj):
             continue  # skip rows with no OPJ
 
-        code = str(row.get("DESIGN") or "").strip()
-        type_raw = str(row.get("JENIS KAIN") or "").strip()
+        code = normalize_design_name(str(row.get("DESIGN") or ""))
+        type_raw = str(row.get("JENIS KAIN") or "")
         roll = row.get("ROLL")
         tgl = row.get("TGL")
 

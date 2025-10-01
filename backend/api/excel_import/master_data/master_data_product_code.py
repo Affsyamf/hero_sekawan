@@ -4,16 +4,7 @@ from sqlalchemy.orm import Session
 from io import BytesIO
 from db.models import Product, Account
 
-def normalize_product_name(value: str) -> str:
-    """Normalize product names but keep spaces intact."""
-    if not isinstance(value, str):
-        value = str(value or "")
-    # Remove leading/trailing spaces
-    value = value.strip()
-    # Collapse multiple spaces to single
-    value = re.sub(r"\s+", " ", value)
-    # Uppercase for consistency
-    return value.upper()
+from utils.helpers import normalize_product_name
 
 def run(contents: bytes, db: Session):
     # Load Excel

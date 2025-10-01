@@ -7,6 +7,8 @@ import math
 import re
 from models.enum import LedgerLocation, LedgerRef
 
+from utils.helpers import normalize_product_name
+
 from db.models import Supplier, Product, Purchasing, Purchasing_Detail, Ledger
 
 
@@ -29,14 +31,6 @@ def safe_number(value):
     if value is None or (isinstance(value, float) and (math.isnan(value) or math.isinf(value))):
         return None
     return value
-
-
-def normalize_product_name(value: str) -> str:
-    if not isinstance(value, str):
-        value = str(value or "")
-    value = value.strip()
-    value = re.sub(r"\s+", " ", value)  # collapse spaces
-    return value.upper()
 
 
 def run(contents: bytes, db: Session):
@@ -88,6 +82,7 @@ def run(contents: bytes, db: Session):
                     "product": product_name,
                     "ppn": safe_number(row.get("PPN")),
                     "dpp": safe_number(row.get("DPP")),
+                    "pph": safe_number(row.get("PPH")),
                 })
                 continue
 
@@ -101,6 +96,7 @@ def run(contents: bytes, db: Session):
                     "product": product_name,
                     "ppn": safe_number(row.get("PPN")),
                     "dpp": safe_number(row.get("DPP")),
+                    "pph": safe_number(row.get("PPH")),
                 })
                 continue
 
@@ -128,6 +124,7 @@ def run(contents: bytes, db: Session):
                     "reason": f"product not found: {product_name}",
                     "ppn": safe_number(row.get("PPN")),
                     "dpp": safe_number(row.get("DPP")),
+                    "pph": safe_number(row.get("PPH")),
                 })
                 continue
 
@@ -138,6 +135,7 @@ def run(contents: bytes, db: Session):
                 discount=row.get("POT.") or 0.0,
                 ppn=row.get("PPN") or 0.0,
                 dpp=row.get("DPP") or 0.0,
+                pph=row.get("PPH") or 0.0,
                 tax_no=safe_str(row.get("FAKTUR PAJAK")),
                 exchange_rate=row.get("KURS") or 0.0,
                 product_id=product.id,
