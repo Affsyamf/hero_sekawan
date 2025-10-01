@@ -117,72 +117,55 @@ export default function Dashboard() {
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            {/* <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Sales Overview</h3>
-              <Button icon={Filter} label="Filter" variant="secondary" />
-            </div> */}
-            <Chart.Bar
-              initialData={[
-                { label: "Jan", productIn: 1000000, productOut: 800000 },
-                { label: "Feb", productIn: 1200000, productOut: 950000 },
-                { label: "Mar", productIn: 1100000, productOut: 900000 },
-              ]}
-              title="Product In vs Out Comparison"
-              subtitle="Compare your product flow"
-              datasets={[
-                { key: "productIn", label: "Product In", color: "success" },
-                { key: "productOut", label: "Product Out", color: "error" },
-              ]}
-              periods={["Q2 2024", "Q1 2024", "Q4 2023"]}
-              onFetchData={salesData}
-              showSummary={true}
-            />
-            {/* <Chart.Bar
-              data={salesData}
-              showTrend={true}
-              periods={[
-                "Jun 2024",
-                "May 2024",
-                "Apr 2024",
-                "Mar 2024",
-                "Feb 2024",
-                "Jan 2024",
-              ]}
-              defaultPeriod="Jun 2024"
-            /> */}
-          </Card>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="flex lg:col-span-9">
+            <Card className="w-full">
+              <Chart.Bar
+                initialData={[
+                  { label: "Jan", productIn: 1000000, productOut: 800000 },
+                  { label: "Feb", productIn: 1200000, productOut: 950000 },
+                  { label: "Mar", productIn: 1100000, productOut: 900000 },
+                ]}
+                title="Product In vs Out Comparison"
+                subtitle="Compare your product flow"
+                datasets={[
+                  { key: "productIn", label: "Product In", color: "success" },
+                  { key: "productOut", label: "Product Out", color: "error" },
+                ]}
+                periods={["Q2 2024", "Q1 2024", "Q4 2023"]}
+                onFetchData={salesData}
+                showSummary={true}
+              />
+            </Card>
+          </div>
 
-          {/* <Card> */}
-          {/* <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Total Subscribers</h3>
-              <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
-                <option>Weekly</option>
-                <option>Monthly</option>
-              </select>
-            </div> */}
+          <div className="flex lg:col-span-3">
+            <Card className="w-full">
+              <h3 className="mb-6 font-semibold text-gray-900">Performance</h3>
+              <div className="space-y-6">
+                {performanceData.map((item, index) => (
+                  <Chart.Progress
+                    key={index}
+                    label={`${item.label} ${item.value}%`}
+                    value={item.value}
+                    maxValue={item.maxValue}
+                    color={item.color}
+                  />
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Bottom Row */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Chart.Line
             data={subscribersData}
             value="$12,100"
             trend={50}
             title="Total revenue"
           />
-          {/* </Card> */}
-        </div>
 
-        {/* Bottom Row */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* <Card> */}
-          {/* <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">
-                Sales Distribution
-              </h3>
-              <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg">
-                <option>Monthly</option>
-                <option>Weekly</option>
-              </select>
-            </div> */}
           <Chart.Donut
             data={salesDistributionData}
             centerText={{
@@ -190,41 +173,21 @@ export default function Dashboard() {
               label: "orders",
             }}
           />
-          {/* </Card> */}
-
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">
-                List of Integration
-              </h3>
-              <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                See All
-              </button>
-            </div>
-            <Table
-              columns={columns}
-              fetchData={fetchIntegrations}
-              pageSizeOptions={[3]}
-            />
-          </Card>
         </div>
 
         {/* Performance Metrics */}
         <Card>
-          <h3 className="mb-6 font-semibold text-gray-900">
-            Performance Metrics
-          </h3>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {performanceData.map((item, index) => (
-              <Chart.Progress
-                key={index}
-                label={`${item.label} ${item.value}%`}
-                value={item.value}
-                maxValue={item.maxValue}
-                color={item.color}
-              />
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-900">List of Integration</h3>
+            <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
+              See All
+            </button>
           </div>
+          <Table
+            columns={columns}
+            fetchData={fetchIntegrations}
+            pageSizeOptions={[3]}
+          />
         </Card>
       </div>
     </MainLayout>

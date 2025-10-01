@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Maximize2, Minimize2, Loader2 } from "lucide-react";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { cn } from "../../../utils/cn";
 
 export default function Modal({
   isOpen = false,
@@ -15,7 +17,9 @@ export default function Modal({
   loading = false,
   closeOnOverlayClick = true,
   closeOnEscape = true,
+  className = "",
 }) {
+  const { colors } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(fullScreen);
   const modalRef = useRef(null);
 
@@ -67,35 +71,66 @@ export default function Modal({
     }
   };
 
+  const overlayClasses = cn(
+    "fixed inset-0 z-50 flex items-center justify-center p-4 duration-200 animate-in fade-in",
+    "backdrop-blur-sm"
+  );
+
+  const modalClasses = cn(
+    "relative rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ease-out w-full",
+    "animate-in zoom-in-95 slide-in-from-bottom-2",
+    isFullscreen
+      ? "w-screen h-screen max-w-none rounded-none flex flex-col"
+      : `${sizeMap[size]} max-h-[calc(100vh-2rem)] flex flex-col`,
+    className
+  );
+
+  const headerClasses = cn(
+    "relative flex items-start justify-between p-6 flex-shrink-0"
+  );
+
+  const buttonBaseClasses = cn(
+    "p-2 transition-all duration-200 ease-in-out rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1"
+  );
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 duration-200 bg-black/60 backdrop-blur-sm animate-in fade-in"
+      className={overlayClasses}
+      style={{ backgroundColor: `${colors.overlay || "rgba(0, 0, 0, 0.6)"}` }}
       onClick={handleOverlayClick}
     >
       <div
         ref={modalRef}
-        className={`
-          relative bg-surface border border-default rounded-2xl shadow-2xl 
-          overflow-hidden transition-all duration-300 ease-out w-full
-          animate-in zoom-in-95 slide-in-from-bottom-2
-          ${
-            isFullscreen
-              ? "w-screen h-screen max-w-none rounded-none border-0"
-              : `${sizeMap[size]} max-h-[calc(100vh-2rem)]`
-          }
-        `}
+        className={modalClasses}
+        style={{
+          backgroundColor: colors.background.primary,
+          borderColor: isFullscreen ? "transparent" : colors.border.primary,
+          borderWidth: isFullscreen ? 0 : "1px",
+        }}
       >
         {/* Header */}
         {(title || subtitle || showCloseButton || showFullscreenToggle) && (
-          <div className="relative flex items-start justify-between p-6 border-b border-light">
+          <div
+            className={headerClasses}
+            style={{
+              borderBottomColor: colors.border.light,
+              borderBottomWidth: "1px",
+            }}
+          >
             <div className="flex-1 min-w-0 pr-4">
               {title && (
-                <h2 className="text-xl font-semibold leading-tight text-primary-text">
+                <h2
+                  className="text-xl font-semibold leading-tight"
+                  style={{ color: colors.text.primary }}
+                >
                   {title}
                 </h2>
               )}
               {subtitle && (
-                <p className="mt-2 text-sm leading-relaxed text-secondary-text">
+                <p
+                  className="mt-2 text-sm leading-relaxed"
+                  style={{ color: colors.text.secondary }}
+                >
                   {subtitle}
                 </p>
               )}
@@ -106,7 +141,19 @@ export default function Modal({
               {showFullscreenToggle && (
                 <button
                   onClick={handleToggleFullscreen}
-                  className="p-2 transition-all duration-200 ease-in-out rounded-lg text-secondary-text hover:bg-background hover:text-primary-text focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={buttonBaseClasses}
+                  style={{
+                    color: colors.text.secondary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      colors.background.secondary;
+                    e.currentTarget.style.color = colors.text.primary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = colors.text.secondary;
+                  }}
                   aria-label={
                     isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
                   }
@@ -122,7 +169,18 @@ export default function Modal({
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="p-2 transition-all duration-200 ease-in-out rounded-lg text-secondary-text hover:bg-danger/10 hover:text-danger focus:outline-none focus:ring-2 focus:ring-danger/20"
+                  className={buttonBaseClasses}
+                  style={{
+                    color: colors.text.secondary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = `${colors.status.error}15`;
+                    e.currentTarget.style.color = colors.status.error;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                    e.currentTarget.style.color = colors.text.secondary;
+                  }}
                   aria-label="Close modal"
                 >
                   <X className="w-4 h-4" />
@@ -134,16 +192,23 @@ export default function Modal({
 
         {/* Content */}
         <div
-          className={`
-            overflow-y-auto scrollbar-thin scrollbar-track-transparent 
-            scrollbar-thumb-border hover:scrollbar-thumb-primary/20
-            ${isFullscreen ? "flex-1" : "max-h-[calc(100vh-12rem)]"}
-          `}
+          className={cn(
+            "overflow-y-auto flex-1 min-h-0",
+            "scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+          )}
         >
           {loading ? (
             <div className="flex flex-col items-center justify-center px-6 py-16">
-              <Loader2 className="w-8 h-8 mb-4 text-primary animate-spin" />
-              <span className="text-sm text-secondary-text">Loading...</span>
+              <Loader2
+                className="w-8 h-8 mb-4 animate-spin"
+                style={{ color: colors.primary }}
+              />
+              <span
+                className="text-sm"
+                style={{ color: colors.text.secondary }}
+              >
+                Loading...
+              </span>
             </div>
           ) : (
             <div className="p-6">{children}</div>
@@ -152,7 +217,14 @@ export default function Modal({
 
         {/* Footer Actions */}
         {actions && (
-          <div className="flex flex-wrap items-center justify-end gap-3 p-6 border-t border-light bg-background/50">
+          <div
+            className="flex flex-wrap items-center justify-end flex-shrink-0 gap-3 p-6"
+            style={{
+              borderTopColor: colors.border.light,
+              borderTopWidth: "1px",
+              backgroundColor: `${colors.background.secondary}80`,
+            }}
+          >
             {actions}
           </div>
         )}

@@ -3,7 +3,7 @@ import {
   ShoppingBag,
   Home,
   ShoppingBag as Bag,
-  Scissors,
+  ShoppingCart,
   PackagePlus,
   Truck,
   ReceiptText,
@@ -31,10 +31,8 @@ const menuItems = [
     ],
   },
 
-  { isHeader: true, text: "Stock" },
-  { label: "CMT", icon: Scissors, path: "/cmt" },
-  { label: "Stock In", icon: PackagePlus, path: "/stock-in" },
-  { label: "Shipment", icon: Truck, path: "/shipments" },
+  { isHeader: true, text: "Purchasing" },
+  { label: "Purchasing", icon: ShoppingCart, path: "/purchasing" },
 
   { isHeader: true, text: "Transactions" },
   { label: "Sales", icon: ReceiptText, path: "/transactions" },
