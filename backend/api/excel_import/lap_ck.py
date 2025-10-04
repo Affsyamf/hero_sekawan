@@ -18,6 +18,8 @@ from db.models import (
     Design
 )
 
+SKIP_NAMES = {"0.4", "0.5", "0.6", "0.65"}
+
 # ---------- safe helpers ----------
 def safe_str(value):
     if pd.isna(value):
@@ -117,19 +119,6 @@ def read_headers_and_meta(contents: bytes):
     df.columns = columns
     return df, meta
 
-def make_unique_columns(df):
-    seen = {}
-    new_cols = []
-    for col in df.columns:
-        if col in seen:
-            seen[col] += 1
-            new_cols.append(f"{col}_{seen[col]}")
-        else:
-            seen[col] = 0
-            new_cols.append(col)
-    df.columns = new_cols
-    return df
-
 def save_to_db(parsed, db: Session):
     missing_products = set()
     missing_designs = set()
@@ -157,10 +146,16 @@ def save_to_db(parsed, db: Session):
     if missing_products or missing_designs:
         msg = []
         if missing_products:
-            msg.append(f"Missing products: {', '.join(sorted(missing_products))}")
+            safe_products = sorted([p for p in missing_products if p])
+            if safe_products:
+                msg.append(f"Missing products: {', '.join(safe_products)}")
         if missing_designs:
-            msg.append(f"Missing designs: {', '.join(sorted(missing_designs))}")
-        raise ValueError(" | ".join(msg))
+            safe_designs = sorted([d for d in missing_designs if d])
+            if safe_designs:
+                msg.append(f"Missing designs: {', '.join(safe_designs)}")
+
+        if msg:  # ✅ only raise if something meaningful exists
+            raise ValueError(" | ".join(msg))
 
     # ----------- insert pass -----------
     for b in parsed["batches"]:
@@ -182,7 +177,16 @@ def save_to_db(parsed, db: Session):
 
         # entries
         for e in b.get("entries", []):
-            design = db.query(Design).filter_by(name=normalize_design_name(e["design"])).first()
+        # skip empty OPJ or design (no code or design_id)
+            if not e.get("code"):
+                print(f"⚠️ Skipping entry with no code in batch {b['code']}")
+                continue
+
+            design = db.query(Design).filter_by(code=normalize_design_name(e["design"])).first()
+            if not design:
+                print(f"⚠️ Skipping entry with no matching design: {e['design']}")
+                continue
+
             entry = Color_Kitchen_Entry(
                 code=e["code"],
                 date=datetime.fromisoformat(e["date"]) if e["date"] else datetime.utcnow(),
@@ -192,16 +196,6 @@ def save_to_db(parsed, db: Session):
                 batch=batch,
             )
             db.add(entry)
-
-            # entry-level details
-            for d in e.get("details", []):
-                product = db.query(Product).filter_by(name=d["product_name"]).first()
-                edetail = Color_Kitchen_Entry_Detail(
-                    product=product,
-                    quantity=d["quantity"],
-                    color_kitchen_entry=entry,
-                )
-                db.add(edetail)
 
     db.commit()
     return {"missing_products": [], "missing_designs": []}
@@ -223,7 +217,18 @@ def run(contents: bytes, db: Session):
     batch_agg = {}
     skipped_rows = []
     
+    # Drop columns in df whose header text is in SKIP_NAMES
+    cols_to_drop = [
+        col for col in df.columns
+        if any(skip_name in str(col).split("|") for skip_name in SKIP_NAMES)
+    ]
 
+    if cols_to_drop:
+        df.drop(columns=cols_to_drop, inplace=True)
+
+    # Update meta to only include columns that still exist
+    meta = [m for m in meta if m["flat"] not in cols_to_drop]
+    
     def finalize_batch():
         nonlocal current_batch, batch_agg
         if current_batch:
@@ -278,7 +283,7 @@ def run(contents: bytes, db: Session):
                 
                 if m["flat"] in parent_cols:
                     continue
-                val = safe_number(row[m["idx"]])
+                val = safe_number(row.get(m["flat"]))
                 
                 if val is not None and val != 0:
                     total_val += val
@@ -295,10 +300,9 @@ def run(contents: bytes, db: Session):
                     aux_accum[pname] = aux_accum.get(pname, 0.0) + total_val
             else:
                 batch_agg[pname] = batch_agg.get(pname, 0.0) + total_val
-
         for pname, qty in aux_accum.items():
             entry["details"].append({"product_name": pname, "quantity": qty})
-
+    
     finalize_batch()
 
     summary = {
