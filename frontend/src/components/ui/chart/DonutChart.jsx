@@ -7,7 +7,8 @@ export function DonutChart({
   data,
   title = "Data Overview",
   subtitle,
-  centerLabel = "Total",
+  centerText, // { value: "16,424", label: "Total kg" }
+  centerLabel = "Total", // Fallback if centerText not provided
   filterOptions = [],
   onFilterChange,
   className = "",
@@ -18,14 +19,24 @@ export function DonutChart({
     filterOptions[0]?.value || "all"
   );
 
+  // Fallback colors
+  const primaryColor = colors?.primary || "#3b82f6";
+  const warningColor = colors?.status?.warning || "#f59e0b";
+  const successColor = colors?.status?.success || "#10b981";
+  const borderPrimary = colors?.border?.primary || "#e5e7eb";
+  const bgPrimary = colors?.background?.primary || "#ffffff";
+  const bgSecondary = colors?.background?.secondary || "#f9fafb";
+  const textPrimary = colors?.text?.primary || "#111827";
+  const textSecondary = colors?.text?.secondary || "#6b7280";
+
   const chartColors = [
-    colors.primary,
-    colors.status.warning,
+    primaryColor,
+    warningColor,
     "#64B5F6", // Light Blue
     "#FFD54F", // Yellow
     "#BA68C8", // Purple
     "#F48FB1", // Pink
-    colors.status.success,
+    successColor,
     "#FFB74D", // Amber
   ];
 
@@ -50,27 +61,20 @@ export function DonutChart({
   let cumulativePercentage = 0;
 
   return (
-    // <div
-    //   className={`rounded-xl shadow-sm border p-4 ${className}`}
-    //   style={{
-    //     backgroundColor: colors.background.primary,
-    //     borderColor: colors.border.primary,
-    //   }}
-    // >
-    <Card>
+    <Card className={className}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex-1 min-w-0">
           <h3
-            className="text-lg font-semibold"
-            style={{ color: colors.text.primary }}
+            className="text-sm font-semibold truncate md:text-base"
+            style={{ color: textPrimary }}
           >
             {title}
           </h3>
           {subtitle && (
             <p
-              className="mt-1 text-sm"
-              style={{ color: colors.text.secondary }}
+              className="mt-0.5 text-xs truncate"
+              style={{ color: textSecondary }}
             >
               {subtitle}
             </p>
@@ -79,15 +83,15 @@ export function DonutChart({
 
         {/* Filter Dropdown */}
         {filterOptions.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center ml-2">
             <select
               value={selectedFilter}
               onChange={(e) => handleFilterChange(e.target.value)}
-              className="px-3 py-1.5 text-sm border rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
+              className="px-2.5 py-1 text-xs border rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
               style={{
-                backgroundColor: colors.background.primary,
-                color: colors.text.primary,
-                borderColor: colors.border.primary,
+                backgroundColor: bgPrimary,
+                color: textPrimary,
+                borderColor: borderPrimary,
               }}
             >
               {filterOptions.map((option) => (
@@ -101,12 +105,12 @@ export function DonutChart({
       </div>
 
       {/* Chart Container */}
-      <div className="flex items-center justify-center gap-8">
+      <div className="flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-6">
         {/* Donut Chart */}
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <svg
-            width="260"
-            height="260"
+            width="180"
+            height="180"
             viewBox="0 0 42 42"
             className="transform -rotate-90"
           >
@@ -116,7 +120,7 @@ export function DonutChart({
               cy="21"
               r="15.915"
               fill="transparent"
-              stroke={colors.border.primary}
+              stroke={borderPrimary}
               strokeWidth="3"
               opacity="0.3"
             />
@@ -155,32 +159,51 @@ export function DonutChart({
           {/* Center text */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div
-                className="text-2xl font-bold"
-                style={{ color: colors.text.primary }}
-              >
-                {formatValue(total)}
-              </div>
-              <div
-                className="mt-1 text-sm"
-                style={{ color: colors.text.secondary }}
-              >
-                {centerLabel}
-              </div>
+              {centerText ? (
+                <>
+                  <div
+                    className="text-xl font-bold md:text-2xl"
+                    style={{ color: textPrimary }}
+                  >
+                    {centerText.value}
+                  </div>
+                  <div
+                    className="mt-0.5 text-xs"
+                    style={{ color: textSecondary }}
+                  >
+                    {centerText.label}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="text-xl font-bold md:text-2xl"
+                    style={{ color: textPrimary }}
+                  >
+                    {formatValue(total)}
+                  </div>
+                  <div
+                    className="mt-0.5 text-xs"
+                    style={{ color: textSecondary }}
+                  >
+                    {centerLabel}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
           {/* Tooltip */}
           {hoveredIndex !== null && (
             <div
-              className="absolute top-0 z-10 px-3 py-2 mb-2 text-sm transform -translate-x-1/2 -translate-y-full rounded-lg shadow-lg left-1/2 whitespace-nowrap"
+              className="absolute top-0 z-10 px-2.5 py-1.5 mb-2 text-xs transform -translate-x-1/2 -translate-y-full rounded-lg shadow-lg left-1/2 whitespace-nowrap"
               style={{
-                backgroundColor: colors.text.primary,
-                color: colors.background.primary,
+                backgroundColor: textPrimary,
+                color: bgPrimary,
               }}
             >
               <div className="font-medium">{data[hoveredIndex].label}</div>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="font-semibold">
                   {formatValue(data[hoveredIndex].value)}
                 </span>
@@ -192,7 +215,7 @@ export function DonutChart({
               <div className="absolute bottom-0 transform -translate-x-1/2 translate-y-full left-1/2">
                 <div
                   className="border-4 border-transparent"
-                  style={{ borderTopColor: colors.text.primary }}
+                  style={{ borderTopColor: textPrimary }}
                 ></div>
               </div>
             </div>
@@ -200,7 +223,7 @@ export function DonutChart({
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-3 min-w-[200px]">
+        <div className="flex flex-col w-full gap-2 lg:min-w-[180px] lg:max-w-[220px]">
           {data.map((item, index) => {
             const percentage = ((item.value / total) * 100).toFixed(1);
             const isHovered = hoveredIndex === index;
@@ -208,40 +231,40 @@ export function DonutChart({
             return (
               <div
                 key={index}
-                className="flex items-center justify-between p-2 transition-all duration-200 rounded-lg cursor-pointer"
+                className="flex items-center justify-between p-1.5 transition-all duration-200 rounded-lg cursor-pointer"
                 style={{
                   backgroundColor: isHovered
-                    ? colors.background.secondary
+                    ? bgSecondary
                     : "transparent",
                   opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
                 }}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
-                <div className="flex items-center flex-1 gap-2">
+                <div className="flex items-center flex-1 min-w-0 gap-1.5">
                   <div
-                    className="flex-shrink-0 w-3 h-3 rounded-full"
+                    className="flex-shrink-0 w-2.5 h-2.5 rounded-full"
                     style={{
                       backgroundColor: chartColors[index % chartColors.length],
                     }}
                   />
                   <span
-                    className="text-sm font-medium truncate"
-                    style={{ color: colors.text.primary }}
+                    className="text-xs font-medium truncate"
+                    style={{ color: textPrimary }}
                   >
                     {item.label}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center flex-shrink-0 gap-1.5 ml-2">
                   <span
-                    className="text-sm font-semibold"
-                    style={{ color: colors.text.primary }}
+                    className="text-xs font-semibold"
+                    style={{ color: textPrimary }}
                   >
                     {formatValue(item.value)}
                   </span>
                   <span
-                    className="text-xs min-w-[45px] text-right"
-                    style={{ color: colors.text.secondary }}
+                    className="text-xs min-w-[40px] text-right"
+                    style={{ color: textSecondary }}
                   >
                     ({percentage}%)
                   </span>
@@ -251,7 +274,6 @@ export function DonutChart({
           })}
         </div>
       </div>
-    {/* </div> */}
     </Card>
   );
 }

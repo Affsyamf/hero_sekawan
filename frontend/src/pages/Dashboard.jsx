@@ -73,10 +73,10 @@ export default function Dashboard() {
 
   // Data untuk Stock Location (Donut Chart)
   const stockLocationData = [
-    { label: "Gudang", value: 34 }, // 5600kg = 34%
-    { label: "Kitchen", value: 15 }, // 2400kg = 15%
-    { label: "Usage", value: 50 }, // 8300kg = 50%
-    { label: "Opname", value: 1 }, // 124kg = 1%
+    { label: "Pigment Merah", value: 34 }, // 5600kg = 34%
+    { label: "Pigment Biru", value: 15 }, // 2400kg = 15%
+    { label: "Pigment Kuning", value: 50 }, // 8300kg = 50%
+    { label: "Binder", value: 1 }, // 124kg = 1%
   ];
 
   // Data untuk Top Products (Progress bars)
@@ -89,7 +89,7 @@ export default function Dashboard() {
   ];
 
   // Data untuk Design Cost (Line Chart untuk trend)
-  const designCostTrend = [45, 52, 48, 58, 54, 62, 59, 68, 65, 72, 70, 78];
+  const designCostTrend = [45, 52, 48, 58, 54, 62, 59];
 
   // Data untuk Design Cost Cards
   const designCostData = [
@@ -153,10 +153,10 @@ export default function Dashboard() {
         </div>
 
         {/* Main Charts Row */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-12">
           {/* Stock Flow Chart */}
-          <div className="flex lg:col-span-8">
-            <Card className="w-full">
+          <div className="lg:col-span-8">
+            <Card className="w-full h-full">
               <Chart.Bar
                 initialData={stockFlowData}
                 title="Pergerakan Stock (Masuk vs Keluar)"
@@ -173,17 +173,16 @@ export default function Dashboard() {
           </div>
 
           {/* Stock Location Donut */}
-          <div className="flex lg:col-span-4">
-            {/* <Card className="w-full"> */}
-              <Chart.Donut
-                data={stockLocationData}
-                centerText={{
-                  value: "16,424",
-                  label: "Total kg",
-                }}
-                title="Stock Per Lokasi"
-              />
-            {/* </Card> */}
+          <div className="lg:col-span-4">
+            <Chart.Donut
+              data={stockLocationData}
+              centerText={{
+                value: "16,424",
+                label: "Total kg",
+              }}
+              title="Stock Per Lokasi"
+              className="w-full h-full"
+            />
           </div>
         </div>
 
@@ -250,21 +249,21 @@ export default function Dashboard() {
             title="Trend Cost Produksi"
           />
 
-          {/* Stock Movement by Location */}
+          {/* Stock Movement by Product */}
           <Card>
-            <h3 className="mb-6 font-semibold text-gray-900">Distribusi Stock Berdasarkan Lokasi</h3>
-            <div className="space-y-4">
+            <h3 className="mb-4 text-sm font-semibold text-gray-900 md:text-base">Distribusi Stock Berdasarkan Product</h3>
+            <div className="space-y-3">
               {stockLocationData.map((item, idx) => {
                 const colors = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"];
                 return (
                   <div key={idx}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                      <span className="text-sm text-gray-600">{item.value}%</span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-medium text-gray-700 md:text-sm">{item.label}</span>
+                      <span className="text-xs text-gray-600">{item.value}%</span>
                     </div>
-                    <div className="w-full h-3 bg-gray-200 rounded-full">
+                    <div className="w-full h-2.5 bg-gray-200 rounded-full">
                       <div
-                        className="h-3 transition-all duration-500 rounded-full"
+                        className="h-2.5 transition-all duration-500 rounded-full"
                         style={{ width: `${item.value}%`, backgroundColor: colors[idx] }}
                       />
                     </div>
