@@ -77,8 +77,8 @@ class Ledger(Base):
     ref = Column(SQLAlchemyEnum(LedgerRef), nullable=False)
     ref_code = Column(String, nullable=False)
     location = Column(SQLAlchemyEnum(LedgerLocation), nullable=False)
-    qty_in = Column(Float, default=0.0)
-    qty_out = Column(Float, default=0.0)
+    qty_in = Column(Numeric(18, 2), default=0.0)
+    qty_out = Column(Numeric(18, 2), default=0.0)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="ledger_entries")
@@ -104,14 +104,14 @@ class Purchasing_Detail(Base):
     __tablename__ = 'purchasing_details'
     
     id = Column(Integer, primary_key=True)
-    quantity = Column(Float, nullable=False)
-    price = Column(Float, nullable=False)
-    discount = Column(Float, default=0.0)
-    ppn = Column(Float, default=0.0)
-    pph = Column(Float, default=0.0)
-    dpp = Column(Float, default=0.0)
+    quantity = Column(Numeric(18, 2), nullable=False)
+    price = Column(Numeric(18, 2), nullable=False)
+    discount = Column(Numeric(18, 2), default=0.0)
+    ppn = Column(Numeric(18, 2), default=0.0)
+    pph = Column(Numeric(18, 2), default=0.0)
+    dpp = Column(Numeric(18, 2), default=0.0)
     tax_no = Column(String, nullable=True) # No Faktur Pajak
-    exchange_rate = Column(Float, default=0.0)
+    exchange_rate = Column(Numeric(18, 2), default=0.0)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="purchasing_details")
@@ -134,7 +134,7 @@ class Stock_Movement_Detail(Base):
     __tablename__ = 'stock_movement_details'
     
     id = Column(Integer, primary_key=True)
-    quantity = Column(Float, nullable=False)
+    quantity = Column(Numeric(18, 2), nullable=False)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="stock_movement_details")
@@ -159,7 +159,7 @@ class Color_Kitchen_Batch_Detail(Base):
     __tablename__ = "color_kitchen_batch_details"
 
     id = Column(Integer, primary_key=True)
-    quantity = Column(Float, nullable=False)
+    quantity = Column(Numeric(18, 2), nullable=False)
 
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     product = relationship("Product")
@@ -174,7 +174,7 @@ class Color_Kitchen_Entry(Base):
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)  # OPJ
     rolls = Column(Integer)
-    paste_quantity = Column(Float, nullable=False)
+    paste_quantity = Column(Numeric(18, 2), nullable=False)
 
     design_id = Column(Integer, ForeignKey("designs.id"), nullable=False)
     design = relationship("Design", back_populates="color_kitchen_entries")
@@ -190,7 +190,7 @@ class Color_Kitchen_Entry_Detail(Base):
     __tablename__ = 'color_kitchen_entry_details'
     
     id = Column(Integer, primary_key=True)
-    quantity = Column(Float, nullable=False)
+    quantity = Column(Numeric(18, 2), nullable=False)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="color_kitchen_entry_details")
