@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime, Text, Numeric
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime, Text, Numeric, Computed
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -34,6 +34,7 @@ class Product(Base):
     stock_movement_details = relationship("Stock_Movement_Detail", back_populates="product")
     color_kitchen_entry_details = relationship("Color_Kitchen_Entry_Detail", back_populates="product")
     ledger_entries = relationship("Ledger", back_populates="product")
+    stock_opname_details = relationship("Stock_Opname_Detail", back_populates="product")
 
 class Design(Base):
     __tablename__ = 'designs'
@@ -77,8 +78,8 @@ class Ledger(Base):
     ref = Column(SQLAlchemyEnum(LedgerRef), nullable=False)
     ref_code = Column(String, nullable=False)
     location = Column(SQLAlchemyEnum(LedgerLocation), nullable=False)
-    qty_in = Column(Numeric(18, 2), default=0.0)
-    qty_out = Column(Numeric(18, 2), default=0.0)
+    quantity_in = Column(Numeric(18, 2), default=0.0)
+    quantity_out = Column(Numeric(18, 2), default=0.0)
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="ledger_entries")
@@ -198,3 +199,31 @@ class Color_Kitchen_Entry_Detail(Base):
     color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id'), nullable=False)
     color_kitchen_entry = relationship("Color_Kitchen_Entry", back_populates="details")
 #endregion Color Kitchen
+
+#region Stock Opname
+class Stock_Opname(Base):
+    __tablename__ = 'stock_opnames'
+    
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, default=datetime.utcnow)
+    code = Column(String, nullable=False)
+
+    details = relationship("Stock_Opname_Detail", back_populates="stock_opname")
+    
+class Stock_Opname_Detail(Base):
+    __tablename__ = 'stock_opname_details'
+    
+    id = Column(Integer, primary_key=True)
+    system_quantity = Column(Numeric(18, 2), nullable=False)
+    physical_quantity = Column(Numeric(18, 2), nullable=False)
+    difference = Column(
+        Numeric(18, 2),
+        Computed("physical_quantity - system_quantity", persisted=False)
+    )
+
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    product = relationship("Product", back_populates="stock_opname_details")
+
+    stock_opname_id = Column(Integer, ForeignKey('stock_opnames.id'), nullable=False)
+    stock_opname = relationship("Stock_Opname", back_populates="details")
+#endregion Stock Opname

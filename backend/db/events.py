@@ -3,6 +3,7 @@ from db.models import (Purchasing_Detail, Purchasing,
                        Stock_Movement, Stock_Movement_Detail,
                        Color_Kitchen_Entry, Color_Kitchen_Entry_Detail,
                        Color_Kitchen_Batch, Color_Kitchen_Batch_Detail,
+                       Stock_Opname, Stock_Opname_Detail,
                        Ledger)
 from models.enum import LedgerRef, LedgerLocation
 
@@ -25,8 +26,8 @@ def create_ledger_entry(mapper, connection, target):
             ref=LedgerRef.Purchasing.value,
             ref_code=purchasing.code or "",
             location=LedgerLocation.Gudang.value,
-            qty_in=target.quantity or 0.0,
-            qty_out=0.0,
+            quantity_in=target.quantity or 0.0,
+            quantity_out=0.0,
             product_id=target.product_id,
         )
     )
@@ -45,7 +46,7 @@ def update_ledger_entry(mapper, connection, target):
         .where(Ledger.product_id == target.product_id)
         .values(
             date=purchasing.date,
-            qty_in=target.quantity or 0.0,
+            quantity_in=target.quantity or 0.0,
         )
     )
 
@@ -83,8 +84,8 @@ def create_ledger_from_stock_movement(mapper, connection, target):
             ref=LedgerRef.StockMovement.value,
             ref_code=movement.code or "",
             location=LedgerLocation.Gudang.value,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
+            quantity_in=0.0,
+            quantity_out=target.quantity or 0.0,
             product_id=target.product_id,
         )
     )
@@ -96,8 +97,8 @@ def create_ledger_from_stock_movement(mapper, connection, target):
             ref=LedgerRef.StockMovement.value,
             ref_code=movement.code or "",
             location=LedgerLocation.Kitchen.value,
-            qty_in=target.quantity or 0.0,
-            qty_out=0.0,
+            quantity_in=target.quantity or 0.0,
+            quantity_out=0.0,
             product_id=target.product_id,
         )
     )
@@ -117,8 +118,8 @@ def update_ledger_from_stock_movement(mapper, connection, target):
         .where(Ledger.location == LedgerLocation.Gudang.value)
         .values(
             date=movement.date,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
+            quantity_in=0.0,
+            quantity_out=target.quantity or 0.0,
         )
     )
 
@@ -131,8 +132,8 @@ def update_ledger_from_stock_movement(mapper, connection, target):
         .where(Ledger.location == LedgerLocation.Kitchen.value)
         .values(
             date=movement.date,
-            qty_in=target.quantity or 0.0,
-            qty_out=0.0,
+            quantity_in=target.quantity or 0.0,
+            quantity_out=0.0,
         )
     )
 
@@ -170,8 +171,8 @@ def create_ledger_from_ck(mapper, connection, target):
             ref=LedgerRef.Ck.value,
             ref_code=entry.code or "",
             location=LedgerLocation.Kitchen.value,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
+            quantity_in=0.0,
+            quantity_out=target.quantity or 0.0,
             product_id=target.product_id,
         )
     )
@@ -183,8 +184,8 @@ def create_ledger_from_ck(mapper, connection, target):
             ref=LedgerRef.Ck.value,
             ref_code=entry.code or "",
             location=LedgerLocation.Usage.value,
-            qty_in=target.quantity or 0.0,
-            qty_out=0.0,
+            quantity_in=target.quantity or 0.0,
+            quantity_out=0.0,
             product_id=target.product_id,
         )
     )
@@ -202,7 +203,7 @@ def update_ledger_from_ck(mapper, connection, target):
         .where(Ledger.ref_code == (entry.code or ""))
         .where(Ledger.product_id == target.product_id)
         .where(Ledger.location == LedgerLocation.Kitchen.value)
-        .values(date=entry.date, qty_in=0.0, qty_out=target.quantity or 0.0)
+        .values(date=entry.date, quantity_in=0.0, quantity_out=target.quantity or 0.0)
     )
 
     # Usage IN
@@ -212,7 +213,7 @@ def update_ledger_from_ck(mapper, connection, target):
         .where(Ledger.ref_code == (entry.code or ""))
         .where(Ledger.product_id == target.product_id)
         .where(Ledger.location == LedgerLocation.Usage.value)
-        .values(date=entry.date, qty_in=target.quantity or 0.0, qty_out=0.0)
+        .values(date=entry.date, quantity_in=target.quantity or 0.0, quantity_out=0.0)
     )
 
 @event.listens_for(Color_Kitchen_Entry_Detail, "after_delete")
@@ -247,8 +248,8 @@ def create_ledger_from_ck_batch(mapper, connection, target):
             ref=LedgerRef.Ck.value,
             ref_code=batch.code or "",
             location=LedgerLocation.Kitchen.value,
-            qty_in=0.0,
-            qty_out=target.quantity or 0.0,
+            quantity_in=0.0,
+            quantity_out=target.quantity or 0.0,
             product_id=target.product_id,
         )
     )
@@ -260,8 +261,8 @@ def create_ledger_from_ck_batch(mapper, connection, target):
             ref=LedgerRef.Ck.value,
             ref_code=batch.code or "",
             location=LedgerLocation.Usage.value,
-            qty_in=target.quantity or 0.0,
-            qty_out=0.0,
+            quantity_in=target.quantity or 0.0,
+            quantity_out=0.0,
             product_id=target.product_id,
         )
     )
@@ -278,7 +279,7 @@ def update_ledger_from_ck_batch(mapper, connection, target):
         .where(Ledger.ref_code == (batch.code or ""))
         .where(Ledger.product_id == target.product_id)
         .where(Ledger.location == LedgerLocation.Kitchen.value)
-        .values(date=batch.date, qty_in=0.0, qty_out=target.quantity or 0.0)
+        .values(date=batch.date, quantity_in=0.0, quantity_out=target.quantity or 0.0)
     )
 
     # Usage IN
@@ -288,7 +289,7 @@ def update_ledger_from_ck_batch(mapper, connection, target):
         .where(Ledger.ref_code == (batch.code or ""))
         .where(Ledger.product_id == target.product_id)
         .where(Ledger.location == LedgerLocation.Usage.value)
-        .values(date=batch.date, qty_in=target.quantity or 0.0, qty_out=0.0)
+        .values(date=batch.date, quantity_in=target.quantity or 0.0, quantity_out=0.0)
     )
 
 @event.listens_for(Color_Kitchen_Batch_Detail, "after_delete")
