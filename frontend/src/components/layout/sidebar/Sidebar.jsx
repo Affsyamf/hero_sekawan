@@ -31,8 +31,8 @@ const menuItems = [
       { label: "Products", path: "/products" },
       { label: "Suppliers", path: "/suppliers" },
       { label: "Accounts", path: "/accounts" },
-      { label: "Design", path: "/designs" },
       { label: "Design Type", path: "/design-types" },
+      { label: "Design", path: "/designs" },
     ],
   },
 

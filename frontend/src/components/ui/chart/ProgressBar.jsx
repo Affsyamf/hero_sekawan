@@ -31,39 +31,54 @@ export function ProgressBar({
     }
   }, [percentage, animate]);
 
+  // Fallback colors
+  const primaryColor = colors?.primary || "#3b82f6";
+  const successColor = colors?.status?.success || "#10b981";
+  const successLight = colors?.status?.successLight || "#d1fae5";
+  const warningColor = colors?.status?.warning || "#f59e0b";
+  const warningLight = colors?.status?.warningLight || "#fef3c7";
+  const errorColor = colors?.status?.error || "#ef4444";
+  const errorLight = colors?.status?.errorLight || "#fee2e2";
+  const infoColor = colors?.status?.info || "#0ea5e9";
+  const infoLight = colors?.status?.infoLight || "#e0f2fe";
+  const primaryLight = colors?.primaryLight || "#dbeafe";
+  const textPrimary = colors?.text?.primary || "#111827";
+  const textSecondary = colors?.text?.secondary || "#6b7280";
+  const textTertiary = colors?.text?.tertiary || "#9ca3af";
+
   const getBarColor = () => {
     switch (color) {
       case "success":
-        return colors.status.success;
+        return successColor;
       case "warning":
-        return colors.status.warning;
+        return warningColor;
       case "error":
-        return colors.status.error;
+        return errorColor;
       case "info":
-        return colors.status.info;
+        return infoColor;
       default:
-        return colors.primary;
+        return primaryColor;
     }
   };
 
   const getBackgroundColor = () => {
     switch (color) {
       case "success":
-        return colors.status.successLight;
+        return successLight;
       case "warning":
-        return colors.status.warningLight;
+        return warningLight;
       case "error":
-        return colors.status.errorLight;
+        return errorLight;
       case "info":
-        return colors.status.infoLight;
+        return infoLight;
       default:
-        return colors.primaryLight;
+        return primaryLight;
     }
   };
 
   const getTrendIcon = () => {
     if (!trend) return null;
-    const iconStyle = { width: 16, height: 16 };
+    const iconStyle = { width: 12, height: 12 };
     if (trend === "up") return <TrendingUp style={iconStyle} />;
     if (trend === "down") return <TrendingDown style={iconStyle} />;
     return <Minus style={iconStyle} />;
@@ -72,11 +87,11 @@ export function ProgressBar({
   const getBarHeight = () => {
     switch (size) {
       case "sm":
-        return "6px";
+        return "4px";
       case "lg":
-        return "12px";
+        return "10px";
       default:
-        return "8px";
+        return "6px";
     }
   };
 
@@ -88,12 +103,12 @@ export function ProgressBar({
 
   return (
     <div className="w-full">
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between mb-1.5">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
             <span
-              className="text-sm font-medium"
-              style={{ color: colors.secondary }}
+              className="text-xs font-medium truncate"
+              style={{ color: textPrimary }}
             >
               {label}
             </span>
@@ -102,22 +117,22 @@ export function ProgressBar({
             )}
           </div>
           {subtitle && (
-            <span className="text-xs" style={{ color: colors.tertiary }}>
+            <span className="text-xs truncate" style={{ color: textTertiary }}>
               {subtitle}
             </span>
           )}
         </div>
-        <div className="text-right">
+        <div className="flex-shrink-0 ml-2 text-right">
           {showPercentage && (
             <div
-              className="text-lg font-bold"
-              style={{ color: colors.primary }}
+              className="text-sm font-bold"
+              style={{ color: getBarColor() }}
             >
               {percentage.toFixed(0)}%
             </div>
           )}
           {showValue && (
-            <div className="text-xs" style={{ color: colors.secondary }}>
+            <div className="text-xs" style={{ color: textSecondary }}>
               {formatValue(value)}
             </div>
           )}
