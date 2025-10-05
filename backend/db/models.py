@@ -218,7 +218,7 @@ class Stock_Opname_Detail(Base):
     physical_quantity = Column(Numeric(18, 2), nullable=False)
     difference = Column(
         Numeric(18, 2),
-        Computed("physical_quantity - system_quantity")
+        Computed("system_quantity - physical_quantity")
     )
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
