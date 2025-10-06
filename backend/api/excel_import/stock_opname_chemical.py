@@ -3,9 +3,11 @@ import pandas as pd
 import re
 from sqlalchemy.orm import Session
 from io import BytesIO
-from db.models import Product, Stock_Opname, Stock_Opname_Detail
 import math
 from datetime import datetime
+
+from db.models import Product, Stock_Opname, Stock_Opname_Detail, Ledger
+from models.enum import LedgerRef, LedgerLocation
 
 from utils.helpers import normalize_product_name
 
@@ -34,10 +36,12 @@ def run(contents: bytes, db: Session):
     
     df = pd.read_excel(xls, sheet_name="GUDANG BESAR", header=4)
     df = df[df["NO"].notna()]
+
+    so_code = "SO-" + start_date.strftime("%Y%m%d")
     
     stock_opname = Stock_Opname(
         date=start_date,
-        code="SO-" + start_date.strftime("%Y%m%d"),
+        code=so_code,
     )
     db.add(stock_opname)
     db.flush()
@@ -68,6 +72,46 @@ def run(contents: bytes, db: Session):
             stock_opname=stock_opname
         )
         db.add(detail)
+
+        # --- Ledger ---
+        difference = system_qty - physical_qty
+        if difference != 0:
+            if difference > 0:
+                # System > Physical: OUT from Gudang
+                ledger_entry = Ledger(
+                    date=start_date,
+                    ref=LedgerRef.StockOpname.value,
+                    ref_code=so_code,
+                    location=LedgerLocation.Gudang.value,
+                    quantity_in=0.0,
+                    quantity_out=-difference,  # make positive
+                    product=product,
+                )
+            else:
+                # System < Physical: IN to Gudang, OUT from Kitchen
+                ledger_entry_kitchen = Ledger(
+                    date=start_date,
+                    ref=LedgerRef.StockOpname.value,
+                    ref_code=so_code,
+                    location=LedgerLocation.Kitchen.value,
+                    quantity_in=0.0,
+                    quantity_out=difference,  # make positive
+                    product=product,
+                )
+
+                ledger_entry = Ledger(
+                    date=start_date,
+                    ref=LedgerRef.StockOpname.value,
+                    ref_code=so_code,
+                    location=LedgerLocation.Gudang.value,
+                    quantity_in=difference,  # make positive
+                    quantity_out=0.0,
+                    product=product,
+                )
+
+                db.add(ledger_entry_kitchen)
+
+            db.add(ledger_entry)
         added += 1
 
     db.commit()

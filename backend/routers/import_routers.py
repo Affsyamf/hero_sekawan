@@ -5,7 +5,7 @@ import traceback, sys
 from typing import List, Optional
 
 from utils.deps import DB
-from api.excel_import import harga_obat, lap_chemical, lap_pembelian, lap_ck, opening_balance, stock_opname
+from api.excel_import import harga_obat, lap_chemical, lap_pembelian, lap_ck, opening_balance, stock_opname_chemical
 from api.excel_import.master_data import (master_data_design, master_data_lap_pembelian, master_data_product_code)
 
 excel_import_router = APIRouter(prefix="/import", tags=["import"])
@@ -105,7 +105,7 @@ async def import_stock_opname_lap_chemical(
         raise HTTPException(status_code=400, detail="Please upload an .xlsx file")
     try:
         contents: bytes = await file.read()
-        result = stock_opname.run(contents, db=db)
+        result = stock_opname_chemical.run(contents, db=db)
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
