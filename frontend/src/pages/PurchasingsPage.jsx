@@ -1,8 +1,9 @@
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import PurchasingForm from "../components/features/purchasing/PurchasingForm";
+import ImportPurchasingModal from "../components/features/purchasing/ImportPurchasingModal";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
 import { formatCurrency, formatDate } from "../utils/helpers";
 
@@ -10,7 +11,9 @@ const SAMPLE_PURCHASINGS = [];
 
 export default function PurchasingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedPurchasing, setSelectedPurchasing] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { value: purchasings = SAMPLE_PURCHASINGS, set: setPurchasings } =
     useTemp("purchasings:working-list", SAMPLE_PURCHASINGS);
@@ -136,7 +139,7 @@ export default function PurchasingsPage() {
     },
   ];
 
-  // CRUD Handlers - Parent only orchestrates data
+  // CRUD Handlers
   const handleAdd = () => {
     setSelectedPurchasing(null);
     setIsModalOpen(true);
@@ -165,7 +168,7 @@ export default function PurchasingsPage() {
     setSelectedPurchasing(null);
   };
 
-  // Save handler - Parent manages the data state
+  // Save handler
   const handleSave = (purchasingData) => {
     const nextId = (arr) =>
       arr.length ? Math.max(...arr.map((p) => p.id || 0)) + 1 : 1;
@@ -183,6 +186,20 @@ export default function PurchasingsPage() {
     });
 
     handleCloseModal();
+  };
+
+  const handleImport = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleImportSuccess = (result) => {
+    // Refresh table data after successful import
+    setRefreshKey(prev => prev + 1);
+    
+    // Log success
+    console.log("Import successful:", result);
+    
+    // Optionally reload data from API if you have one
   };
 
   const renderActions = (row) => (
@@ -223,7 +240,19 @@ export default function PurchasingsPage() {
             calculations.
           </p>
 
+          {/* Import Button */}
+          <div className="mb-4">
+            <button
+              onClick={handleImport}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              <Upload className="w-4 h-4" />
+              Import Master Data
+            </button>
+          </div>
+
           <Table
+            key={refreshKey}
             columns={columns}
             fetchData={fetchPurchasings}
             actions={renderActions}
@@ -237,6 +266,12 @@ export default function PurchasingsPage() {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
+          />
+
+          <ImportPurchasingModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImportSuccess={handleImportSuccess}
           />
         </div>
       </div>

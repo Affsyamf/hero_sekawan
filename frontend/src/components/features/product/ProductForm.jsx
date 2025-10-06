@@ -180,7 +180,7 @@ export default function ProductForm({
             onChange={(e) => handleInputChange("unit", e.target.value)}
             placeholder="Enter unit (e.g., Pcs, Kg, Box, etc.)"
           />
-          <Form.Helper>Unit of measurement for this product</Form.Helper>
+          {/* <Form.Helper>Unit of measurement for this product</Form.Helper> */}
         </Form.Group>
 
         <Form.Group>
@@ -203,7 +203,7 @@ export default function ProductForm({
               </option>
             ))}
           </select>
-          <Form.Helper>Link this product to an accounting account</Form.Helper>
+          {/* <Form.Helper>Link this product to an accounting account</Form.Helper> */}
         </Form.Group>
       </div>
     </Modal>

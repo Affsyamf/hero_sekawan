@@ -1,15 +1,18 @@
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import ProductForm from "../components/features/product/ProductForm";
+import ImportProductModal from "../components/features/product/ImportProductModal";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
 
 const SAMPLE_PRODUCTS = [];
 
 export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { value: products = SAMPLE_PRODUCTS, set: setProducts } = useTemp(
     "products:working-list",
@@ -155,6 +158,20 @@ export default function ProductsPage() {
     handleCloseModal();
   };
 
+  const handleImport = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleImportSuccess = (result) => {
+    // Refresh table data after successful import
+    setRefreshKey(prev => prev + 1);
+    
+    // Log success (you can replace with your notification system)
+    console.log("Import successful:", result);
+    
+    // Optionally reload products from API if you have one
+  };
+
   const renderActions = (row) => (
     <div className="flex items-center gap-2">
       <button
@@ -192,7 +209,19 @@ export default function ProductsPage() {
             Manage your products with codes, units, and account associations.
           </p>
 
+          {/* Import Button */}
+          <div className="mb-4">
+            <button
+              onClick={handleImport}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              <Upload className="w-4 h-4" />
+              Import from Excel
+            </button>
+          </div>
+
           <Table
+            key={refreshKey}
             columns={columns}
             fetchData={fetchProducts}
             actions={renderActions}
@@ -205,6 +234,12 @@ export default function ProductsPage() {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
+          />
+
+          <ImportProductModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImportSuccess={handleImportSuccess}
           />
         </div>
       </div>
