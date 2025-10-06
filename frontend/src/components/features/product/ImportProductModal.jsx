@@ -11,6 +11,7 @@ import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
+import { importApi } from "../../../services/endpoints";
 
 export default function ImportProductModal({
   isOpen,
@@ -164,11 +165,7 @@ export default function ImportProductModal({
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/import/master-data/product-code", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
+      const response = await importApi.importMasterDataProductCode(file);
 
       const result = await response.json();
 

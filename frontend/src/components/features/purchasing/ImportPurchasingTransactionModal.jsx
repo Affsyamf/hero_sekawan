@@ -135,11 +135,9 @@ export default function ImportPurchasingTransactionModal({ isOpen, onClose, onIm
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/import/lap-pembelian", {
-        method: "POST",
-        body: fd,
-        credentials: "include"
-      });
+    
+      const res = await importApi.importLapPembelian(file);
+      
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Import failed");
       setResult(data);
@@ -218,32 +216,42 @@ export default function ImportPurchasingTransactionModal({ isOpen, onClose, onIm
           </p>
         </div>
         <div className="overflow-hidden border rounded-lg" style={{ borderColor: colors.border.primary }}>
-          <table className="w-full">
-            <thead style={{ backgroundColor: colors.background.secondary, borderBottomWidth: "1px", borderColor: colors.border.primary }}>
-              <tr>
-                <th className="px-3 py-2 text-xs font-semibold text-left" style={{ color: colors.text.secondary }}>No</th>
-                <th className="px-3 py-2 text-xs font-semibold text-left" style={{ color: colors.text.secondary }}>Bukti</th>
-                <th className="px-3 py-2 text-xs font-semibold text-left" style={{ color: colors.text.secondary }}>Date</th>
-                <th className="px-3 py-2 text-xs font-semibold text-left" style={{ color: colors.text.secondary }}>Supplier</th>
-                <th className="px-3 py-2 text-xs font-semibold text-left" style={{ color: colors.text.secondary }}>Product</th>
-                <th className="px-3 py-2 text-xs font-semibold text-right" style={{ color: colors.text.secondary }}>Qty</th>
-                <th className="px-3 py-2 text-xs font-semibold text-right" style={{ color: colors.text.secondary }}>Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {preview.slice(0, 50).map((r, i) => (
-                <tr key={i} style={{ borderBottomWidth: "1px", borderColor: colors.border.primary }}>
-                  <td className="px-3 py-2 text-xs" style={{ color: colors.text.secondary }}>{i + 1}</td>
-                  <td className="px-3 py-2 text-xs font-medium" style={{ color: colors.text.primary }}>{r.nobukti}</td>
-                  <td className="px-3 py-2 text-xs" style={{ color: colors.text.secondary }}>{r.date}</td>
-                  <td className="px-3 py-2 text-xs" style={{ color: colors.text.primary }}>{r.supplier}</td>
-                  <td className="px-3 py-2 text-xs" style={{ color: colors.text.primary }}>{r.product}</td>
-                  <td className="px-3 py-2 text-xs text-right" style={{ color: colors.text.primary }}>{r.qty}</td>
-                  <td className="px-3 py-2 text-xs text-right" style={{ color: colors.text.primary }}>{r.price}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead style={{ backgroundColor: colors.background.secondary, borderBottomWidth: "1px", borderColor: colors.border.primary }}>
+                <tr>
+                  <th className="px-2 py-2 font-semibold text-left whitespace-nowrap" style={{ color: colors.text.secondary }}>No</th>
+                  <th className="px-2 py-2 font-semibold text-left whitespace-nowrap" style={{ color: colors.text.secondary }}>Sheet</th>
+                  <th className="px-2 py-2 font-semibold text-left whitespace-nowrap" style={{ color: colors.text.secondary }}>No Bukti</th>
+                  <th className="px-2 py-2 font-semibold text-left whitespace-nowrap" style={{ color: colors.text.secondary }}>Tanggal</th>
+                  <th className="px-2 py-2 font-semibold text-left whitespace-nowrap" style={{ color: colors.text.secondary }}>Kode Supplier</th>
+                  <th className="px-2 py-2 font-semibold text-left whitespace-nowrap" style={{ color: colors.text.secondary }}>Nama Barang</th>
+                  <th className="px-2 py-2 font-semibold text-right whitespace-nowrap" style={{ color: colors.text.secondary }}>Qty</th>
+                  <th className="px-2 py-2 font-semibold text-right whitespace-nowrap" style={{ color: colors.text.secondary }}>Harga</th>
+                  <th className="px-2 py-2 font-semibold text-right whitespace-nowrap" style={{ color: colors.text.secondary }}>PPN</th>
+                  <th className="px-2 py-2 font-semibold text-right whitespace-nowrap" style={{ color: colors.text.secondary }}>DPP</th>
+                  <th className="px-2 py-2 font-semibold text-right whitespace-nowrap" style={{ color: colors.text.secondary }}>PPH</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {preview.slice(0, 50).map((r, i) => (
+                  <tr key={i} style={{ borderBottomWidth: "1px", borderColor: colors.border.primary }}>
+                    <td className="px-2 py-2" style={{ color: colors.text.secondary }}>{i + 1}</td>
+                    <td className="px-2 py-2" style={{ color: colors.text.secondary }}>{r.sheet}</td>
+                    <td className="px-2 py-2 font-medium" style={{ color: colors.text.primary }}>{r.nobukti}</td>
+                    <td className="px-2 py-2" style={{ color: colors.text.secondary }}>{r.date}</td>
+                    <td className="px-2 py-2" style={{ color: colors.text.primary }}>{r.supplier}</td>
+                    <td className="px-2 py-2" style={{ color: colors.text.primary }}>{r.product}</td>
+                    <td className="px-2 py-2 text-right" style={{ color: colors.text.primary }}>{r.qty}</td>
+                    <td className="px-2 py-2 text-right" style={{ color: colors.text.primary }}>{r.price.toLocaleString()}</td>
+                    <td className="px-2 py-2 text-right" style={{ color: colors.text.primary }}>{r.ppn.toLocaleString()}</td>
+                    <td className="px-2 py-2 text-right" style={{ color: colors.text.primary }}>{r.dpp.toLocaleString()}</td>
+                    <td className="px-2 py-2 text-right" style={{ color: colors.text.primary }}>{r.pph.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {preview.length > 50 && (
             <div className="p-3 text-sm text-center" style={{ backgroundColor: colors.background.secondary, color: colors.text.secondary }}>
               Showing 50 of {preview.length}

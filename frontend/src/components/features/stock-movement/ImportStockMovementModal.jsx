@@ -5,6 +5,7 @@ import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
+import { importApi } from "../../../services/endpoints";
 
 export default function ImportStockMovementModal({ isOpen, onClose, onImportSuccess }) {
   const { colors } = useTheme();
@@ -131,11 +132,9 @@ export default function ImportStockMovementModal({ isOpen, onClose, onImportSucc
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/import/master-data/lap-chemical", {
-        method: "POST",
-        body: fd,
-        credentials: "include"
-      });
+      
+      const res = await importApi.importLapChemical(file);
+      
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Import failed");
       setResult(data);

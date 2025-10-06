@@ -7,3 +7,5 @@ export { default as DesignTypesPage } from './DesignTypesPage';
 export { default as PurchasingsPage } from './PurchasingsPage';
 export { default as StockMovementsPage } from './StockMovementsPage';
 export { default as SuppliersPage } from './SuppliersPage';
+export { default as StockOpnamePage } from './StockOpnamePage';
+export { default as PurchasingReportsPage } from './report/PurchasingReportsPage';

@@ -5,6 +5,7 @@ import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
+import { importApi } from "../../../services/endpoints";
 
 export default function ImportPurchasingModal({ isOpen, onClose, onImportSuccess }) {
   const { colors } = useTheme();
@@ -196,11 +197,7 @@ export default function ImportPurchasingModal({ isOpen, onClose, onImportSuccess
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/import/master-data/lap-pembelian", {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
+      const response = await importApi.importMasterDataLapPembelian(file);
 
       const result = await response.json();
 

@@ -43,7 +43,7 @@ const menuItems = [
   { label: "Stock Opname", icon: ClipboardCheck, path: "/stock-opnames" },
 
   { isHeader: true, text: "Reports" },
-  { label: "Reports", icon: FileBarChart2, path: "/reports" },
+  { label: "Reports", icon: FileBarChart2, path: "/reports/purchasings" },
 
   { isHeader: true, text: "Settings" },
   {
