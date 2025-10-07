@@ -110,14 +110,16 @@ def read_headers_and_meta(contents: bytes):
         })
         columns.append(flat)
 
-    df = pd.read_excel(
-        BytesIO(contents),
-        sheet_name=sheet_name,
-        header=header_rows,
-        usecols=usecols
-    )
-    df.columns = columns
-    return df, meta
+    print(meta)
+
+    # df = pd.read_excel(
+    #     BytesIO(contents),
+    #     sheet_name=sheet_name,
+    #     header=header_rows,
+    #     usecols=usecols
+    # )
+    raw.columns = columns
+    return raw, meta
 
 def save_to_db(parsed, db: Session):
     missing_products = set()
@@ -179,7 +181,7 @@ def save_to_db(parsed, db: Session):
         for e in b.get("entries", []):
         # skip empty OPJ or design (no code or design_id)
             if not e.get("code"):
-                print(f"⚠️ Skipping entry with no code in batch {b['code']}")
+                # print(f"⚠️ Skipping entry with no code in batch {b['code']}")
                 continue
 
             design = db.query(Design).filter_by(code=normalize_design_name(e["design"])).first()
@@ -273,9 +275,6 @@ def run(contents: bytes, db: Session):
 
         aux_accum = {}
         
-        # print("###########################################################################################################")
-        # print(row.to_dict())
-        
         # process by grouped product_name
         for pname, metas in grouped_meta.items():
             total_val = 0.0
@@ -305,20 +304,9 @@ def run(contents: bytes, db: Session):
     
     finalize_batch()
 
-    summary = {
-        "total_batches": len(batches),
-        "total_entries": sum(len(b["entries"]) for b in batches),
-        "total_aux_details": sum(len(e["details"]) for b in batches for e in b["entries"]),
-        "total_batch_details": sum(len(b["details"]) for b in batches),
-        "skipped_rows": len(skipped_rows),
-    }
-    
     ret = save_to_db({"batches": batches}, db)
 
     return {
         "missing_products": ret,
-        # "batches": batches,
-        # "skipped_rows": skipped_rows,
-        # "summary": summary,
     }
     
