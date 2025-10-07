@@ -36,18 +36,19 @@ export const supplierApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/supplier/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/supplier/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    code: string;
-    name: string;
-    contact_info?: string;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      code: string;
+      name: string;
+      contact_info?: string;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/supplier`,
@@ -56,11 +57,15 @@ export const supplierApi = {
     );
   },
 
-  async update(id: number, payload: {
-    code?: string;
-    name?: string;
-    contact_info?: string;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      code?: string;
+      name?: string;
+      contact_info?: string;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/supplier/${id}`,
@@ -70,11 +75,9 @@ export const supplierApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/supplier/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/supplier/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -90,19 +93,20 @@ export const productApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/product/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/product/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    code?: string;
-    name: string;
-    unit?: string;
-    account_id?: number;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      code?: string;
+      name: string;
+      unit?: string;
+      account_id?: number;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/product`,
@@ -111,12 +115,16 @@ export const productApi = {
     );
   },
 
-  async update(id: number, payload: {
-    code?: string;
-    name?: string;
-    unit?: string;
-    account_id?: number;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      code?: string;
+      name?: string;
+      unit?: string;
+      account_id?: number;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/product/${id}`,
@@ -126,11 +134,9 @@ export const productApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/product/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/product/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -146,17 +152,18 @@ export const designApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/design/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/design/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    code: string;
-    type_id: number;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      code: string;
+      type_id: number;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/design`,
@@ -165,10 +172,14 @@ export const designApi = {
     );
   },
 
-  async update(id: number, payload: {
-    code?: string;
-    type_id?: number;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      code?: string;
+      type_id?: number;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/design/${id}`,
@@ -178,11 +189,9 @@ export const designApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/design/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/design/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -200,19 +209,20 @@ export const accountApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/account/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/account/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    name: string;
-    account_no: number;
-    account_type: string; // 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE'
-    alias?: string;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      name: string;
+      account_no: number;
+      account_type: string; // 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE'
+      alias?: string;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/account`,
@@ -221,12 +231,16 @@ export const accountApi = {
     );
   },
 
-  async update(id: number, payload: {
-    name?: string;
-    account_no?: number;
-    account_type?: string;
-    alias?: string;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      name?: string;
+      account_no?: number;
+      account_type?: string;
+      alias?: string;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/account/${id}`,
@@ -236,11 +250,9 @@ export const accountApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/account/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/account/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -256,16 +268,17 @@ export const designTypeApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/design-type/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/design-type/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    name: string;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      name: string;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/design-type`,
@@ -274,9 +287,13 @@ export const designTypeApi = {
     );
   },
 
-  async update(id: number, payload: {
-    name?: string;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      name?: string;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/design-type/${id}`,
@@ -286,26 +303,27 @@ export const designTypeApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/design-type/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/design-type/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
 // ==================== LEDGER ====================
 
 export const ledgerApi = {
-  async search(filters: {
-    product_id?: number;
-    ref?: string; // 'PURCHASING' | 'STOCK_MOVEMENT' | 'COLOR_KITCHEN'
-    location?: string; // 'WAREHOUSE' | 'PRODUCTION'
-    start_date?: string;
-    end_date?: string;
-    limit?: number;
-    offset?: number;
-  } = {}, showLoading: boolean = true) {
+  async search(
+    filters: {
+      product_id?: number;
+      ref?: string; // 'PURCHASING' | 'STOCK_MOVEMENT' | 'COLOR_KITCHEN'
+      location?: string; // 'WAREHOUSE' | 'PRODUCTION'
+      start_date?: string;
+      end_date?: string;
+      limit?: number;
+      offset?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/ledger/search`,
@@ -315,19 +333,21 @@ export const ledgerApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/ledger/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/ledger/${id}`, {
+      method: "GET",
+    });
   },
 
-  async getByProduct(productId: number, filters: {
-    start_date?: string;
-    end_date?: string;
-    limit?: number;
-    offset?: number;
-  } = {}, showLoading: boolean = true) {
+  async getByProduct(
+    productId: number,
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      limit?: number;
+      offset?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/ledger/product/${productId}`,
@@ -336,10 +356,13 @@ export const ledgerApi = {
     );
   },
 
-  async getStock(filters: {
-    product_id?: number;
-    location?: string;
-  } = {}, showLoading: boolean = true) {
+  async getStock(
+    filters: {
+      product_id?: number;
+      location?: string;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/ledger/stock`,
@@ -362,30 +385,31 @@ export const purchasingApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/purchasing/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/purchasing/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    date?: string;
-    code?: string;
-    purchase_order?: string;
-    supplier_id: number;
-    details: Array<{
-      product_id: number;
-      quantity: number;
-      price: number;
-      discount?: number;
-      ppn?: number;
-      pph?: number;
-      dpp?: number;
-      tax_no?: string;
-      exchange_rate?: number;
-    }>;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      date?: string;
+      code?: string;
+      purchase_order?: string;
+      supplier_id: number;
+      details: Array<{
+        product_id: number;
+        quantity: number;
+        price: number;
+        discount?: number;
+        ppn?: number;
+        pph?: number;
+        dpp?: number;
+        tax_no?: string;
+        exchange_rate?: number;
+      }>;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/purchasing`,
@@ -394,24 +418,28 @@ export const purchasingApi = {
     );
   },
 
-  async update(id: number, payload: {
-    date?: string;
-    code?: string;
-    purchase_order?: string;
-    supplier_id?: number;
-    details?: Array<{
-      id?: number;
-      product_id: number;
-      quantity: number;
-      price: number;
-      discount?: number;
-      ppn?: number;
-      pph?: number;
-      dpp?: number;
-      tax_no?: string;
-      exchange_rate?: number;
-    }>;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      date?: string;
+      code?: string;
+      purchase_order?: string;
+      supplier_id?: number;
+      details?: Array<{
+        id?: number;
+        product_id: number;
+        quantity: number;
+        price: number;
+        discount?: number;
+        ppn?: number;
+        pph?: number;
+        dpp?: number;
+        tax_no?: string;
+        exchange_rate?: number;
+      }>;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/purchasing/${id}`,
@@ -421,14 +449,16 @@ export const purchasingApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/purchasing/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/purchasing/${id}`, {
+      method: "DELETE",
+    });
   },
 
-  async getBySupplier(supplierId: number, filters: SearchFilters = {}, showLoading: boolean = true) {
+  async getBySupplier(
+    supplierId: number,
+    filters: SearchFilters = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/purchasing/supplier/${supplierId}`,
@@ -451,21 +481,22 @@ export const stockMovementApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/stock-movement/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/stock-movement/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    date?: string;
-    code: string;
-    details: Array<{
-      product_id: number;
-      quantity: number;
-    }>;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      date?: string;
+      code: string;
+      details: Array<{
+        product_id: number;
+        quantity: number;
+      }>;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/stock-movement`,
@@ -474,15 +505,19 @@ export const stockMovementApi = {
     );
   },
 
-  async update(id: number, payload: {
-    date?: string;
-    code?: string;
-    details?: Array<{
-      id?: number;
-      product_id: number;
-      quantity: number;
-    }>;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      date?: string;
+      code?: string;
+      details?: Array<{
+        id?: number;
+        product_id: number;
+        quantity: number;
+      }>;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/stock-movement/${id}`,
@@ -492,11 +527,9 @@ export const stockMovementApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/stock-movement/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/stock-movement/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -513,22 +546,23 @@ export const stockOpnameApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/stock-opname/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/stock-opname/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    date?: string;
-    code: string;
-    details: Array<{
-      product_id: number;
-      system_quantity: number;
-      physical_quantity: number;
-    }>;
-  }, showLoading: boolean = true) {
+  async create(
+    payload: {
+      date?: string;
+      code: string;
+      details: Array<{
+        product_id: number;
+        system_quantity: number;
+        physical_quantity: number;
+      }>;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/stock-opname`,
@@ -537,16 +571,20 @@ export const stockOpnameApi = {
     );
   },
 
-  async update(id: number, payload: {
-    date?: string;
-    code?: string;
-    details?: Array<{
-      id?: number;
-      product_id: number;
-      system_quantity: number;
-      physical_quantity: number;
-    }>;
-  }, showLoading: boolean = true) {
+  async update(
+    id: number,
+    payload: {
+      date?: string;
+      code?: string;
+      details?: Array<{
+        id?: number;
+        product_id: number;
+        system_quantity: number;
+        physical_quantity: number;
+      }>;
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/stock-opname/${id}`,
@@ -556,18 +594,19 @@ export const stockOpnameApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/stock-opname/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/stock-opname/${id}`, {
+      method: "DELETE",
+    });
   },
 
   // Get current system stock untuk prepare stock opname
-  async getCurrentStock(filters: {
-    product_id?: number;
-    location?: string;
-  } = {}, showLoading: boolean = true) {
+  async getCurrentStock(
+    filters: {
+      product_id?: number;
+      location?: string;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/stock-opname/current-stock`,
@@ -587,11 +626,9 @@ export const stockOpnameApi = {
 
   // Approve stock opname (untuk update ledger berdasarkan selisih)
   async approve(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/stock-opname/${id}/approve`,
-      { method: "POST" }
-    );
+    return await http<ApiResponse>(showLoading, `/stock-opname/${id}/approve`, {
+      method: "POST",
+    });
   },
 };
 
@@ -609,31 +646,32 @@ export const colorKitchenBatchApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/color-kitchen-batch/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/color-kitchen-batch/${id}`, {
+      method: "GET",
+    });
   },
 
-  async create(payload: {
-    date?: string;
-    code: string;
-    entries: Array<{
-      code: string; // OPJ
-      design_id: number;
-      rolls?: number;
-      paste_quantity: number;
+  async create(
+    payload: {
+      date?: string;
+      code: string;
+      entries: Array<{
+        code: string; // OPJ
+        design_id: number;
+        rolls?: number;
+        paste_quantity: number;
+        details: Array<{
+          product_id: number;
+          quantity: number;
+        }>;
+      }>;
       details: Array<{
         product_id: number;
         quantity: number;
       }>;
-    }>;
-    details: Array<{
-      product_id: number;
-      quantity: number;
-    }>;
-  }, showLoading: boolean = true) {
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/color-kitchen-batch`,
@@ -642,27 +680,31 @@ export const colorKitchenBatchApi = {
     );
   },
 
-  async update(id: number, payload: {
-    date?: string;
-    code?: string;
-    entries?: Array<{
-      id?: number;
-      code: string;
-      design_id: number;
-      rolls?: number;
-      paste_quantity: number;
-      details: Array<{
+  async update(
+    id: number,
+    payload: {
+      date?: string;
+      code?: string;
+      entries?: Array<{
+        id?: number;
+        code: string;
+        design_id: number;
+        rolls?: number;
+        paste_quantity: number;
+        details: Array<{
+          id?: number;
+          product_id: number;
+          quantity: number;
+        }>;
+      }>;
+      details?: Array<{
         id?: number;
         product_id: number;
         quantity: number;
       }>;
-    }>;
-    details?: Array<{
-      id?: number;
-      product_id: number;
-      quantity: number;
-    }>;
-  }, showLoading: boolean = true) {
+    },
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/color-kitchen-batch/${id}`,
@@ -672,11 +714,9 @@ export const colorKitchenBatchApi = {
   },
 
   async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/color-kitchen-batch/${id}`,
-      { method: "DELETE" }
-    );
+    return await http<ApiResponse>(showLoading, `/color-kitchen-batch/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -692,14 +732,16 @@ export const colorKitchenEntryApi = {
   },
 
   async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/color-kitchen-entry/${id}`,
-      { method: "GET" }
-    );
+    return await http<ApiResponse>(showLoading, `/color-kitchen-entry/${id}`, {
+      method: "GET",
+    });
   },
 
-  async getByBatch(batchId: number, filters: SearchFilters = {}, showLoading: boolean = true) {
+  async getByBatch(
+    batchId: number,
+    filters: SearchFilters = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/color-kitchen-entry/batch/${batchId}`,
@@ -708,7 +750,11 @@ export const colorKitchenEntryApi = {
     );
   },
 
-  async getByDesign(designId: number, filters: SearchFilters = {}, showLoading: boolean = true) {
+  async getByDesign(
+    designId: number,
+    filters: SearchFilters = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/color-kitchen-entry/design/${designId}`,
@@ -721,21 +767,48 @@ export const colorKitchenEntryApi = {
 // ==================== DASHBOARD ====================
 
 export const dashboardApi = {
-  async getOverview(filters: {
-    start_date?: string;
-    end_date?: string;
-  } = {}, showLoading: boolean = true) {
+  // src/services/api.ts
+
+  async getDashboard(
+    params: {
+      period?: string; // "1 Bulan" | "3 Bulan" | "6 Bulan"
+      month?: number; // 1-12
+      year?: number; // 2024, 2025, etc
+    } = {},
+    showLoading: boolean = true
+  ) {
+    const query = buildQuery(params);
+    return await http<ApiResponse>(showLoading, `/dashboard${query}`, {
+      method: "GET",
+    });
+  },
+
+  async getDashboardTransactions(
+    params: {
+      page?: number;
+      page_size?: number;
+      search?: string;
+      date_start?: string;
+      date_end?: string;
+      sort_by?: string;
+      sort_dir?: string;
+    } = {},
+    showLoading: boolean = true
+  ) {
+    const query = buildQuery(params);
     return await http<ApiResponse>(
       showLoading,
-      `/dashboard/overview`,
-      { method: "POST" },
-      filters
+      `/dashboard/transactions${query}`,
+      { method: "GET" }
     );
   },
 
-  async getStockSummary(filters: {
-    location?: string; // 'WAREHOUSE' | 'PRODUCTION'
-  } = {}, showLoading: boolean = true) {
+  async getStockSummary(
+    filters: {
+      location?: string; // 'WAREHOUSE' | 'PRODUCTION'
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/dashboard/stock-summary`,
@@ -744,11 +817,14 @@ export const dashboardApi = {
     );
   },
 
-  async getPurchasingSummary(filters: {
-    start_date?: string;
-    end_date?: string;
-    supplier_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async getPurchasingSummary(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      supplier_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/dashboard/purchasing-summary`,
@@ -757,10 +833,13 @@ export const dashboardApi = {
     );
   },
 
-  async getProductionSummary(filters: {
-    start_date?: string;
-    end_date?: string;
-  } = {}, showLoading: boolean = true) {
+  async getProductionSummary(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/dashboard/production-summary`,
@@ -774,12 +853,15 @@ export const dashboardApi = {
 
 export const reportApi = {
   // Ledger Reports
-  async getLedgerReport(filters: {
-    product_id?: number;
-    start_date?: string;
-    end_date?: string;
-    location?: string;
-  } = {}, showLoading: boolean = true) {
+  async getLedgerReport(
+    filters: {
+      product_id?: number;
+      start_date?: string;
+      end_date?: string;
+      location?: string;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/report/ledger`,
@@ -788,12 +870,15 @@ export const reportApi = {
     );
   },
 
-  async exportLedger(filters: {
-    product_id?: number;
-    start_date?: string;
-    end_date?: string;
-    location?: string;
-  } = {}, showLoading: boolean = true) {
+  async exportLedger(
+    filters: {
+      product_id?: number;
+      start_date?: string;
+      end_date?: string;
+      location?: string;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await downloadFile(
       showLoading,
       `/report/ledger/export`,
@@ -804,10 +889,13 @@ export const reportApi = {
   },
 
   // Stock Reports
-  async getStockReport(filters: {
-    location?: string;
-    product_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async getStockReport(
+    filters: {
+      location?: string;
+      product_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/report/stock`,
@@ -816,10 +904,13 @@ export const reportApi = {
     );
   },
 
-  async exportStock(filters: {
-    location?: string;
-    product_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async exportStock(
+    filters: {
+      location?: string;
+      product_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await downloadFile(
       showLoading,
       `/report/stock/export`,
@@ -830,11 +921,14 @@ export const reportApi = {
   },
 
   // Purchasing Reports
-  async getPurchasingReport(filters: {
-    start_date?: string;
-    end_date?: string;
-    supplier_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async getPurchasingReport(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      supplier_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/report/purchasing`,
@@ -843,11 +937,14 @@ export const reportApi = {
     );
   },
 
-  async exportPurchasing(filters: {
-    start_date?: string;
-    end_date?: string;
-    supplier_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async exportPurchasing(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      supplier_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await downloadFile(
       showLoading,
       `/report/purchasing/export`,
@@ -858,11 +955,14 @@ export const reportApi = {
   },
 
   // Stock Opname Reports
-  async getStockOpnameReport(filters: {
-    start_date?: string;
-    end_date?: string;
-    product_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async getStockOpnameReport(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      product_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/report/stock-opname`,
@@ -871,11 +971,14 @@ export const reportApi = {
     );
   },
 
-  async exportStockOpname(filters: {
-    start_date?: string;
-    end_date?: string;
-    product_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async exportStockOpname(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      product_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await downloadFile(
       showLoading,
       `/report/stock-opname/export`,
@@ -886,11 +989,14 @@ export const reportApi = {
   },
 
   // Production Reports
-  async getProductionReport(filters: {
-    start_date?: string;
-    end_date?: string;
-    design_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async getProductionReport(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      design_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await http<ApiResponse>(
       showLoading,
       `/report/production`,
@@ -899,11 +1005,14 @@ export const reportApi = {
     );
   },
 
-  async exportProduction(filters: {
-    start_date?: string;
-    end_date?: string;
-    design_id?: number;
-  } = {}, showLoading: boolean = true) {
+  async exportProduction(
+    filters: {
+      start_date?: string;
+      end_date?: string;
+      design_id?: number;
+    } = {},
+    showLoading: boolean = true
+  ) {
     return await downloadFile(
       showLoading,
       `/report/production/export`,
@@ -946,11 +1055,7 @@ export const importApi = {
 
   // Import Lap CK (Color Kitchen)
   async importLapCk(file: File, showLoading: boolean = true) {
-    return await uploadFile<ApiResponse>(
-      showLoading,
-      `/import/lap-ck`,
-      file
-    );
+    return await uploadFile<ApiResponse>(showLoading, `/import/lap-ck`, file);
   },
 
   // Import Opening Balance

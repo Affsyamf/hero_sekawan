@@ -26,12 +26,22 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, futu
 Session = SessionLocal
 
 # Dependency for FastAPI or context managers
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#         db.commit()
+#     except Exception:
+#         db.rollback()
+#         raise
+#     finally:
+#         db.close()
 def get_db():
     db = SessionLocal()
     try:
         yield db
         db.commit()
-    except Exception:
+    except:
         db.rollback()
         raise
     finally:

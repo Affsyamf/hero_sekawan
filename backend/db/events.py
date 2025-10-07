@@ -1,3 +1,4 @@
+# db/events.py
 from sqlalchemy import event
 from db.models import (Purchasing_Detail, Purchasing, 
                        Stock_Movement, Stock_Movement_Detail,

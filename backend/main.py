@@ -9,11 +9,13 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",   # React (Vite)
     "http://127.0.0.1:5173",   # kadang React pakai ini juga
+    "http://localhost:3000",   # React (Create React App)
+    "http://127.0.0.1:3000",   # kadang React pakai ini juga
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # frontend dev server
+    allow_origins=["*"],  # frontend dev server
     allow_credentials=True,
     allow_methods=["*"],   # allow POST, GET, OPTIONS, etc.
     allow_headers=["*"],   # allow all headers
@@ -26,5 +28,7 @@ def read_root():
 from db import models, events
 
 from routers import import_routers
+from routers import dashboard_routers
 
 app.include_router(import_routers.excel_import_router)
+app.include_router(dashboard_routers.router)

@@ -14,116 +14,71 @@ import {
 } from "lucide-react";
 import { MainLayout } from "../layouts";
 import { useEffect, useState } from "react";
+import { dashboardApi } from "../services/endpoints";
 
 export default function Dashboard() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState("1 Bulan");
   const { colors } = useTheme();
 
-  // Dummy API fetch untuk tabel transaksi
-  const fetchTransactions = async () => {
-    return {
-      rows: [
-        {
-          id: 1,
-          date: "2024-12-15",
-          type: "Purchasing",
-          ref: "PO-2024-123",
-          product: "Pigment Merah",
-          qty: 500,
-          location: "Gudang",
-        },
-        {
-          id: 2,
-          date: "2024-12-15",
-          type: "Stock Movement",
-          ref: "SM-2024-089",
-          product: "Binder",
-          qty: -150,
-          location: "Kitchen",
-        },
-        {
-          id: 3,
-          date: "2024-12-14",
-          type: "Color Kitchen",
-          ref: "CK-2024-234",
-          product: "Pigment Biru",
-          qty: -200,
-          location: "Usage",
-        },
-        {
-          id: 4,
-          date: "2024-12-14",
-          type: "Purchasing",
-          ref: "PO-2024-124",
-          product: "Thickener",
-          qty: 300,
-          location: "Gudang",
-        },
-        {
-          id: 5,
-          date: "2024-12-13",
-          type: "Stock Opname",
-          ref: "SO-2024-012",
-          product: "Pigment Kuning",
-          qty: -15,
-          location: "Opname",
-        },
-        {
-          id: 6,
-          date: "2024-12-13",
-          type: "Purchasing",
-          ref: "PO-2024-125",
-          product: "Pigment Hitam",
-          qty: 450,
-          location: "Gudang",
-        },
-        {
-          id: 7,
-          date: "2024-12-12",
-          type: "Stock Movement",
-          ref: "SM-2024-090",
-          product: "Pigment Merah",
-          qty: -200,
-          location: "Kitchen",
-        },
-        {
-          id: 8,
-          date: "2024-12-12",
-          type: "Color Kitchen",
-          ref: "CK-2024-235",
-          product: "Binder",
-          qty: -180,
-          location: "Usage",
-        },
-        {
-          id: 9,
-          date: "2024-12-11",
-          type: "Purchasing",
-          ref: "PO-2024-126",
-          product: "Pigment Hijau",
-          qty: 350,
-          location: "Gudang",
-        },
-        {
-          id: 10,
-          date: "2024-12-11",
-          type: "Stock Opname",
-          ref: "SO-2024-013",
-          product: "Thickener",
-          qty: -8,
-          location: "Opname",
-        },
-      ],
-      total: 10,
+  // Fetch main dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardApi.getDashboard({ 
+          period: period,
+        });
+        
+        if (response.success) {
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchDashboardData();
+  }, [period]);
+
+  // Fetch function untuk Table component
+  const fetchTransactions = async (params) => {
+    try {
+      const response = await dashboardApi.getDashboardTransactions({
+        page: params.page,
+        page_size: params.pageSize,
+        search: params.search || "",
+        date_start: params.dateRange?.start || undefined,
+        date_end: params.dateRange?.end || undefined,
+        sort_by: params.sortBy || undefined,
+        sort_dir: params.sortDir || "desc",
+      });
+      
+      if (response.success) {
+        return response.data;
+      }
+      return { rows: [], total: 0 };
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      return { rows: [], total: 0 };
+    }
   };
 
+  // Transaction columns definition
   const transactionColumns = [
-    { key: "date", label: "Tanggal" },
+    { 
+      key: "date", 
+      label: "Tanggal",
+      sortable: true 
+    },
     {
       key: "type",
       label: "Tipe",
       render: (value) => {
-        const colors = {
+        const typeColors = {
           Purchasing: "bg-green-100 text-green-800",
           "Stock Movement": "bg-blue-100 text-blue-800",
           "Color Kitchen": "bg-purple-100 text-purple-800",
@@ -132,7 +87,7 @@ export default function Dashboard() {
         return (
           <span
             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-              colors[value] || "bg-gray-100 text-gray-800"
+              typeColors[value] || "bg-gray-100 text-gray-800"
             }`}
           >
             {value}
@@ -140,11 +95,20 @@ export default function Dashboard() {
         );
       },
     },
-    { key: "ref", label: "Referensi" },
-    { key: "product", label: "Product" },
+    { 
+      key: "ref", 
+      label: "Referensi",
+      sortable: true
+    },
+    { 
+      key: "product", 
+      label: "Product",
+      sortable: true
+    },
     {
       key: "qty",
       label: "Qty (kg)",
+      sortable: true,
       render: (value) => (
         <span
           className={`font-medium ${
@@ -156,47 +120,48 @@ export default function Dashboard() {
         </span>
       ),
     },
-    { key: "location", label: "Lokasi" },
+    { 
+      key: "location", 
+      label: "Lokasi",
+      sortable: true
+    },
   ];
 
-  // Data untuk Stock Flow Chart (Bar Chart)
-  const stockFlowData = [
-    { label: "Jan", stockMasuk: 15000, stockKeluar: 12000 },
-    { label: "Feb", stockMasuk: 18000, stockKeluar: 14000 },
-    { label: "Mar", stockMasuk: 16000, stockKeluar: 13500 },
-    { label: "Apr", stockMasuk: 19000, stockKeluar: 15000 },
-    { label: "May", stockMasuk: 17000, stockKeluar: 14500 },
-    { label: "Jun", stockMasuk: 20000, stockKeluar: 16000 },
-  ];
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+            <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  // Data untuk Stock Location (Donut Chart)
-  const stockLocationData = [
-    { label: "Pigment Merah", value: 34 }, // 5600kg = 34%
-    { label: "Pigment Biru", value: 15 }, // 2400kg = 15%
-    { label: "Pigment Kuning", value: 50 }, // 8300kg = 50%
-    { label: "Binder", value: 1 }, // 124kg = 1%
-  ];
+  if (!dashboardData) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">No data available</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  // Data untuk Top Products (Progress bars)
-  const topProductsData = [
-    { label: "Pigment Merah", value: 85, maxValue: 100, color: "error" },
-    { label: "Pigment Biru", value: 75, maxValue: 100, color: "primary" },
-    { label: "Pigment Kuning", value: 60, maxValue: 100, color: "warning" },
-    { label: "Binder", value: 50, maxValue: 100, color: "success" },
-    { label: "Thickener", value: 40, maxValue: 100, color: "info" },
-  ];
+  const { metrics, stock_flow, stock_location, top_products, design_cost } = dashboardData;
 
-  // Data untuk Design Cost (Line Chart untuk trend)
-  const designCostTrend = [45, 52, 48, 58, 54, 62, 59];
+  // Calculate total stock for donut center
+  const totalStock = stock_location.reduce((sum, item) => sum + item.value, 0);
 
-  // Data untuk Design Cost Cards
-  const designCostData = [
-    { design: "BTK-001", cost: 4500000, orders: 45 },
-    { design: "BTK-002", cost: 3800000, orders: 38 },
-    { design: "BTK-003", cost: 5200000, orders: 52 },
-    { design: "BTK-004", cost: 2900000, orders: 29 },
-    { design: "BTK-005", cost: 4100000, orders: 41 },
-  ];
+  // Calculate design cost trend (dummy data for line chart - you can enhance this later)
+  const designCostTrend = design_cost.map(d => d.orders);
+
+  // Calculate total cost for trend chart
+  const totalDesignCost = design_cost.reduce((sum, d) => sum + d.cost, 0);
 
   return (
     <MainLayout>
@@ -212,11 +177,14 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>Bulan Ini</option>
-              <option>3 Bulan Terakhir</option>
-              <option>6 Bulan Terakhir</option>
-              <option>Tahun Ini</option>
+            <select 
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option>1 Bulan</option>
+              <option>3 Bulan</option>
+              <option>6 Bulan</option>
             </select>
             <Button icon={Filter} label="Filter" variant="secondary" />
             <Button icon={Download} label="Export" variant="primary" />
@@ -227,29 +195,29 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Chart.Metric
             title="Total Stock Masuk (Bulan Ini)"
-            value="12,450 kg"
-            trend="+15.8%"
+            value={`${metrics.stock_masuk.value.toLocaleString()} kg`}
+            trend={`${metrics.stock_masuk.trend > 0 ? '+' : ''}${metrics.stock_masuk.trend}%`}
             icon={TrendingUp}
           />
 
           <Chart.Metric
             title="Total Stock Keluar (Bulan Ini)"
-            value="8,363 kg"
-            trend="+12.3%"
+            value={`${metrics.stock_keluar.value.toLocaleString()} kg`}
+            trend={`${metrics.stock_keluar.trend > 0 ? '+' : ''}${metrics.stock_keluar.trend}%`}
             icon={TrendingDown}
           />
 
           <Chart.Metric
             title="Total Cost Produksi"
-            value="Rp 45.5 Jt"
-            trend="-8.5%"
+            value={`Rp ${(metrics.cost_produksi.value / 1000000).toFixed(1)} Jt`}
+            trend={`${metrics.cost_produksi.trend > 0 ? '+' : ''}${metrics.cost_produksi.trend}%`}
             icon={DollarSign}
           />
 
           <Chart.Metric
             title="Selisih Stock Opname"
-            value="124 kg"
-            trend="+5.2%"
+            value={`${metrics.selisih_opname.value.toLocaleString()} kg`}
+            trend={`${metrics.selisih_opname.trend > 0 ? '+' : ''}${metrics.selisih_opname.trend}%`}
             icon={AlertTriangle}
           />
         </div>
@@ -260,19 +228,15 @@ export default function Dashboard() {
           <div className="lg:col-span-8">
             <Card className="w-full h-full">
               <Chart.Bar
-                initialData={stockFlowData}
+                initialData={stock_flow}
                 title="Pergerakan Stock (Masuk vs Keluar)"
                 subtitle="Monitoring alur stock purchasing hingga usage"
                 datasets={[
                   { key: "stockMasuk", label: "Stock Masuk", color: "success" },
-                  {
-                    key: "stockKeluar",
-                    label: "Stock Keluar",
-                    color: "primary",
-                  },
+                  { key: "stockKeluar", label: "Stock Keluar", color: "primary" },
                 ]}
                 periods={["6 Bulan", "3 Bulan", "1 Bulan"]}
-                onFetchData={stockFlowData}
+                onFetchData={stock_flow}
                 showSummary={true}
               />
             </Card>
@@ -281,12 +245,12 @@ export default function Dashboard() {
           {/* Stock Location Donut */}
           <div className="lg:col-span-4">
             <Chart.Donut
-              data={stockLocationData}
+              data={stock_location}
               centerText={{
-                value: "16,424",
-                label: "Total kg",
+                value: totalStock.toFixed(0),
+                label: "Total %",
               }}
-              title="Stock Per Lokasi"
+              title="Stock Per Product"
               className="w-full h-full"
             />
           </div>
@@ -300,7 +264,7 @@ export default function Dashboard() {
               Product Paling Cepat Habis
             </h3>
             <div className="space-y-6">
-              {topProductsData.map((item, index) => (
+              {top_products.map((item, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg">
                     <span className="text-sm font-bold text-blue-600">
@@ -312,7 +276,12 @@ export default function Dashboard() {
                       label={item.label}
                       value={item.value}
                       maxValue={item.maxValue}
-                      color={item.color}
+                      color={
+                        index === 0 ? "error" :
+                        index === 1 ? "primary" :
+                        index === 2 ? "warning" :
+                        index === 3 ? "success" : "info"
+                      }
                     />
                   </div>
                 </div>
@@ -326,7 +295,7 @@ export default function Dashboard() {
               Cost Produksi Per Design
             </h3>
             <div className="space-y-3">
-              {designCostData.map((item, idx) => (
+              {design_cost.map((item, idx) => (
                 <div
                   key={idx}
                   className="flex items-center justify-between p-3 transition-colors rounded-lg bg-gray-50 hover:bg-gray-100"
@@ -349,7 +318,7 @@ export default function Dashboard() {
                       Rp {(item.cost / 1000000).toFixed(1)}jt
                     </p>
                     <p className="text-xs text-gray-600">
-                      @{(item.cost / item.orders / 1000).toFixed(0)}k/order
+                      @{item.orders > 0 ? (item.cost / item.orders / 1000).toFixed(0) : 0}k/order
                     </p>
                   </div>
                 </div>
@@ -363,8 +332,8 @@ export default function Dashboard() {
           {/* Design Cost Trend */}
           <Chart.Line
             data={designCostTrend}
-            value="Rp 45.5 Jt"
-            trend={12.5}
+            value={`Rp ${(totalDesignCost / 1000000).toFixed(1)} Jt`}
+            trend={design_cost.length > 0 ? 12.5 : 0}
             title="Trend Cost Produksi"
           />
 
@@ -374,8 +343,8 @@ export default function Dashboard() {
               Distribusi Stock Berdasarkan Product
             </h3>
             <div className="space-y-3">
-              {stockLocationData.map((item, idx) => {
-                const colors = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b"];
+              {stock_location.map((item, idx) => {
+                const progressColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
                 return (
                   <div key={idx}>
                     <div className="flex items-center justify-between mb-1.5">
@@ -391,7 +360,7 @@ export default function Dashboard() {
                         className="h-2.5 transition-all duration-500 rounded-full"
                         style={{
                           width: `${item.value}%`,
-                          backgroundColor: colors[idx],
+                          backgroundColor: progressColors[idx % progressColors.length],
                         }}
                       />
                     </div>
@@ -413,9 +382,6 @@ export default function Dashboard() {
                 History pergerakan stock dari semua proses
               </p>
             </div>
-            <button className="text-sm font-medium text-blue-600 hover:text-blue-700">
-              See All
-            </button>
           </div>
           <Table
             columns={transactionColumns}
