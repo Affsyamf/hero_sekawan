@@ -1,15 +1,18 @@
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import DesignForm from "../components/features/design/DesignForm";
+import ImportDesignModal from "../components/features/design/ImportDesignModal";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
 
 const SAMPLE_DESIGNS = [];
 
 export default function DesignsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedDesign, setSelectedDesign] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { value: designs = SAMPLE_DESIGNS, set: setDesigns } = useTemp(
     "designs:working-list",
@@ -125,6 +128,21 @@ export default function DesignsPage() {
     handleCloseModal();
   };
 
+  const handleImport = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleImportSuccess = (result) => {
+    // Refresh table data after successful import
+    setRefreshKey(prev => prev + 1);
+    
+    // Show success notification (you can use your notification system)
+    console.log("Import successful:", result);
+    
+    // Optionally reload designs from API if you have one
+    // Or you can fetch the updated list here
+  };
+
   const renderActions = (row) => (
     <div className="flex items-center gap-2">
       <button
@@ -162,7 +180,19 @@ export default function DesignsPage() {
             Manage designs with codes and type classifications.
           </p>
 
+          {/* Custom header actions */}
+          <div className="mb-4">
+            <button
+              onClick={handleImport}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              <Upload className="w-4 h-4" />
+              Import from Excel
+            </button>
+          </div>
+
           <Table
+            key={refreshKey}
             columns={columns}
             fetchData={fetchDesigns}
             actions={renderActions}
@@ -175,6 +205,12 @@ export default function DesignsPage() {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
+          />
+
+          <ImportDesignModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImportSuccess={handleImportSuccess}
           />
         </div>
       </div>

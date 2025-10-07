@@ -1,8 +1,9 @@
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import ColorKitchenForm from "../components/features/color-kitchen/ColorKitchenForm";
+import ImportColorKitchenModal from "../components/features/color-kitchen/ImportColorKitchenModal";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
 import { formatDate } from "../utils/helpers";
 
@@ -10,51 +11,36 @@ const SAMPLE_COLOR_KITCHEN_ENTRIES = [];
 
 export default function ColorKitchensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [refresh, setRefresh] = useState(0);
 
-  const { value: entries = SAMPLE_COLOR_KITCHEN_ENTRIES, set: setEntries } =
-    useTemp("color-kitchen-entries:working-list", SAMPLE_COLOR_KITCHEN_ENTRIES);
-
+  const { value: entries = SAMPLE_COLOR_KITCHEN_ENTRIES, set: setEntries } = useTemp("color-kitchen-entries:working-list", SAMPLE_COLOR_KITCHEN_ENTRIES);
   const { value: designs = [] } = useTemp("designs:working-list", []);
 
   const fetchEntries = async (params) => {
     const { page, pageSize, search, sortBy, sortDir, dateRange } = params;
-
     let filtered = [...entries];
 
     if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (e) =>
-          e.code?.toLowerCase().includes(searchLower) ||
-          designs
-            .find((d) => d.id === e.design_id)
-            ?.code?.toLowerCase()
-            .includes(searchLower)
-      );
+      const s = search.toLowerCase();
+      filtered = filtered.filter((e) => e.code?.toLowerCase().includes(s) || designs.find((d) => d.id === e.design_id)?.code?.toLowerCase().includes(s));
     }
 
     if (dateRange.start && dateRange.end) {
       filtered = filtered.filter((e) => {
-        const date = new Date(e.date);
-        const start = new Date(dateRange.start);
-        const end = new Date(dateRange.end);
-        return date >= start && date <= end;
+        const d = new Date(e.date);
+        return d >= new Date(dateRange.start) && d <= new Date(dateRange.end);
       });
     }
 
     if (sortBy) {
       filtered.sort((a, b) => {
-        let aVal = a[sortBy];
-        let bVal = b[sortBy];
-
+        let aVal = a[sortBy], bVal = b[sortBy];
         if (sortBy === "design_id") {
-          const designA = designs.find((d) => d.id === a.design_id);
-          const designB = designs.find((d) => d.id === b.design_id);
-          aVal = designA?.code || "";
-          bVal = designB?.code || "";
+          aVal = designs.find((d) => d.id === a.design_id)?.code || "";
+          bVal = designs.find((d) => d.id === b.design_id)?.code || "";
         }
-
         if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
         if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
         return 0;
@@ -63,158 +49,54 @@ export default function ColorKitchensPage() {
 
     const total = filtered.length;
     const start = (page - 1) * pageSize;
-    const rows = filtered.slice(start, start + pageSize);
-
-    return { rows, total };
+    return { rows: filtered.slice(start, start + pageSize), total };
   };
 
   const columns = [
-    {
-      key: "code",
-      label: "No OPJ",
-      sortable: true,
-      render: (value) => (
-        <span className="font-medium text-primary-text">{value}</span>
-      ),
-    },
-    {
-      key: "date",
-      label: "Date",
-      sortable: true,
-      render: (value) => (
-        <span className="text-secondary-text">{formatDate(value)}</span>
-      ),
-    },
-    {
-      key: "design_id",
-      label: "Design",
-      sortable: true,
-      render: (value) => {
-        const design = designs.find((d) => d.id === value);
-        return (
-          <span className="text-primary-text">
-            {design ? design.code : "-"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "quantity",
-      label: "Quantity",
-      sortable: true,
-      render: (value) => <span className="text-secondary-text">{value}</span>,
-    },
-    {
-      key: "paste_quantity",
-      label: "Paste Qty",
-      sortable: true,
-      render: (value) => <span className="text-secondary-text">{value}</span>,
-    },
-    {
-      key: "details",
-      label: "Items",
-      sortable: false,
-      render: (value) => (
-        <span className="text-secondary-text">{value?.length || 0}</span>
-      ),
-    },
+    { key: "code", label: "No OPJ", sortable: true, render: (v) => <span className="font-medium text-primary-text">{v}</span> },
+    { key: "date", label: "Date", sortable: true, render: (v) => <span className="text-secondary-text">{formatDate(v)}</span> },
+    { key: "design_id", label: "Design", sortable: true, render: (v) => <span className="text-primary-text">{designs.find((d) => d.id === v)?.code || "-"}</span> },
+    { key: "quantity", label: "Quantity", sortable: true, render: (v) => <span className="text-secondary-text">{v}</span> },
+    { key: "paste_quantity", label: "Paste Qty", sortable: true, render: (v) => <span className="text-secondary-text">{v}</span> },
+    { key: "details", label: "Items", sortable: false, render: (v) => <span className="text-secondary-text">{v?.length || 0}</span> }
   ];
 
-  const handleAdd = () => {
-    setSelectedEntry(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (row) => {
-    setSelectedEntry(row);
-    setIsModalOpen(true);
-  };
-
-  const handleDetail = (row) => {
-    setSelectedEntry(row);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (row) => {
-    if (window.confirm(`Are you sure you want to delete entry ${row.code}?`)) {
-      setEntries((prev) => prev.filter((e) => e.id !== row.id));
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedEntry(null);
-  };
-
-  const handleSave = (entryData) => {
-    const nextId = (arr) =>
-      arr.length ? Math.max(...arr.map((e) => e.id || 0)) + 1 : 1;
-
-    setEntries((prev) => {
-      const current = Array.isArray(prev) ? prev : [];
-      if (entryData.id) {
-        return current.map((e) =>
-          e.id === entryData.id ? { ...e, ...entryData } : e
-        );
-      }
-      return [...current, { ...entryData, id: nextId(current) }];
-    });
-
-    handleCloseModal();
-  };
-
-  const renderActions = (row) => (
+  const actions = (row) => (
     <div className="flex items-center gap-2">
-      <button
-        onClick={() => handleDetail(row)}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200"
-        title="View Details"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => handleEdit(row)}
-        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all duration-200"
-        title="Edit"
-      >
-        <Edit2 className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => handleDelete(row)}
-        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all duration-200"
-        title="Delete"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+      <button onClick={() => { setSelected(row); setIsModalOpen(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="View"><Eye className="w-4 h-4" /></button>
+      <button onClick={() => { setSelected(row); setIsModalOpen(true); }} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded" title="Edit"><Edit2 className="w-4 h-4" /></button>
+      <button onClick={() => { if (confirm(`Delete ${row.code}?`)) setEntries((p) => p.filter((e) => e.id !== row.id)); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 className="w-4 h-4" /></button>
     </div>
   );
+
+  const save = (data) => {
+    setEntries((prev) => {
+      const c = Array.isArray(prev) ? prev : [];
+      if (data.id) return c.map((e) => (e.id === data.id ? { ...e, ...data } : e));
+      const id = c.length ? Math.max(...c.map((e) => e.id || 0)) + 1 : 1;
+      return [...c, { ...data, id }];
+    });
+    setIsModalOpen(false);
+    setSelected(null);
+  };
 
   return (
     <MainLayout>
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Color Kitchen Management
-          </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage color kitchen entries with design and product details.
-          </p>
+          <h1 className="mb-1 text-2xl font-bold text-primary-text">Color Kitchen Management</h1>
+          <p className="mb-6 text-secondary-text">Manage color kitchen entries with design and product details.</p>
 
-          <Table
-            columns={columns}
-            fetchData={fetchEntries}
-            actions={renderActions}
-            onCreate={handleAdd}
-            pageSizeOptions={[10, 20, 50, 100]}
-            dateFilterKey="date"
-          />
+          <div className="mb-4">
+            <button onClick={() => setIsImportOpen(true)} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+              <Upload className="w-4 h-4" />Import from Excel
+            </button>
+          </div>
 
-          <ColorKitchenForm
-            entry={selectedEntry}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            onSave={handleSave}
-          />
+          <Table key={refresh} columns={columns} fetchData={fetchEntries} actions={actions} onCreate={() => { setSelected(null); setIsModalOpen(true); }} pageSizeOptions={[10, 20, 50, 100]} dateFilterKey="date" />
+
+          <ColorKitchenForm entry={selected} isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelected(null); }} onSave={save} />
+          <ImportColorKitchenModal isOpen={isImportOpen} onClose={() => setIsImportOpen(false)} onImportSuccess={() => setRefresh(p => p + 1)} />
         </div>
       </div>
     </MainLayout>
