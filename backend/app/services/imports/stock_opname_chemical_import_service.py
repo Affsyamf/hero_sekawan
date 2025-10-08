@@ -7,8 +7,8 @@ import pandas as pd
 
 from app.models import (
     Product,
-    Stock_Opname, 
-    Stock_Opname_Detail,
+    StockOpname, 
+    StockOpnameDetail,
     Ledger
 )
 
@@ -32,7 +32,7 @@ class StockOpnameChemicalImportService(BaseImportService):
 
         so_code = "SO-" + start_date.strftime("%Y%m%d")
         
-        stock_opname = Stock_Opname(
+        stock_opname = StockOpname(
             date=start_date,
             code=so_code,
         )
@@ -58,7 +58,7 @@ class StockOpnameChemicalImportService(BaseImportService):
                 skipped_products.append(prod_name)
                 continue
             
-            detail = Stock_Opname_Detail(
+            detail = StockOpnameDetail(
                 product=product,
                 system_quantity=system_qty,
                 physical_quantity=physical_qty,

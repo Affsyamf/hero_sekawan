@@ -4,16 +4,16 @@ from datetime import datetime
 
 from app.models import Base
 
-class Stock_Movement(Base):
+class StockMovement(Base):
     __tablename__ = 'stock_movements'
     
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)
 
-    details = relationship("Stock_Movement_Detail", back_populates="stock_movement")
+    details = relationship("StockMovementDetail", back_populates="stock_movement")
 
-class Stock_Movement_Detail(Base):
+class StockMovementDetail(Base):
     __tablename__ = 'stock_movement_details'
     
     id = Column(Integer, primary_key=True)
@@ -23,4 +23,4 @@ class Stock_Movement_Detail(Base):
     product = relationship("Product", back_populates="stock_movement_details")
 
     stock_movement_id = Column(Integer, ForeignKey('stock_movements.id'), nullable=False)
-    stock_movement = relationship("Stock_Movement", back_populates="details")
+    stock_movement = relationship("StockMovement", back_populates="details")

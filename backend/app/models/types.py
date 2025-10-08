@@ -18,7 +18,7 @@ class Account(Base):
     
     products = relationship("Product", back_populates="account")
     
-class Design_Type(Base):
+class DesignType(Base):
     __tablename__ = "design_types"
 
     id = Column(Integer, primary_key=True)

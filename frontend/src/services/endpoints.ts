@@ -87,8 +87,7 @@ export const productApi = {
     return await http<ApiResponse>(
       showLoading,
       `/product/search`,
-      { method: "POST" },
-      filters
+      { method: "GET" }
     );
   },
 
@@ -1025,6 +1024,17 @@ export const reportApi = {
 
 // ==================== IMPORT ====================
 
+// 1. "/master-data/lap-pembelian" -> lap_pembelian > buat supplier
+// 2. "/master-data/lap-chemical" -> lap_chemical > buat product code
+// 3. "/master-data/lap-ck" -> lap_ck > buat design
+
+// terus baru sisanya, ini bebas urutannya gmn
+// - "/lap-chemical" -> lap_chemical
+// - "/lap-pembelian" -> lap_pembelian
+// - "/lap-ck" -> lap_ck
+// - "/opening-balance" -> lap_chemical
+// - "/stock-opname-chemical" -> lap_chemical
+
 export const importApi = {
   // Import Harga Obat
   async importHargaObat(file: File, showLoading: boolean = true) {
@@ -1088,7 +1098,7 @@ export const importApi = {
   async importMasterDataProductCode(file: File, showLoading: boolean = true) {
     return await uploadFile<ApiResponse>(
       showLoading,
-      `/import/master-data/product_code`,
+      `/import/master-data/lap-chemical`,
       file
     );
   },
@@ -1096,7 +1106,7 @@ export const importApi = {
   async importMasterDataDesign(file: File, showLoading: boolean = true) {
     return await uploadFile<ApiResponse>(
       showLoading,
-      `/import/master-data/design`,
+      `/import/master-data/lap-ck`,
       file
     );
   },

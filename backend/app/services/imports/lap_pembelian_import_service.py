@@ -10,7 +10,7 @@ from app.models import (
     Product,
     Supplier, 
     Purchasing, 
-    Purchasing_Detail
+    PurchasingDetail
 )
 
 from app.utils.normalise import normalise_product_name
@@ -118,7 +118,7 @@ class LapPembelianImportService(BaseImportService):
                     continue
 
                 # --- detail insert ---
-                detail = Purchasing_Detail(
+                detail = PurchasingDetail(
                     quantity=row.get("QTY") or 0,
                     price=row.get("HARGA SAT") or 0,
                     discount=row.get("POT.") or 0.0,

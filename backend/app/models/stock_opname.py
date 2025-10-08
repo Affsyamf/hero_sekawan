@@ -5,16 +5,16 @@ from datetime import datetime
 
 from app.models import Base
 
-class Stock_Opname(Base):
+class StockOpname(Base):
     __tablename__ = 'stock_opnames'
     
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)
 
-    details = relationship("Stock_Opname_Detail", back_populates="stock_opname")
+    details = relationship("StockOpnameDetail", back_populates="stock_opname")
     
-class Stock_Opname_Detail(Base):
+class StockOpnameDetail(Base):
     __tablename__ = 'stock_opname_details'
     
     id = Column(Integer, primary_key=True)
@@ -29,4 +29,4 @@ class Stock_Opname_Detail(Base):
     product = relationship("Product", back_populates="stock_opname_details")
 
     stock_opname_id = Column(Integer, ForeignKey('stock_opnames.id'), nullable=False)
-    stock_opname = relationship("Stock_Opname", back_populates="details")
+    stock_opname = relationship("StockOpname", back_populates="details")

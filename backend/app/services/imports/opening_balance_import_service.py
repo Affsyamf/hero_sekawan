@@ -13,7 +13,7 @@ from app.models import (
     Product,
     Supplier, 
     Purchasing,
-    Purchasing_Detail
+    PurchasingDetail
 )
 
 from app.utils.normalise import normalise_product_name
@@ -80,7 +80,7 @@ class OpeningBalanceImportService(BaseImportService):
                 skipped_products.append(prod_name)
                 continue
             
-            detail = Purchasing_Detail(
+            detail = PurchasingDetail(
                 product=product,
                 purchasing=purchasing,
                 quantity=qty,
