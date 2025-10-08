@@ -19,6 +19,7 @@ from app.models import (
 
 from app.utils.normalise import normalise_design_name, normalise_product_name
 from app.utils.safe_parse import safe_str, safe_date, safe_number
+from app.utils.cost_helper import get_avg_cost_for_product
 
 SKIP_NAMES = {"0.4", "0.5", "0.6", "0.65"}
 
@@ -142,10 +143,16 @@ class ColorKitchenImportService(BaseImportService):
             # batch-level details
             for d in b.get("details", []):
                 product = self.db.query(Product).filter_by(name=d["product_name"]).first()
+                unit_cost = get_avg_cost_for_product(self.db, product.id)
+                if unit_cost is None:
+                    print(f"⚠️ No avg cost for product {d['product_name']}, skipping cost stamping")
+                    continue
+
                 detail = Color_Kitchen_Batch_Detail(
                     product=product,
                     quantity=d["quantity"],
                     batch=batch,
+                    unit_cost_used=unit_cost
                 )
                 self.db.add(detail)
 
@@ -173,10 +180,16 @@ class ColorKitchenImportService(BaseImportService):
 
                 for d in e.get("details", []):
                     product = self.db.query(Product).filter_by(name=d["product_name"]).first()
+                    unit_cost = get_avg_cost_for_product(self.db, product.id)
+                    if unit_cost is None:
+                        print(f"⚠️ No avg cost for product {d['product_name']}, skipping cost stamping")
+                        continue
+
                     detail = Color_Kitchen_Entry_Detail(
                         product=product,
                         quantity=d["quantity"],
                         color_kitchen_entry=entry,
+                        unit_cost_used=unit_cost
                     )
                     self.db.add(detail)
 
