@@ -9,6 +9,8 @@ from .stock_movement import *
 from .color_kitchen import *
 from .stock_opname import *
 from .types import *
+from .analytics.product_avg_cost import *
+from .cache.product_avg_cost_cache import ProductAvgCostCache
 
 __all__ = [
     "Base",
@@ -27,4 +29,8 @@ __all__ = [
     "Stock_Opname", "Stock_Opname_Detail",
     # types.py
     "Account", "Design_Type",
+    # product_avg_cost.py
+    "ProductAvgCost",
+    # product_avg_cost_cache.py
+    "ProductAvgCostCache",
 ]

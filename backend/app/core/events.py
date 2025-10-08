@@ -5,6 +5,8 @@ from app.models import (Purchasing_Detail, Purchasing,
                        Color_Kitchen_Batch, Color_Kitchen_Batch_Detail,
                        Ledger)
 from app.models.enum.ledger_enum import LedgerRef, LedgerLocation
+from app.utils.event_flags import should_skip_cost_cache_updates
+from app.utils.cost_helper import update_avg_cost_for_products
 
 #region Purchasing
 def _get_purchasing(connection, purchasing_id):
@@ -15,9 +17,14 @@ def _get_purchasing(connection, purchasing_id):
 
 @event.listens_for(Purchasing_Detail, "after_insert")
 def create_ledger_entry(mapper, connection, target):
+    if should_skip_cost_cache_updates():
+        return
+    
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
         return
+    
+    update_avg_cost_for_products(connection, [target.product_id])
 
     connection.execute(
         Ledger.__table__.insert().values(
@@ -34,9 +41,14 @@ def create_ledger_entry(mapper, connection, target):
 
 @event.listens_for(Purchasing_Detail, "after_update")
 def update_ledger_entry(mapper, connection, target):
+    if should_skip_cost_cache_updates():
+        return
+    
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
         return
+    
+    update_avg_cost_for_products(connection, [target.product_id])
 
     connection.execute(
         Ledger.__table__.update()
@@ -52,6 +64,11 @@ def update_ledger_entry(mapper, connection, target):
 
 @event.listens_for(Purchasing_Detail, "after_delete")
 def delete_ledger_entry(mapper, connection, target):
+    if should_skip_cost_cache_updates():
+        return
+    
+    update_avg_cost_for_products(connection, [target.product_id])
+
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
         return
