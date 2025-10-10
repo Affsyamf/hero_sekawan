@@ -27,8 +27,7 @@ from app.core import events
 from app.models import *
 
 from app.api.imports.routes import excel_import_router
-
-# from routers import dashboard_routers
+from app.api.product.routes import product_router
 
 app.include_router(excel_import_router)
-# app.include_router(dashboard_routers.router)
+app.include_router(product_router)

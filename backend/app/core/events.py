@@ -1,8 +1,8 @@
 from sqlalchemy import event
-from app.models import (Purchasing_Detail, Purchasing, 
-                       Stock_Movement, Stock_Movement_Detail,
-                       Color_Kitchen_Entry, Color_Kitchen_Entry_Detail,
-                       Color_Kitchen_Batch, Color_Kitchen_Batch_Detail,
+from app.models import (PurchasingDetail, Purchasing, 
+                       StockMovement, StockMovementDetail,
+                       ColorKitchenEntry, ColorKitchenEntryDetail,
+                       ColorKitchenBatch, ColorKitchenBatchDetail,
                        Ledger)
 from app.models.enum.ledger_enum import LedgerRef, LedgerLocation
 
@@ -13,7 +13,7 @@ def _get_purchasing(connection, purchasing_id):
     ).fetchone()
 
 
-@event.listens_for(Purchasing_Detail, "after_insert")
+@event.listens_for(PurchasingDetail, "after_insert")
 def create_ledger_entry(mapper, connection, target):
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
@@ -32,7 +32,7 @@ def create_ledger_entry(mapper, connection, target):
     )
 
 
-@event.listens_for(Purchasing_Detail, "after_update")
+@event.listens_for(PurchasingDetail, "after_update")
 def update_ledger_entry(mapper, connection, target):
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
@@ -50,7 +50,7 @@ def update_ledger_entry(mapper, connection, target):
     )
 
 
-@event.listens_for(Purchasing_Detail, "after_delete")
+@event.listens_for(PurchasingDetail, "after_delete")
 def delete_ledger_entry(mapper, connection, target):
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
@@ -67,10 +67,10 @@ def delete_ledger_entry(mapper, connection, target):
 #region Stock Movement
 def _get_stock_movement(connection, stock_movement_id):
     return connection.execute(
-        Stock_Movement.__table__.select().where(Stock_Movement.id == stock_movement_id)
+        StockMovement.__table__.select().where(StockMovement.id == stock_movement_id)
     ).fetchone()
 
-@event.listens_for(Stock_Movement_Detail, "after_insert")
+@event.listens_for(StockMovementDetail, "after_insert")
 def create_ledger_from_stock_movement(mapper, connection, target):
     movement = _get_stock_movement(connection, target.stock_movement_id)
     if not movement:
@@ -102,7 +102,7 @@ def create_ledger_from_stock_movement(mapper, connection, target):
         )
     )
 
-@event.listens_for(Stock_Movement_Detail, "after_update")
+@event.listens_for(StockMovementDetail, "after_update")
 def update_ledger_from_stock_movement(mapper, connection, target):
     movement = _get_stock_movement(connection, target.stock_movement_id)
     if not movement:
@@ -136,7 +136,7 @@ def update_ledger_from_stock_movement(mapper, connection, target):
         )
     )
 
-@event.listens_for(Stock_Movement_Detail, "after_delete")
+@event.listens_for(StockMovementDetail, "after_delete")
 def delete_ledger_from_stock_movement(mapper, connection, target):
     movement = _get_stock_movement(connection, target.stock_movement_id)
     if not movement:
@@ -154,10 +154,10 @@ def delete_ledger_from_stock_movement(mapper, connection, target):
 #region Color Kitchen
 def _get_ck_entry(connection, entry_id):
     return connection.execute(
-        Color_Kitchen_Entry.__table__.select().where(Color_Kitchen_Entry.id == entry_id)
+        ColorKitchenEntry.__table__.select().where(ColorKitchenEntry.id == entry_id)
     ).fetchone()
 
-@event.listens_for(Color_Kitchen_Entry_Detail, "after_insert")
+@event.listens_for(ColorKitchenEntryDetail, "after_insert")
 def create_ledger_from_ck(mapper, connection, target):
     entry = _get_ck_entry(connection, target.color_kitchen_entry_id)
     if not entry:
@@ -189,7 +189,7 @@ def create_ledger_from_ck(mapper, connection, target):
         )
     )
 
-@event.listens_for(Color_Kitchen_Entry_Detail, "after_update")
+@event.listens_for(ColorKitchenEntryDetail, "after_update")
 def update_ledger_from_ck(mapper, connection, target):
     entry = _get_ck_entry(connection, target.color_kitchen_entry_id)
     if not entry:
@@ -215,7 +215,7 @@ def update_ledger_from_ck(mapper, connection, target):
         .values(date=entry.date, quantity_in=target.quantity or 0.0, quantity_out=0.0)
     )
 
-@event.listens_for(Color_Kitchen_Entry_Detail, "after_delete")
+@event.listens_for(ColorKitchenEntryDetail, "after_delete")
 def delete_ledger_from_ck(mapper, connection, target):
     entry = _get_ck_entry(connection, target.color_kitchen_entry_id)
     if not entry:
@@ -231,10 +231,10 @@ def delete_ledger_from_ck(mapper, connection, target):
     
 def _get_ck_batch(connection, batch_id):
     return connection.execute(
-        Color_Kitchen_Batch.__table__.select().where(Color_Kitchen_Batch.id == batch_id)
+        ColorKitchenBatch.__table__.select().where(ColorKitchenBatch.id == batch_id)
     ).fetchone()
     
-@event.listens_for(Color_Kitchen_Batch_Detail, "after_insert")
+@event.listens_for(ColorKitchenBatchDetail, "after_insert")
 def create_ledger_from_ck_batch(mapper, connection, target):
     batch = _get_ck_batch(connection, target.batch_id)
     if not batch:
@@ -266,7 +266,7 @@ def create_ledger_from_ck_batch(mapper, connection, target):
         )
     )
 
-@event.listens_for(Color_Kitchen_Batch_Detail, "after_update")
+@event.listens_for(ColorKitchenBatchDetail, "after_update")
 def update_ledger_from_ck_batch(mapper, connection, target):
     batch = _get_ck_batch(connection, target.batch_id)
     if not batch:
@@ -291,7 +291,7 @@ def update_ledger_from_ck_batch(mapper, connection, target):
         .values(date=batch.date, quantity_in=target.quantity or 0.0, quantity_out=0.0)
     )
 
-@event.listens_for(Color_Kitchen_Batch_Detail, "after_delete")
+@event.listens_for(ColorKitchenBatchDetail, "after_delete")
 def delete_ledger_from_ck_batch(mapper, connection, target):
     batch = _get_ck_batch(connection, target.batch_id)
     if not batch:

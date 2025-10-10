@@ -1,4 +1,4 @@
-import { http, uploadFile, downloadFile, buildQuery } from "./api";
+import { http, uploadFile, downloadFile } from "./api_old";
 
 // ==================== TYPES ====================
 export interface ApiResponse<T = any> {
@@ -83,60 +83,33 @@ export const supplierApi = {
 
 // Product API
 export const productApi = {
-  async search(filters: SearchFilters = {}, showLoading: boolean = true) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/product/search`,
-      { method: "GET" }
-    );
-  },
-
-  async getById(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(showLoading, `/product/${id}`, {
+  async search(filters = {}, showLoading = true) {
+    const query = buildQuery(filters);
+    return await http(showLoading, `/product/search${query}`, {
       method: "GET",
     });
   },
 
-  async create(
-    payload: {
-      code?: string;
-      name: string;
-      unit?: string;
-      account_id?: number;
-    },
-    showLoading: boolean = true
-  ) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/product`,
-      { method: "POST" },
-      payload
-    );
-  },
+  // async getById(id, showLoading = true) {
+  //   return await http(showLoading, `/product/${id}`, { method: "GET" });
+  // },
 
-  async update(
-    id: number,
-    payload: {
-      code?: string;
-      name?: string;
-      unit?: string;
-      account_id?: number;
-    },
-    showLoading: boolean = true
-  ) {
-    return await http<ApiResponse>(
-      showLoading,
-      `/product/${id}`,
-      { method: "PUT" },
-      payload
-    );
-  },
+  // async create(payload, showLoading = true) {
+  //   return await http(showLoading, `/product`, { method: "POST" }, payload);
+  // },
 
-  async delete(id: number, showLoading: boolean = true) {
-    return await http<ApiResponse>(showLoading, `/product/${id}`, {
-      method: "DELETE",
-    });
-  },
+  // async update(id, payload, showLoading = true) {
+  //   return await http(
+  //     showLoading,
+  //     `/product/${id}`,
+  //     { method: "PUT" },
+  //     payload
+  //   );
+  // },
+
+  // async delete(id, showLoading = true) {
+  //   return await http(showLoading, `/product/${id}`, { method: "DELETE" });
+  // },
 };
 
 // Design API
@@ -198,6 +171,21 @@ export const designApi = {
 
 // Account API
 export const accountApi = {
+  // list: (params: Record<string, any> = {}) =>
+  //   http(true, `/account${buildQuery(params)}`, { method: "GET" }),
+
+  // detail: (id: number | string) =>
+  //   http(true, `/account/${id}`, { method: "GET" }),
+
+  // create: (data: any) =>
+  //   http(true, `/account`, { method: "POST" }, data),
+
+  // update: (id: number | string, data: any) =>
+  //   http(true, `/account/${id}`, { method: "PUT" }, data),
+
+  // delete: (id: number | string) =>
+  //   http(true, `/account/${id}`, { method: "DELETE" }),
+
   async search(filters: SearchFilters = {}, showLoading: boolean = true) {
     return await http<ApiResponse>(
       showLoading,
@@ -1130,3 +1118,6 @@ export default {
   report: reportApi,
   import: importApi,
 };
+function buildQuery(filters: {}) {
+  throw new Error("Function not implemented.");
+}

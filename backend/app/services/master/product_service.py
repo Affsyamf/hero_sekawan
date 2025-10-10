@@ -3,11 +3,12 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_
+from fastapi.responses import JSONResponse
+from sqlalchemy import func, or_
 
 from app.schemas.input_models.master_input_models import ProductCreate, ProductUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import (
     Product, PurchasingDetail, StockMovementDetail, 
     ColorKitchenEntryDetail, Ledger, StockOpnameDetail
@@ -23,7 +24,7 @@ class ProductService:
 
     def list_product(self, request: ListRequest):
         product = self.db.query(Product)
-
+                
         if request.search:
             like = f"%{request.search}%"
             product = product.filter(

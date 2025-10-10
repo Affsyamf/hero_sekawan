@@ -5,6 +5,12 @@ import ImportProductModal from "../components/features/product/ImportProductModa
 import { useState } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
+import {
+  createProduct,
+  deleteProduct,
+  searchProduct,
+  updateProduct,
+} from "../services/product_service";
 
 const SAMPLE_PRODUCTS = [];
 
@@ -20,54 +26,6 @@ export default function ProductsPage() {
   );
 
   const { value: accounts = [] } = useTemp("accounts:working-list", []);
-
-  // Fetch function for Table component
-  const fetchProducts = async (params) => {
-    const { page, pageSize, search, sortBy, sortDir } = params;
-
-    let filtered = [...products];
-
-    // Search filter
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.code?.toLowerCase().includes(searchLower) ||
-          p.name?.toLowerCase().includes(searchLower) ||
-          p.unit?.toLowerCase().includes(searchLower) ||
-          accounts
-            .find((a) => a.id === p.account_id)
-            ?.name?.toLowerCase()
-            .includes(searchLower)
-      );
-    }
-
-    // Sorting
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortBy];
-        let bVal = b[sortBy];
-
-        if (sortBy === "account_id") {
-          const accountA = accounts.find((acc) => acc.id === a.account_id);
-          const accountB = accounts.find((acc) => acc.id === b.account_id);
-          aVal = accountA?.name || "";
-          bVal = accountB?.name || "";
-        }
-
-        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    // Pagination
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    const rows = filtered.slice(start, start + pageSize);
-
-    return { rows, total };
-  };
 
   const columns = [
     {
@@ -125,11 +83,16 @@ export default function ProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (row) => {
+  const handleDelete = async (row) => {
     if (
       window.confirm(`Are you sure you want to delete product ${row.name}?`)
     ) {
-      setProducts((prev) => prev.filter((p) => p.id !== row.id));
+      try {
+        await deleteProduct(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
     }
   };
 
@@ -139,23 +102,18 @@ export default function ProductsPage() {
   };
 
   // Save handler
-  const handleSave = (productData) => {
-    const nextId = (arr) =>
-      arr.length ? Math.max(...arr.map((p) => p.id || 0)) + 1 : 1;
-
-    setProducts((prev) => {
-      const current = Array.isArray(prev) ? prev : [];
+  const handleSave = async (productData) => {
+    try {
       if (productData.id) {
-        // Update existing
-        return current.map((p) =>
-          p.id === productData.id ? { ...p, ...productData } : p
-        );
+        await updateProduct(productData.id, productData);
+      } else {
+        await createProduct(productData);
       }
-      // Create new
-      return [...current, { ...productData, id: nextId(current) }];
-    });
-
-    handleCloseModal();
+      setRefreshKey((prev) => prev + 1);
+      handleCloseModal();
+    } catch (error) {
+      alert("Failed to save product: " + error.message);
+    }
   };
 
   const handleImport = () => {
@@ -164,11 +122,11 @@ export default function ProductsPage() {
 
   const handleImportSuccess = (result) => {
     // Refresh table data after successful import
-    setRefreshKey(prev => prev + 1);
-    
+    setRefreshKey((prev) => prev + 1);
+
     // Log success (you can replace with your notification system)
     console.log("Import successful:", result);
-    
+
     // Optionally reload products from API if you have one
   };
 
@@ -200,7 +158,7 @@ export default function ProductsPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screena bg-background">
         <div className="mx-auto max-w-7xl">
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Product Management
@@ -223,7 +181,7 @@ export default function ProductsPage() {
           <Table
             key={refreshKey}
             columns={columns}
-            fetchData={fetchProducts}
+            fetchData={searchProduct}
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}

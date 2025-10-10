@@ -4,6 +4,7 @@ import AccountForm from "../components/features/account/AccountForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
+import { searchAccount } from "../services/account_service";
 
 const SAMPLE_ACCOUNTS = [];
 
@@ -16,38 +17,48 @@ export default function AccountsPage() {
     SAMPLE_ACCOUNTS
   );
 
-  const fetchAccounts = async (params) => {
-    const { page, pageSize, search, sortBy, sortDir } = params;
+  // const fetchAccounts = async (params) => {
+  //   const { page, pageSize, search, sortBy, sortDir } = params;
 
-    let filtered = [...accounts];
+  //   let filtered = [...accounts];
 
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (a) =>
-          a.name?.toLowerCase().includes(searchLower) ||
-          a.account_no?.toString().includes(searchLower) ||
-          a.alias?.toLowerCase().includes(searchLower)
-      );
-    }
+  //   if (search) {
+  //     const searchLower = search.toLowerCase();
+  //     filtered = filtered.filter(
+  //       (a) =>
+  //         a.name?.toLowerCase().includes(searchLower) ||
+  //         a.account_no?.toString().includes(searchLower) ||
+  //         a.alias?.toLowerCase().includes(searchLower)
+  //     );
+  //   }
 
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortBy] || "";
-        let bVal = b[sortBy] || "";
+  //   if (sortBy) {
+  //     filtered.sort((a, b) => {
+  //       let aVal = a[sortBy] || "";
+  //       let bVal = b[sortBy] || "";
 
-        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
+  //       if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+  //       if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+  //       return 0;
+  //     });
+  //   }
 
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    const rows = filtered.slice(start, start + pageSize);
+  //   const total = filtered.length;
+  //   const start = (page - 1) * pageSize;
+  //   const rows = filtered.slice(start, start + pageSize);
 
-    return { rows, total };
-  };
+  //   return { rows, total };
+  // };
+
+  // const fetchAccounts = async (params) => {
+  //   try {
+  //     const data = await accountApi.search(params);
+  //     return { rows: data.rows || data, total: data.total || data.length };
+  //   } catch (error) {
+  //     console.error("Failed to fetch products:", error);
+  //     return { rows: [], total: 0 };
+  //   }
+  // };
 
   const columns = [
     {
@@ -91,11 +102,16 @@ export default function AccountsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (row) => {
+  const handleDelete = async (row) => {
     if (
-      window.confirm(`Are you sure you want to delete account ${row.name}?`)
+      window.confirm(`Are you sure you want to delete product ${row.name}?`)
     ) {
-      setAccounts((prev) => prev.filter((a) => a.id !== row.id));
+      try {
+        await accountApi.delete(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
     }
   };
 
@@ -104,21 +120,18 @@ export default function AccountsPage() {
     setSelectedAccount(null);
   };
 
-  const handleSave = (accountData) => {
-    const nextId = (arr) =>
-      arr.length ? Math.max(...arr.map((a) => a.id || 0)) + 1 : 1;
-
-    setAccounts((prev) => {
-      const current = Array.isArray(prev) ? prev : [];
-      if (accountData.id) {
-        return current.map((a) =>
-          a.id === accountData.id ? { ...a, ...accountData } : a
-        );
+  const handleSave = async (productData) => {
+    try {
+      if (productData.id) {
+        await accountApi.update(productData.id, productData);
+      } else {
+        await accountApi.create(productData);
       }
-      return [...current, { ...accountData, id: nextId(current) }];
-    });
-
-    handleCloseModal();
+      setRefreshKey((prev) => prev + 1);
+      handleCloseModal();
+    } catch (error) {
+      alert("Failed to save product: " + error.message);
+    }
   };
 
   const renderActions = (row) => (
@@ -160,7 +173,7 @@ export default function AccountsPage() {
 
           <Table
             columns={columns}
-            fetchData={fetchAccounts}
+            fetchData={searchAccount}
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}

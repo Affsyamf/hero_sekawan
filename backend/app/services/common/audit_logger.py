@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from typing import Any, Optional
 
-from models import AuditColumnLog
+from app.models import AuditColumnLog
 
 
 class AuditLoggerService:

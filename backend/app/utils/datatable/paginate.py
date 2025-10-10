@@ -3,8 +3,8 @@ from typing import Any, Dict, Callable
 from sqlalchemy.orm import Query
 from sqlalchemy.sql import func
 
-from utils.datatable.request import ListRequest
-from utils.datatable.response import ListResponse
+from app.utils.datatable.request import ListRequest
+from app.utils.datatable.response import ListResponse
 
 
 # Helper untuk query pagination

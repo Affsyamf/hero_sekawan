@@ -6,7 +6,7 @@ from fastapi import status
 from sqlalchemy import func
 from sqlalchemy.orm import Query
 
-from utils.datatable.request import ListRequest
+from app.utils.datatable.request import ListRequest
 
 
 class APIResponse:
@@ -258,8 +258,8 @@ class APIResponse:
         """
 
         # Hitung total records
-        total = query.order_by(None).with_entities(func.count()).scalar() or 0
-
+        total = query.order_by(None).count() or 0
+        
         # Ambil data dengan pagination
         items = (
             query

@@ -4,6 +4,7 @@ import SupplierForm from "../components/features/supplier/SupplierForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
+import { searchSupplier } from "../services/supplier_service";
 
 const SAMPLE_SUPPLIERS = [];
 
@@ -17,41 +18,41 @@ export default function SuppliersPage() {
   );
 
   // Fetch function for Table component
-  const fetchSuppliers = async (params) => {
-    const { page, pageSize, search, sortBy, sortDir } = params;
+  // const fetchSuppliers = async (params) => {
+  //   const { page, pageSize, search, sortBy, sortDir } = params;
 
-    let filtered = [...suppliers];
+  //   let filtered = [...suppliers];
 
-    // Search filter
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (s) =>
-          s.code?.toLowerCase().includes(searchLower) ||
-          s.name?.toLowerCase().includes(searchLower) ||
-          s.contact_info?.toLowerCase().includes(searchLower)
-      );
-    }
+  //   // Search filter
+  //   if (search) {
+  //     const searchLower = search.toLowerCase();
+  //     filtered = filtered.filter(
+  //       (s) =>
+  //         s.code?.toLowerCase().includes(searchLower) ||
+  //         s.name?.toLowerCase().includes(searchLower) ||
+  //         s.contact_info?.toLowerCase().includes(searchLower)
+  //     );
+  //   }
 
-    // Sorting
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortBy] || "";
-        let bVal = b[sortBy] || "";
+  //   // Sorting
+  //   if (sortBy) {
+  //     filtered.sort((a, b) => {
+  //       let aVal = a[sortBy] || "";
+  //       let bVal = b[sortBy] || "";
 
-        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
+  //       if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+  //       if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+  //       return 0;
+  //     });
+  //   }
 
-    // Pagination
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    const rows = filtered.slice(start, start + pageSize);
+  //   // Pagination
+  //   const total = filtered.length;
+  //   const start = (page - 1) * pageSize;
+  //   const rows = filtered.slice(start, start + pageSize);
 
-    return { rows, total };
-  };
+  //   return { rows, total };
+  // };
 
   const columns = [
     {
@@ -168,7 +169,7 @@ export default function SuppliersPage() {
 
           <Table
             columns={columns}
-            fetchData={fetchSuppliers}
+            fetchData={searchSupplier}
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}

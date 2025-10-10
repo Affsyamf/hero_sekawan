@@ -1,17 +1,7 @@
 import { loadingManager } from "../contexts/loadingManager";
+import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-
-// Helper untuk build query string
-function buildQuery(params: Record<string, any> = {}) {
-  const sp = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === null) continue;
-    sp.set(k, String(v));
-  }
-  const qs = sp.toString();
-  return qs ? `?${qs}` : "";
-}
 
 // Generic HTTP function untuk JSON requests
 export async function http<T = any>(
@@ -57,7 +47,7 @@ export async function uploadFile<T = any>(
   const url = `${BASE_URL}${path}`;
   const form = new FormData();
   form.append(fieldName, file, file.name);
-  
+
   // Tambahkan field tambahan jika ada
   if (additionalFields) {
     for (const [key, value] of Object.entries(additionalFields)) {
@@ -66,7 +56,7 @@ export async function uploadFile<T = any>(
   }
 
   if (withLoading) loadingManager.setLoading(true);
-  
+
   try {
     const res = await fetch(url, { method: "POST", body: form });
     if (!res.ok) {
@@ -91,9 +81,9 @@ export async function downloadFile(
   body?: any
 ): Promise<void> {
   const url = `${BASE_URL}${path}`;
-  
+
   if (withLoading) loadingManager.setLoading(true);
-  
+
   try {
     const options: RequestInit = { method };
     if (body && method === "POST") {
@@ -103,7 +93,7 @@ export async function downloadFile(
 
     const res = await fetch(url, options);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    
+
     const blob = await res.blob();
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -119,4 +109,4 @@ export async function downloadFile(
 }
 
 // Export BASE_URL jika diperlukan
-export { BASE_URL, buildQuery };
+export { BASE_URL };
