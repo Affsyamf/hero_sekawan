@@ -4,45 +4,22 @@ import DesignTypeForm from "../components/features/design-type/DesignTypeForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
+import {
+  createDesignType,
+  deleteDesignType,
+  searchDesignType,
+  updateDesignType,
+} from "../services/design_type_service";
 
 const SAMPLE_DESIGN_TYPES = [];
 
 export default function DesignTypesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDesignType, setSelectedDesignType] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { value: designTypes = SAMPLE_DESIGN_TYPES, set: setDesignTypes } =
     useTemp("design-types:working-list", SAMPLE_DESIGN_TYPES);
-
-  const fetchDesignTypes = async (params) => {
-    const { page, pageSize, search, sortBy, sortDir } = params;
-
-    let filtered = [...designTypes];
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter((dt) =>
-        dt.name?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortBy] || "";
-        let bVal = b[sortBy] || "";
-
-        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    const rows = filtered.slice(start, start + pageSize);
-
-    return { rows, total };
-  };
 
   const columns = [
     {
@@ -70,34 +47,42 @@ export default function DesignTypesPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (row) => {
-    if (
-      window.confirm(`Are you sure you want to delete design type ${row.name}?`)
-    ) {
-      setDesignTypes((prev) => prev.filter((dt) => dt.id !== row.id));
-    }
-  };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedDesignType(null);
   };
 
-  const handleSave = (designTypeData) => {
-    const nextId = (arr) =>
-      arr.length ? Math.max(...arr.map((dt) => dt.id || 0)) + 1 : 1;
+  const handleSave = async (designTypeData) => {
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(designTypeData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
 
-    setDesignTypes((prev) => {
-      const current = Array.isArray(prev) ? prev : [];
-      if (designTypeData.id) {
-        return current.map((dt) =>
-          dt.id === designTypeData.id ? { ...dt, ...designTypeData } : dt
-        );
+      if (payload.id) {
+        await updateDesignType(payload.id, payload);
+      } else {
+        await createDesignType(payload);
       }
-      return [...current, { ...designTypeData, id: nextId(current) }];
-    });
+      setRefreshKey((prev) => prev + 1);
+      handleCloseModal();
+    } catch (error) {
+      alert("Failed to save design type: " + error.message);
+    }
+  };
 
-    handleCloseModal();
+  const handleDelete = async (row) => {
+    if (
+      window.confirm(`Are you sure you want to delete design type ${row.name}?`)
+    ) {
+      try {
+        await deleteDesignType(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
+    }
   };
 
   const renderActions = (row) => (
@@ -138,8 +123,9 @@ export default function DesignTypesPage() {
           </p>
 
           <Table
+            key={refreshKey}
             columns={columns}
-            fetchData={fetchDesignTypes}
+            fetchData={searchDesignType}
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}

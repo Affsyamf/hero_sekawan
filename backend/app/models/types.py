@@ -16,7 +16,7 @@ class Account(Base):
     account_type = Column(enum_column(AccountType, name='account_type_enum'), nullable=False)
     alias = Column(String, nullable=True)
     
-    products = relationship("Product", back_populates="account")
+    products = relationship("Product", back_populates="account", lazy='subquery')
     
 class DesignType(Base):
     __tablename__ = "design_types"
@@ -24,4 +24,4 @@ class DesignType(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     
-    designs = relationship("Design", back_populates="type")
+    designs = relationship("Design", back_populates="type", lazy='subquery')

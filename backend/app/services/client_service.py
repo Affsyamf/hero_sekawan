@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from app.schemas.input_models.client_input_models import ClientCreate, ClientUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models.master import Client, StockMovement, Payment
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB

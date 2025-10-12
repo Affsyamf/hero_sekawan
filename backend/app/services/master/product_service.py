@@ -7,7 +7,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import func, or_
 
 from app.schemas.input_models.master_input_models import ProductCreate, ProductUpdate
-from app.services.common.audit_logger import AuditLoggerService
 from app.core.database import Session, get_db
 from app.models import (
     Product, PurchasingDetail, StockMovementDetail, 

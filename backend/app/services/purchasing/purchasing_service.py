@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from app.schemas.input_models.purchasing_input_models import PurchasingCreate, PurchasingUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import Purchasing, PurchasingDetail
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
@@ -35,7 +35,7 @@ class PurchasingService:
         purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
 
         if not purchasing:
-            raise HTTPException(status_code=404, detail=f"Purchasing ID '{purchasing_id}' not found.")
+            return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
 
         details = []
         for detail in purchasing.details:
@@ -96,14 +96,7 @@ class PurchasingService:
     def update_purchasing(self, purchasing_id: int, request: PurchasingUpdate):
         purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
         if not purchasing:
-            raise HTTPException(status_code=404, detail=f"Purchasing ID '{purchasing_id}' not found.")
-
-        old_data = {
-            "date": purchasing.date.isoformat() if purchasing.date else None,
-            "code": purchasing.code,
-            "purchase_order": purchasing.purchase_order,
-            "supplier_id": purchasing.supplier_id,
-        }
+            return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
 
         if request.date is not None:
             purchasing.date = request.date
@@ -140,38 +133,17 @@ class PurchasingService:
             "purchase_order": purchasing.purchase_order,
             "supplier_id": purchasing.supplier_id,
         }
-
-        AuditLoggerService(self.db).log_update(
-            table_name=Purchasing.__tablename__,
-            record_id=purchasing_id,
-            old_data=old_data,
-            new_data=new_data,
-            changed_by="system"
-        )
-
+        
         return APIResponse.ok(f"Purchasing ID '{purchasing_id}' updated.")
 
     def delete_purchasing(self, purchasing_id: int):
         purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
         if not purchasing:
-            raise HTTPException(status_code=404, detail=f"Purchasing ID '{purchasing_id}' not found.")
-
-        old_data = {
-            key: value
-            for key, value in vars(purchasing).items()
-            if not key.startswith("_")
-        }
+            return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
 
         self.db.query(PurchasingDetail).filter(
             PurchasingDetail.purchasing_id == purchasing_id
         ).delete(synchronize_session=False)
-
-        AuditLoggerService(self.db).log_delete(
-            table_name=Purchasing.__tablename__,
-            record_id=purchasing_id,
-            old_data=old_data,
-            changed_by="system"
-        )
 
         self.db.delete(purchasing)
 

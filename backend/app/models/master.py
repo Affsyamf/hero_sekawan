@@ -24,7 +24,7 @@ class Product(Base):
     unit = Column(String, nullable=True)
 
     account_id = Column(Integer, ForeignKey('accounts.id'))
-    account = relationship("Account", back_populates="products")
+    account = relationship("Account", back_populates="products", lazy='noload')
 
     purchasing_details = relationship("PurchasingDetail", back_populates="product")
     stock_movement_details = relationship("StockMovementDetail", back_populates="product")
@@ -41,4 +41,4 @@ class Design(Base):
     type_id = Column(Integer, ForeignKey("design_types.id"), nullable=False)
     type = relationship("DesignType", back_populates="designs")
 
-    color_kitchen_entries = relationship("ColorKitchenEntry", back_populates="design")
+    color_kitchen_entries = relationship("ColorKitchenEntry", back_populates="design", lazy='subquery')

@@ -26,8 +26,6 @@ def create_account(request: AccountCreate, service: AccountService = Depends()):
 def update_account_by_id(account_id: int, request: AccountUpdate, service: AccountService = Depends()):
     try:
         return service.update_account(account_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update account", error_detail=str(e))
 
@@ -35,7 +33,5 @@ def update_account_by_id(account_id: int, request: AccountUpdate, service: Accou
 def delete_account_by_id(account_id: int, service: AccountService = Depends()):
     try:
         return service.delete_account(account_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete account", error_detail=str(e))

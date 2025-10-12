@@ -2,7 +2,7 @@ import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import ProductForm from "../components/features/product/ProductForm";
 import ImportProductModal from "../components/features/product/ImportProductModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
 import {
@@ -11,6 +11,7 @@ import {
   searchProduct,
   updateProduct,
 } from "../services/product_service";
+import { searchAccount } from "../services/account_service";
 
 const SAMPLE_PRODUCTS = [];
 
@@ -19,13 +20,19 @@ export default function ProductsPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [accounts, setAccounts] = useState([]);
 
-  const { value: products = SAMPLE_PRODUCTS, set: setProducts } = useTemp(
-    "products:working-list",
-    SAMPLE_PRODUCTS
-  );
-
-  const { value: accounts = [] } = useTemp("accounts:working-list", []);
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const response = await searchAccount({}); // bisa tambahkan filter jika ada
+        setAccounts(response.data?.data || []);
+      } catch (error) {
+        console.error("Failed to fetch accounts:", error);
+      }
+    };
+    fetchAccounts();
+  }, []);
 
   const columns = [
     {
@@ -57,10 +64,10 @@ export default function ProductsPage() {
       label: "Account",
       sortable: true,
       render: (value) => {
-        const account = accounts.find((a) => a.id === value);
+        const account = (accounts || []).find((a) => a.id === value);
         return (
           <span className="text-primary-text">
-            {account ? `${account.code} - ${account.name}` : "-"}
+            {account ? `${account.account_no} - ${account.name}` : "-"}
           </span>
         );
       },
@@ -68,34 +75,6 @@ export default function ProductsPage() {
   ];
 
   // CRUD Handlers
-  const handleAdd = () => {
-    setSelectedProduct(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (row) => {
-    setSelectedProduct(row);
-    setIsModalOpen(true);
-  };
-
-  const handleDetail = (row) => {
-    setSelectedProduct(row);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (row) => {
-    if (
-      window.confirm(`Are you sure you want to delete product ${row.name}?`)
-    ) {
-      try {
-        await deleteProduct(row.id);
-        setRefreshKey((prev) => prev + 1);
-      } catch (error) {
-        alert("Failed to delete: " + error.message);
-      }
-    }
-  };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
@@ -122,6 +101,19 @@ export default function ProductsPage() {
     }
   };
 
+  const handleDelete = async (row) => {
+    if (
+      window.confirm(`Are you sure you want to delete product ${row.name}?`)
+    ) {
+      try {
+        await deleteProduct(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
+    }
+  };
+
   const handleImport = () => {
     setIsImportModalOpen(true);
   };
@@ -139,14 +131,20 @@ export default function ProductsPage() {
   const renderActions = (row) => (
     <div className="flex items-center gap-2">
       <button
-        onClick={() => handleDetail(row)}
+        onClick={() => {
+          setSelectedProduct(row);
+          setIsModalOpen(true);
+        }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200"
         title="View Details"
       >
         <Eye className="w-4 h-4" />
       </button>
       <button
-        onClick={() => handleEdit(row)}
+        onClick={() => {
+          setSelectedProduct(row);
+          setIsModalOpen(true);
+        }}
         className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all duration-200"
         title="Edit"
       >
@@ -189,7 +187,10 @@ export default function ProductsPage() {
             columns={columns}
             fetchData={searchProduct}
             actions={renderActions}
-            onCreate={handleAdd}
+            onCreate={() => {
+              setSelectedProduct(null);
+              setIsModalOpen(true);
+            }}
             pageSizeOptions={[10, 20, 50, 100]}
           />
 

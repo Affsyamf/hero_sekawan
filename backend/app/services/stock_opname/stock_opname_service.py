@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from app.schemas.input_models.stock_opname_input_models import StockOpnameCreate, StockOpnameUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import StockOpname, StockOpnameDetail
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
@@ -34,7 +34,7 @@ class StockOpnameService:
         stock_opname = self.db.query(StockOpname).filter(StockOpname.id == stock_opname_id).first()
 
         if not stock_opname:
-            raise HTTPException(status_code=404, detail=f"Stock Opname ID '{stock_opname_id}' not found.")
+            return APIResponse.not_found(message=f"Stock Opname ID '{stock_opname_id}' not found.")
 
         details = []
         for detail in stock_opname.details:
@@ -79,12 +79,12 @@ class StockOpnameService:
     def update_stock_opname(self, stock_opname_id: int, request: StockOpnameUpdate):
         stock_opname = self.db.query(StockOpname).filter(StockOpname.id == stock_opname_id).first()
         if not stock_opname:
-            raise HTTPException(status_code=404, detail=f"Stock Opname ID '{stock_opname_id}' not found.")
+            return APIResponse.not_found(message=f"Stock Opname ID '{stock_opname_id}' not found.")
 
-        old_data = {
-            "date": stock_opname.date.isoformat() if stock_opname.date else None,
-            "code": stock_opname.code,
-        }
+        # old_data = {
+        #     "date": stock_opname.date.isoformat() if stock_opname.date else None,
+        #     "code": stock_opname.code,
+        # }
 
         if request.date is not None:
             stock_opname.date = request.date
@@ -105,42 +105,43 @@ class StockOpnameService:
                 )
                 self.db.add(detail)
 
-        new_data = {
-            "date": stock_opname.date.isoformat() if stock_opname.date else None,
-            "code": stock_opname.code,
-        }
+        # new_data = {
+        #     "date": stock_opname.date.isoformat() if stock_opname.date else None,
+        #     "code": stock_opname.code,
+        # }
 
-        AuditLoggerService(self.db).log_update(
-            table_name=StockOpname.__tablename__,
-            record_id=stock_opname_id,
-            old_data=old_data,
-            new_data=new_data,
-            changed_by="system"
-        )
+        # AuditLoggerService(self.db).log_update(
+        #     table_name=StockOpname.__tablename__,
+        #     record_id=stock_opname_id,
+        #     old_data=old_data,
+        #     new_data=new_data,
+        #     changed_by="system"
+        # )
 
         return APIResponse.ok(f"Stock Opname ID '{stock_opname_id}' updated.")
 
     def delete_stock_opname(self, stock_opname_id: int):
         stock_opname = self.db.query(StockOpname).filter(StockOpname.id == stock_opname_id).first()
         if not stock_opname:
-            raise HTTPException(status_code=404, detail=f"Stock Opname ID '{stock_opname_id}' not found.")
+            return APIResponse.not_found(message=f"Stock Opname ID '{stock_opname_id}' not found.")
+        
 
-        old_data = {
-            key: value
-            for key, value in vars(stock_opname).items()
-            if not key.startswith("_")
-        }
+        # old_data = {
+        #     key: value
+        #     for key, value in vars(stock_opname).items()
+        #     if not key.startswith("_")
+        # }
 
         self.db.query(StockOpnameDetail).filter(
             StockOpnameDetail.stock_opname_id == stock_opname_id
         ).delete(synchronize_session=False)
 
-        AuditLoggerService(self.db).log_delete(
-            table_name=StockOpname.__tablename__,
-            record_id=stock_opname_id,
-            old_data=old_data,
-            changed_by="system"
-        )
+        # AuditLoggerService(self.db).log_delete(
+        #     table_name=StockOpname.__tablename__,
+        #     record_id=stock_opname_id,
+        #     old_data=old_data,
+        #     changed_by="system"
+        # )
 
         self.db.delete(stock_opname)
 

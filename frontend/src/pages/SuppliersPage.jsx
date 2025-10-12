@@ -4,13 +4,19 @@ import SupplierForm from "../components/features/supplier/SupplierForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
-import { searchSupplier } from "../services/supplier_service";
+import {
+  createSupplier,
+  deleteSupplier,
+  searchSupplier,
+  updateSupplier,
+} from "../services/supplier_service";
 
 const SAMPLE_SUPPLIERS = [];
 
 export default function SuppliersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { value: suppliers = SAMPLE_SUPPLIERS, set: setSuppliers } = useTemp(
     "suppliers:working-list",
@@ -97,37 +103,43 @@ export default function SuppliersPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (row) => {
-    if (
-      window.confirm(`Are you sure you want to delete supplier ${row.name}?`)
-    ) {
-      setSuppliers((prev) => prev.filter((s) => s.id !== row.id));
-    }
-  };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedSupplier(null);
   };
 
   // Save handler
-  const handleSave = (supplierData) => {
-    const nextId = (arr) =>
-      arr.length ? Math.max(...arr.map((s) => s.id || 0)) + 1 : 1;
+  const handleSave = async (supplierData) => {
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(supplierData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
 
-    setSuppliers((prev) => {
-      const current = Array.isArray(prev) ? prev : [];
-      if (supplierData.id) {
-        // Update existing
-        return current.map((s) =>
-          s.id === supplierData.id ? { ...s, ...supplierData } : s
-        );
+      if (payload.id) {
+        await updateSupplier(payload.id, payload);
+      } else {
+        await createSupplier(payload);
       }
-      // Create new
-      return [...current, { ...supplierData, id: nextId(current) }];
-    });
+      setRefreshKey((prev) => prev + 1);
+      handleCloseModal();
+    } catch (error) {
+      alert("Failed to save supplier: " + error.message);
+    }
+  };
 
-    handleCloseModal();
+  const handleDelete = async (row) => {
+    if (
+      window.confirm(`Are you sure you want to delete supplier ${row.name}?`)
+    ) {
+      try {
+        await deleteSupplier(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
+    }
   };
 
   const renderActions = (row) => (
@@ -168,6 +180,7 @@ export default function SuppliersPage() {
           </p>
 
           <Table
+            key={refreshKey}
             columns={columns}
             fetchData={searchSupplier}
             actions={renderActions}

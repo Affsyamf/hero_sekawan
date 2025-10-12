@@ -26,8 +26,6 @@ def create_supplier(request: SupplierCreate, service: SupplierService = Depends(
 def update_supplier_by_id(supplier_id: int, request: SupplierUpdate, service: SupplierService = Depends()):
     try:
         return service.update_supplier(supplier_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update supplier", error_detail=str(e))
 
@@ -35,7 +33,5 @@ def update_supplier_by_id(supplier_id: int, request: SupplierUpdate, service: Su
 def delete_supplier_by_id(supplier_id: int, service: SupplierService = Depends()):
     try:
         return service.delete_supplier(supplier_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete supplier", error_detail=str(e))

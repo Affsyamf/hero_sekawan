@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { MainLayout } from "../layouts";
 import { useEffect, useState } from "react";
-import { dashboardApi } from "../services/endpoints";
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -23,49 +22,49 @@ export default function Dashboard() {
   const { colors } = useTheme();
 
   // Fetch main dashboard data
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await dashboardApi.getDashboard({ 
-          period: period,
-        });
+  // useEffect(() => {
+  //   const fetchDashboardData = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const response = await dashboardApi.getDashboard({ 
+  //         period: period,
+  //       });
         
-        if (response.success) {
-          setDashboardData(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       if (response.success) {
+  //         setDashboardData(response.data);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching dashboard:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchDashboardData();
-  }, [period]);
+  //   fetchDashboardData();
+  // }, [period]);
 
-  // Fetch function untuk Table component
-  const fetchTransactions = async (params) => {
-    try {
-      const response = await dashboardApi.getDashboardTransactions({
-        page: params.page,
-        page_size: params.pageSize,
-        search: params.search || "",
-        date_start: params.dateRange?.start || undefined,
-        date_end: params.dateRange?.end || undefined,
-        sort_by: params.sortBy || undefined,
-        sort_dir: params.sortDir || "desc",
-      });
+  // // Fetch function untuk Table component
+  // const fetchTransactions = async (params) => {
+  //   try {
+  //     const response = await dashboardApi.getDashboardTransactions({
+  //       page: params.page,
+  //       page_size: params.pageSize,
+  //       search: params.search || "",
+  //       date_start: params.dateRange?.start || undefined,
+  //       date_end: params.dateRange?.end || undefined,
+  //       sort_by: params.sortBy || undefined,
+  //       sort_dir: params.sortDir || "desc",
+  //     });
       
-      if (response.success) {
-        return response.data;
-      }
-      return { rows: [], total: 0 };
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      return { rows: [], total: 0 };
-    }
-  };
+  //     if (response.success) {
+  //       return response.data;
+  //     }
+  //     return { rows: [], total: 0 };
+  //   } catch (error) {
+  //     console.error('Error fetching transactions:', error);
+  //     return { rows: [], total: 0 };
+  //   }
+  // };
 
   // Transaction columns definition
   const transactionColumns = [

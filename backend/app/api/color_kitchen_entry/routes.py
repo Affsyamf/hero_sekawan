@@ -26,8 +26,8 @@ def create_color_kitchen_entry(request: ColorKitchenEntryCreate, service: ColorK
 def update_color_kitchen_entry_by_id(entry_id: int, request: ColorKitchenEntryUpdate, service: ColorKitchenEntryService = Depends()):
     try:
         return service.update_color_kitchen_entry(entry_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update color kitchen entry", error_detail=str(e))
 
@@ -35,7 +35,7 @@ def update_color_kitchen_entry_by_id(entry_id: int, request: ColorKitchenEntryUp
 def delete_color_kitchen_entry_by_id(entry_id: int, service: ColorKitchenEntryService = Depends()):
     try:
         return service.delete_color_kitchen_entry(entry_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete color kitchen entry", error_detail=str(e))

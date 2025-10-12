@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from app.schemas.input_models.color_kitchen_input_models import ColorKitchenEntryCreate, ColorKitchenEntryUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import ColorKitchenEntry, ColorKitchenEntryDetail
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB

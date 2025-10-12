@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from app.schemas.input_models.stock_movement_input_models import StockMovementCreate, StockMovementUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import StockMovement, StockMovementDetail
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
@@ -34,7 +34,7 @@ class StockMovementService:
         stock_movement = self.db.query(StockMovement).filter(StockMovement.id == stock_movement_id).first()
 
         if not stock_movement:
-            raise HTTPException(status_code=404, detail=f"Stock Movement ID '{stock_movement_id}' not found.")
+            return APIResponse.not_found(message=f"Stock Movement ID '{stock_movement_id}' not found.")
 
         details = []
         for detail in stock_movement.details:
@@ -76,12 +76,12 @@ class StockMovementService:
     def update_stock_movement(self, stock_movement_id: int, request: StockMovementUpdate):
         stock_movement = self.db.query(StockMovement).filter(StockMovement.id == stock_movement_id).first()
         if not stock_movement:
-            raise HTTPException(status_code=404, detail=f"Stock Movement ID '{stock_movement_id}' not found.")
+            return APIResponse.not_found(message=f"Stock Movement ID '{stock_movement_id}' not found.")
 
-        old_data = {
-            "date": stock_movement.date.isoformat() if stock_movement.date else None,
-            "code": stock_movement.code,
-        }
+        # old_data = {
+        #     "date": stock_movement.date.isoformat() if stock_movement.date else None,
+        #     "code": stock_movement.code,
+        # }
 
         if request.date is not None:
             stock_movement.date = request.date
@@ -101,42 +101,42 @@ class StockMovementService:
                 )
                 self.db.add(detail)
 
-        new_data = {
-            "date": stock_movement.date.isoformat() if stock_movement.date else None,
-            "code": stock_movement.code,
-        }
+        # new_data = {
+        #     "date": stock_movement.date.isoformat() if stock_movement.date else None,
+        #     "code": stock_movement.code,
+        # }
 
-        AuditLoggerService(self.db).log_update(
-            table_name=StockMovement.__tablename__,
-            record_id=stock_movement_id,
-            old_data=old_data,
-            new_data=new_data,
-            changed_by="system"
-        )
+        # AuditLoggerService(self.db).log_update(
+        #     table_name=StockMovement.__tablename__,
+        #     record_id=stock_movement_id,
+        #     old_data=old_data,
+        #     new_data=new_data,
+        #     changed_by="system"
+        # )
 
         return APIResponse.ok(f"Stock Movement ID '{stock_movement_id}' updated.")
 
     def delete_stock_movement(self, stock_movement_id: int):
         stock_movement = self.db.query(StockMovement).filter(StockMovement.id == stock_movement_id).first()
         if not stock_movement:
-            raise HTTPException(status_code=404, detail=f"Stock Movement ID '{stock_movement_id}' not found.")
+            return APIResponse.not_found(message=f"Stock Movement ID '{stock_movement_id}' not found.")
 
-        old_data = {
-            key: value
-            for key, value in vars(stock_movement).items()
-            if not key.startswith("_")
-        }
+        # old_data = {
+        #     key: value
+        #     for key, value in vars(stock_movement).items()
+        #     if not key.startswith("_")
+        # }
 
         self.db.query(StockMovementDetail).filter(
             StockMovementDetail.stock_movement_id == stock_movement_id
         ).delete(synchronize_session=False)
 
-        AuditLoggerService(self.db).log_delete(
-            table_name=StockMovement.__tablename__,
-            record_id=stock_movement_id,
-            old_data=old_data,
-            changed_by="system"
-        )
+        # AuditLoggerService(self.db).log_delete(
+        #     table_name=StockMovement.__tablename__,
+        #     record_id=stock_movement_id,
+        #     old_data=old_data,
+        #     changed_by="system"
+        # )
 
         self.db.delete(stock_movement)
 

@@ -26,8 +26,8 @@ def create_color_kitchen_batch(request: ColorKitchenBatchCreate, service: ColorK
 def update_color_kitchen_batch_by_id(batch_id: int, request: ColorKitchenBatchUpdate, service: ColorKitchenBatchService = Depends()):
     try:
         return service.update_color_kitchen_batch(batch_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update color kitchen batch", error_detail=str(e))
 
@@ -35,7 +35,7 @@ def update_color_kitchen_batch_by_id(batch_id: int, request: ColorKitchenBatchUp
 def delete_color_kitchen_batch_by_id(batch_id: int, service: ColorKitchenBatchService = Depends()):
     try:
         return service.delete_color_kitchen_batch(batch_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete color kitchen batch", error_detail=str(e))

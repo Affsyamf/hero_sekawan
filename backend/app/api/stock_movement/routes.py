@@ -26,8 +26,8 @@ def create_stock_movement(request: StockMovementCreate, service: StockMovementSe
 def update_stock_movement_by_id(stock_movement_id: int, request: StockMovementUpdate, service: StockMovementService = Depends()):
     try:
         return service.update_stock_movement(stock_movement_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update stock movement", error_detail=str(e))
 
@@ -35,7 +35,7 @@ def update_stock_movement_by_id(stock_movement_id: int, request: StockMovementUp
 def delete_stock_movement_by_id(stock_movement_id: int, service: StockMovementService = Depends()):
     try:
         return service.delete_stock_movement(stock_movement_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete stock movement", error_detail=str(e))

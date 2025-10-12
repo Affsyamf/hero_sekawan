@@ -26,8 +26,8 @@ def create_stock_opname(request: StockOpnameCreate, service: StockOpnameService 
 def update_stock_opname_by_id(stock_opname_id: int, request: StockOpnameUpdate, service: StockOpnameService = Depends()):
     try:
         return service.update_stock_opname(stock_opname_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update stock opname", error_detail=str(e))
 
@@ -35,7 +35,7 @@ def update_stock_opname_by_id(stock_opname_id: int, request: StockOpnameUpdate, 
 def delete_stock_opname_by_id(stock_opname_id: int, service: StockOpnameService = Depends()):
     try:
         return service.delete_stock_opname(stock_opname_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete stock opname", error_detail=str(e))

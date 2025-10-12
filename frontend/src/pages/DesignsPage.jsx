@@ -2,9 +2,11 @@ import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import DesignForm from "../components/features/design/DesignForm";
 import ImportDesignModal from "../components/features/design/ImportDesignModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
+import { createDesign, deleteDesign, searchDesign, updateDesign } from "../services/design_service";
+import { searchDesignType } from "../services/design_type_service";
 
 const SAMPLE_DESIGNS = [];
 
@@ -13,55 +15,26 @@ export default function DesignsPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [designTypes, setDesignType] = useState([]);
 
-  const { value: designs = SAMPLE_DESIGNS, set: setDesigns } = useTemp(
-    "designs:working-list",
-    SAMPLE_DESIGNS
-  );
+  // const { value: designs = SAMPLE_DESIGNS, set: setDesigns } = useTemp(
+  //   "designs:working-list",
+  //   SAMPLE_DESIGNS
+  // );
 
-  const { value: designTypes = [] } = useTemp("design-types:working-list", []);
+  // const { value: designTypes = [] } = useTemp("design-types:working-list", []);
 
-  const fetchDesigns = async (params) => {
-    const { page, pageSize, search, sortBy, sortDir } = params;
-
-    let filtered = [...designs];
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filtered = filtered.filter(
-        (d) =>
-          d.code?.toLowerCase().includes(searchLower) ||
-          designTypes
-            .find((dt) => dt.id === d.type_id)
-            ?.name?.toLowerCase()
-            .includes(searchLower)
-      );
-    }
-
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortBy];
-        let bVal = b[sortBy];
-
-        if (sortBy === "type_id") {
-          const typeA = designTypes.find((dt) => dt.id === a.type_id);
-          const typeB = designTypes.find((dt) => dt.id === b.type_id);
-          aVal = typeA?.name || "";
-          bVal = typeB?.name || "";
-        }
-
-        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    const rows = filtered.slice(start, start + pageSize);
-
-    return { rows, total };
-  };
+  useEffect(() => {
+    const fetchDesignTypes = async () => {
+      try {
+        const response = await searchDesignType({}); // bisa tambahkan filter jika ada        
+        setDesignType(response.data?.data || []);
+      } catch (error) {
+        console.error("Failed to fetch design type:", error);
+      }
+    };
+    fetchDesignTypes();
+  }, []);
 
   const columns = [
     {
@@ -77,9 +50,11 @@ export default function DesignsPage() {
       label: "Design Type",
       sortable: true,
       render: (value) => {
-        const type = designTypes.find((dt) => dt.id === value);
+        const designType = (designTypes || []).find((a) => a.id === value);
         return (
-          <span className="text-primary-text">{type ? type.name : "-"}</span>
+          <span className="text-primary-text">
+            {designType ? `${designType.name}` : "-"}
+          </span>
         );
       },
     },
@@ -100,32 +75,9 @@ export default function DesignsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (row) => {
-    if (window.confirm(`Are you sure you want to delete design ${row.code}?`)) {
-      setDesigns((prev) => prev.filter((d) => d.id !== row.id));
-    }
-  };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedDesign(null);
-  };
-
-  const handleSave = (designData) => {
-    const nextId = (arr) =>
-      arr.length ? Math.max(...arr.map((d) => d.id || 0)) + 1 : 1;
-
-    setDesigns((prev) => {
-      const current = Array.isArray(prev) ? prev : [];
-      if (designData.id) {
-        return current.map((d) =>
-          d.id === designData.id ? { ...d, ...designData } : d
-        );
-      }
-      return [...current, { ...designData, id: nextId(current) }];
-    });
-
-    handleCloseModal();
   };
 
   const handleImport = () => {
@@ -134,13 +86,47 @@ export default function DesignsPage() {
 
   const handleImportSuccess = (result) => {
     // Refresh table data after successful import
-    setRefreshKey(prev => prev + 1);
-    
+    setRefreshKey((prev) => prev + 1);
+
     // Show success notification (you can use your notification system)
     console.log("Import successful:", result);
-    
+
     // Optionally reload designs from API if you have one
     // Or you can fetch the updated list here
+  };
+
+  // Save handler
+  const handleSave = async (designData) => {
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(designData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
+
+      if (payload.id) {
+        await updateDesign(payload.id, payload);
+      } else {
+        await createDesign(payload);
+      }
+      setRefreshKey((prev) => prev + 1);
+      handleCloseModal();
+    } catch (error) {
+      alert("Failed to save design: " + error.message);
+    }
+  };
+
+  const handleDelete = async (row) => {
+    if (
+      window.confirm(`Are you sure you want to delete design ${row.name}?`)
+    ) {
+      try {
+        await deleteDesign(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
+    }
   };
 
   const renderActions = (row) => (
@@ -194,7 +180,7 @@ export default function DesignsPage() {
           <Table
             key={refreshKey}
             columns={columns}
-            fetchData={fetchDesigns}
+            fetchData={searchDesign}
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}

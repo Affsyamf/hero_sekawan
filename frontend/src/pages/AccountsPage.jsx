@@ -4,13 +4,14 @@ import AccountForm from "../components/features/account/AccountForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
-import { searchAccount } from "../services/account_service";
+import { createAccount, deleteAccount, searchAccount, updateAccount } from "../services/account_service";
 
 const SAMPLE_ACCOUNTS = [];
 
 export default function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { value: accounts = SAMPLE_ACCOUNTS, set: setAccounts } = useTemp(
     "accounts:working-list",
@@ -107,7 +108,7 @@ export default function AccountsPage() {
       window.confirm(`Are you sure you want to delete product ${row.name}?`)
     ) {
       try {
-        await accountApi.delete(row.id);
+        await deleteAccount(row.id);
         setRefreshKey((prev) => prev + 1);
       } catch (error) {
         alert("Failed to delete: " + error.message);
@@ -122,10 +123,16 @@ export default function AccountsPage() {
 
   const handleSave = async (productData) => {
     try {
-      if (productData.id) {
-        await accountApi.update(productData.id, productData);
+      const payload = Object.fromEntries(
+        Object.entries(productData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
+      
+      if (payload.id) {
+        await updateAccount(payload.id, payload);
       } else {
-        await accountApi.create(productData);
+        await createAccount(payload);
       }
       setRefreshKey((prev) => prev + 1);
       handleCloseModal();
@@ -172,6 +179,7 @@ export default function AccountsPage() {
           </p>
 
           <Table
+            key={refreshKey}
             columns={columns}
             fetchData={searchAccount}
             actions={renderActions}

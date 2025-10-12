@@ -26,8 +26,8 @@ def create_purchasing(request: PurchasingCreate, service: PurchasingService = De
 def update_purchasing_by_id(purchasing_id: int, request: PurchasingUpdate, service: PurchasingService = Depends()):
     try:
         return service.update_purchasing(purchasing_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update purchasing", error_detail=str(e))
 
@@ -35,7 +35,7 @@ def update_purchasing_by_id(purchasing_id: int, request: PurchasingUpdate, servi
 def delete_purchasing_by_id(purchasing_id: int, service: PurchasingService = Depends()):
     try:
         return service.delete_purchasing(purchasing_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete purchasing", error_detail=str(e))

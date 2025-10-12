@@ -27,12 +27,14 @@ export default function AccountForm({
         setFormData({
           name: account.name || "",
           account_no: account.account_no || "",
+          account_type: account.account_type || "",
           alias: account.alias || "",
         });
       } else {
         setFormData({
           name: "",
           account_no: "",
+          account_type: "",
           alias: "",
         });
       }
@@ -57,6 +59,10 @@ export default function AccountForm({
       newErrors.account_no = "Account Number is required";
     }
 
+    if (!formData.account_type) {
+      newErrors.account_type = "Account Type is required";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -72,6 +78,23 @@ export default function AccountForm({
     } finally {
       setLoading(false);
     }
+  };
+
+  const inputClassName = (field) => `
+    w-full px-3 py-2 rounded-lg border transition-all duration-200 
+    bg-surface text-primary-text placeholder-secondary-text text-sm
+    focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+    hover:border-primary/40
+    ${
+      errors[field]
+        ? "border-danger focus:ring-danger/20 focus:border-danger"
+        : "border-default"
+    }
+  `;
+
+  const AccountType = {
+    Goods: "goods",
+    Service: "service",
   };
 
   return (
@@ -133,6 +156,28 @@ export default function AccountForm({
             error={!!errors.name}
           />
           <Form.Error>{errors.name}</Form.Error>
+        </Form.Group>
+
+        <Form.Group>
+          <Form.Label htmlFor="account_type">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
+              Account Type
+            </div>
+          </Form.Label>
+          <select
+            id="account_type"
+            value={formData.account_type}
+            onChange={(e) => handleInputChange("account_type", e.target.value)}
+            className={inputClassName("account_type")}
+          >
+            <option value="">Select Account Type</option>
+            {Object.entries(AccountType).map(([label, value]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </Form.Group>
 
         <Form.Group>

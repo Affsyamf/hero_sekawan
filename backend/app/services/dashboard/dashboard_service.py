@@ -13,7 +13,7 @@ from app.models import (
     StockOpname, StockOpnameDetail, Ledger, Design, ColorKitchenEntry, ColorKitchenEntryDetail,
     ColorKitchenBatchDetail, LedgerRef
 )
-from utils.response import APIResponse
+from app.utils.response import APIResponse
 
 
 class DashboardService:

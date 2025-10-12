@@ -5,8 +5,7 @@ from fastapi.params import Depends
 from sqlalchemy import or_
 
 from app.schemas.input_models.types_input_models import AccountCreate, AccountUpdate
-from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import Account, Product
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
@@ -29,13 +28,26 @@ class AccountService:
                 )
             ).order_by(Account.id)
 
-        return APIResponse.paginated(account, request)
+        return APIResponse.paginated(account, request, lambda account: {
+                "id": account.id,
+                "name": account.name,
+                "account_no": str(account.account_no) if account.account_no else None,
+                "account_type": account.account_type.value if account.account_type else None,
+                "alias": account.alias,
+                # "products": [{
+                #     "id": product.id,
+                #     "code": product.code,
+                #     "name": product.name,
+                #     "name": product.name,
+                # } for product in account.products] if account.products else []
+            }
+        )
 
     def get_account(self, account_id: int):
         account = self.db.query(Account).filter(Account.id == account_id).first()
 
         if not account:
-            raise HTTPException(status_code=404, detail=f"Account ID '{account_id}' not found.")
+            return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
 
         response = {
             "id": account.id,
@@ -43,6 +55,12 @@ class AccountService:
             "account_no": str(account.account_no) if account.account_no else None,
             "account_type": account.account_type.value if account.account_type else None,
             "alias": account.alias,
+            "products": [{
+                    "id": product.id,
+                    "code": product.code,
+                    "name": product.name,
+                    "name": product.name,
+            } for product in account.products] if account.products else []
         }
 
         return APIResponse.ok(data=response)
@@ -50,7 +68,7 @@ class AccountService:
     def create_account(self, request: AccountCreate):
         existing = self.db.query(Account).filter(Account.account_no == request.account_no).first()
         if existing:
-            raise HTTPException(status_code=409, detail=f"Account number '{request.account_no}' already exists.")
+            return APIResponse.conflict(message=f"Account number '{request.account_no}' already exists.")
 
         account = Account(**request.model_dump())
         self.db.add(account)
@@ -62,7 +80,7 @@ class AccountService:
 
         account = self.db.query(Account).filter(Account.id == account_id).first()
         if not account:
-            raise HTTPException(status_code=404, detail=f"Account ID '{account_id}' not found.")
+            return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
 
         if "account_no" in update_data:
             existing = self.db.query(Account).filter(
@@ -70,9 +88,7 @@ class AccountService:
                 Account.id != account_id
             ).first()
             if existing:
-                raise HTTPException(status_code=409, detail=f"Account number '{update_data['account_no']}' already exists.")
-
-        old_data = {k: getattr(account, k) for k in update_data.keys()}
+                return APIResponse.conflict(message=f"Account number '{update_data['account_no']}' already exists.")
 
         result = (
             self.db.query(Account)
@@ -81,22 +97,14 @@ class AccountService:
         )
 
         if result == 0:
-            raise HTTPException(status_code=404, detail=f"Account ID '{account_id}' not found.")
-        
-        AuditLoggerService(self.db).log_update(
-            table_name=Account.__tablename__,
-            record_id=account_id,
-            old_data=old_data,
-            new_data=update_data,
-            changed_by="system"
-        )
+            return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
 
         return APIResponse.ok(f"Account ID '{account_id}' updated.")
 
     def delete_account(self, account_id: int):
         account = self.db.query(Account).filter(Account.id == account_id).first()
         if not account:
-            raise HTTPException(status_code=404, detail=f"Account ID '{account_id}' not found.")
+            return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
 
         product_count = self.db.query(Product).filter(Product.account_id == account_id).count()
 
@@ -105,20 +113,7 @@ class AccountService:
                 "Account tidak bisa dihapus karena sudah digunakan pada data lain: "
                 f"{product_count} Product."
             )
-            raise HTTPException(status_code=409, detail=msg)
-        
-        old_data = {
-            key: value
-            for key, value in vars(account).items()
-            if not key.startswith("_")
-        }
-        
-        AuditLoggerService(self.db).log_delete(
-            table_name=Account.__tablename__,
-            record_id=account_id,
-            old_data=old_data,
-            changed_by="system"
-        )
+            return APIResponse.conflict(message=msg)
 
         self.db.delete(account)
 

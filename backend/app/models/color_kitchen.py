@@ -12,7 +12,7 @@ class ColorKitchenBatch(Base):
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)  # Generated group code
     
-    entries = relationship("ColorKitchenEntry", back_populates="batch")
+    entries = relationship("ColorKitchenEntry", back_populates="batch", lazy='subquery')
     details = relationship("ColorKitchenBatchDetail", back_populates="batch")
 
 

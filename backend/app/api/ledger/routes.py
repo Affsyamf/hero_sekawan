@@ -26,8 +26,8 @@ def create_ledger(request: LedgerCreate, service: LedgerService = Depends()):
 def update_ledger_by_id(ledger_id: int, request: LedgerUpdate, service: LedgerService = Depends()):
     try:
         return service.update_ledger(ledger_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update ledger", error_detail=str(e))
 
@@ -35,7 +35,7 @@ def update_ledger_by_id(ledger_id: int, request: LedgerUpdate, service: LedgerSe
 def delete_ledger_by_id(ledger_id: int, service: LedgerService = Depends()):
     try:
         return service.delete_ledger(ledger_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
+    # except HTTPException as e:
+    #     return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete ledger", error_detail=str(e))

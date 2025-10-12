@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from app.schemas.input_models.types_input_models import DesignTypeCreate, DesignTypeUpdate
 from app.services.common.audit_logger import AuditLoggerService
-from core.database import Session, get_db
+from app.core.database import Session, get_db
 from app.models import DesignType, Design
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
@@ -27,14 +27,24 @@ class DesignTypeService:
                     DesignType.name.ilike(like),
                 )
             ).order_by(DesignType.id)
+        
+        return APIResponse.paginated(design_type, request, lambda design_type: {
+            "id": design_type.id,
+            "name": design_type.name,
+            # "design": [{
+            #         "id": design.id,
+            #         "date": design.date,
+            #         "code": design.code,
+            # } for design in design.designs] if design.designs else []
+        })
 
-        return APIResponse.paginated(design_type, request)
+        # return APIResponse.paginated(design_type, request)
 
     def get_design_type(self, design_type_id: int):
         design_type = self.db.query(DesignType).filter(DesignType.id == design_type_id).first()
 
         if not design_type:
-            raise HTTPException(status_code=404, detail=f"Design Type ID '{design_type_id}' not found.")
+            return APIResponse.not_found(message=f"Design Type ID '{design_type_id}' not found.")
 
         response = {
             "id": design_type.id,
@@ -46,7 +56,7 @@ class DesignTypeService:
     def create_design_type(self, request: DesignTypeCreate):
         existing = self.db.query(DesignType).filter(DesignType.name == request.name).first()
         if existing:
-            raise HTTPException(status_code=409, detail=f"Design Type name '{request.name}' already exists.")
+            return APIResponse.conflict(message=f"Design Type name '{request.name}' already exists.")
 
         design_type = DesignType(**request.model_dump())
         self.db.add(design_type)
@@ -58,7 +68,7 @@ class DesignTypeService:
 
         design_type = self.db.query(DesignType).filter(DesignType.id == design_type_id).first()
         if not design_type:
-            raise HTTPException(status_code=404, detail=f"Design Type ID '{design_type_id}' not found.")
+            return APIResponse.not_found(message=f"Design Type ID '{design_type_id}' not found.")
 
         if "name" in update_data:
             existing = self.db.query(DesignType).filter(
@@ -66,9 +76,7 @@ class DesignTypeService:
                 DesignType.id != design_type_id
             ).first()
             if existing:
-                raise HTTPException(status_code=409, detail=f"Design Type name '{update_data['name']}' already exists.")
-
-        old_data = {k: getattr(design_type, k) for k in update_data.keys()}
+                return APIResponse.conflict(message=f"Design Type name '{update_data['name']}' already exists.")
 
         result = (
             self.db.query(DesignType)
@@ -77,22 +85,14 @@ class DesignTypeService:
         )
 
         if result == 0:
-            raise HTTPException(status_code=404, detail=f"Design Type ID '{design_type_id}' not found.")
-        
-        AuditLoggerService(self.db).log_update(
-            table_name=DesignType.__tablename__,
-            record_id=design_type_id,
-            old_data=old_data,
-            new_data=update_data,
-            changed_by="system"
-        )
+            return APIResponse.not_found(message=f"Design Type ID '{design_type_id}' not found.")
 
         return APIResponse.ok(f"Design Type ID '{design_type_id}' updated.")
 
     def delete_design_type(self, design_type_id: int):
         design_type = self.db.query(DesignType).filter(DesignType.id == design_type_id).first()
         if not design_type:
-            raise HTTPException(status_code=404, detail=f"Design Type ID '{design_type_id}' not found.")
+            return APIResponse.not_found(message=f"Design Type ID '{design_type_id}' not found.")
 
         design_count = self.db.query(Design).filter(Design.type_id == design_type_id).count()
 
@@ -101,20 +101,7 @@ class DesignTypeService:
                 "Design Type tidak bisa dihapus karena sudah digunakan pada data lain: "
                 f"{design_count} Design."
             )
-            raise HTTPException(status_code=409, detail=msg)
-        
-        old_data = {
-            key: value
-            for key, value in vars(design_type).items()
-            if not key.startswith("_")
-        }
-        
-        AuditLoggerService(self.db).log_delete(
-            table_name=DesignType.__tablename__,
-            record_id=design_type_id,
-            old_data=old_data,
-            changed_by="system"
-        )
+            return APIResponse.conflict(message=msg)
 
         self.db.delete(design_type)
 

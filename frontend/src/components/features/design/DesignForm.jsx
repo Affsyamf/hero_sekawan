@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Palette, FileText, Layers, Save } from "lucide-react";
+import { Palette, FileText, Layers, Save, BookOpen } from "lucide-react";
 import Modal from "../../ui/modal/Modal";
 import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
 import Button from "../../ui/button/Button";
 import { useTemp } from "../../../hooks/useTemp";
+import { searchDesign } from "../../../services/design_service";
+import DropdownServer from "../../ui/dropdown-server/DropdownServer";
+import { searchDesignType } from "../../../services/design_type_service";
 
 export default function DesignForm({ design = null, isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -13,18 +16,6 @@ export default function DesignForm({ design = null, isOpen, onClose, onSave }) {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  const { value: designTypesInTemp = [] } = useTemp(
-    "design-types:working-list",
-    []
-  );
-
-  const designTypeOptions = useMemo(() => {
-    return designTypesInTemp.map((x) => ({
-      id: x.id,
-      name: x.name,
-    }));
-  }, [designTypesInTemp]);
 
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +62,10 @@ export default function DesignForm({ design = null, isOpen, onClose, onSave }) {
 
     setLoading(true);
     try {
-      await onSave({ ...formData, id: design?.id });
+      // await onSave({ ...formData, id: design?.id });
+      const dataToSend = { ...formData, id: design?.id };
+      console.log("📤 Data yang dikirim:", dataToSend); // Tambahkan ini
+      await onSave(dataToSend);
     } catch (error) {
       console.error("Error saving design:", error);
     } finally {
@@ -135,25 +129,22 @@ export default function DesignForm({ design = null, isOpen, onClose, onSave }) {
         </Form.Group>
 
         <Form.Group>
-          <Form.Label htmlFor="type_id" required>
+          <Form.Label htmlFor="type_id">
             <div className="flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5 text-primary" />
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
               Design Type
             </div>
           </Form.Label>
-          <select
-            id="type_id"
+          <DropdownServer
+            apiService={searchDesignType}
+            placeholder="Ketik untuk mencari design type..."
+            onChange={(selectedId) => handleInputChange("type_id", selectedId)}
             value={formData.type_id}
-            onChange={(e) => handleInputChange("type_id", e.target.value)}
-            className={inputClassName("type_id")}
-          >
-            <option value="">Select Design Type</option>
-            {designTypeOptions.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
+            contentItem="name"
+            valueKey="id" // ✅ Return hanya ID
+            displayKey="name" // ✅ Tampilkan name di input
+            name="type_id"
+          />
           <Form.Error>{errors.type_id}</Form.Error>
         </Form.Group>
       </div>

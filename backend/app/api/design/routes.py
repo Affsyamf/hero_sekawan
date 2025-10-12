@@ -26,8 +26,6 @@ def create_design(request: DesignCreate, service: DesignService = Depends()):
 def update_design_by_id(design_id: int, request: DesignUpdate, service: DesignService = Depends()):
     try:
         return service.update_design(design_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update design", error_detail=str(e))
 
@@ -35,7 +33,5 @@ def update_design_by_id(design_id: int, request: DesignUpdate, service: DesignSe
 def delete_design_by_id(design_id: int, service: DesignService = Depends()):
     try:
         return service.delete_design(design_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete design", error_detail=str(e))
