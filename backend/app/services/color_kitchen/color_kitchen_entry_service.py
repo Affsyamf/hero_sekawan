@@ -20,8 +20,8 @@ class ColorKitchenEntryService:
     def list_color_kitchen_entry(self, request: ListRequest):
         entry = self.db.query(ColorKitchenEntry)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             entry = entry.filter(
                 or_(
                     ColorKitchenEntry.code.ilike(like),

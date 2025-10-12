@@ -20,8 +20,8 @@ class PurchasingService:
     def list_purchasing(self, request: ListRequest):
         purchasing = self.db.query(Purchasing)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             purchasing = purchasing.filter(
                 or_(
                     Purchasing.code.ilike(like),

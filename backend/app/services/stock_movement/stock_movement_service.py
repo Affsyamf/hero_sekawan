@@ -20,8 +20,8 @@ class StockMovementService:
     def list_stock_movement(self, request: ListRequest):
         stock_movement = self.db.query(StockMovement)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             stock_movement = stock_movement.filter(
                 or_(
                     StockMovement.code.ilike(like),

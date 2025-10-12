@@ -20,8 +20,8 @@ class StockOpnameService:
     def list_stock_opname(self, request: ListRequest):
         stock_opname = self.db.query(StockOpname)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             stock_opname = stock_opname.filter(
                 or_(
                     StockOpname.code.ilike(like),

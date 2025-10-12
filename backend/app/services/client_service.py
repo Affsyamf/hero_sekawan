@@ -19,8 +19,8 @@ class ClientService:
     def list_client(self, request: ListRequest):
         client = self.db.query(Client)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             client = client.filter(
                 or_(
                     Client.name.ilike(like),

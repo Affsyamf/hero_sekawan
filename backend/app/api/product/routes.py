@@ -27,8 +27,6 @@ def create_product(request: ProductCreate, service: ProductService = Depends()):
 def update_product_by_id(product_id: int, request: ProductUpdate, service: ProductService = Depends()):
     try:
         return service.update_product(product_id, request)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to update product", error_detail=str(e))
 
@@ -36,7 +34,5 @@ def update_product_by_id(product_id: int, request: ProductUpdate, service: Produ
 def delete_product_by_id(product_id: int, service: ProductService = Depends()):
     try:
         return service.delete_product(product_id)
-    except HTTPException as e:
-        return APIResponse(status_code=e.status_code, message=e.detail)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to delete product", error_detail=str(e))

@@ -20,8 +20,8 @@ class ColorKitchenBatchService:
     def list_color_kitchen_batch(self, request: ListRequest):
         batch = self.db.query(ColorKitchenBatch)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             batch = batch.filter(
                 or_(
                     ColorKitchenBatch.code.ilike(like),

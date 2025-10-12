@@ -20,8 +20,8 @@ class AccountService:
     def list_account(self, request: ListRequest):
         account = self.db.query(Account)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             account = account.filter(
                 or_(
                     Account.name.ilike(like),

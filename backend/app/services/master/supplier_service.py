@@ -20,8 +20,8 @@ class SupplierService:
     def list_supplier(self, request: ListRequest):
         supplier = self.db.query(Supplier)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             supplier = supplier.filter(
                 or_(
                     Supplier.code.ilike(like),

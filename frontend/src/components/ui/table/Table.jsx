@@ -70,7 +70,7 @@ export default function Table({
         Object.entries({
           page,
           page_size: pageSize,
-          search,
+          q: search,
           filters,
           sortBy: sortConfig.key,
           sortDir: sortConfig.direction,
@@ -81,17 +81,19 @@ export default function Table({
       const response = await fetchData(params);
 
       // Handle response structure: { success, message, data, meta }
-      if (response.success) {
-        setRows(response.data || []);
+      if (response.status == 200) {
+        const result = response.data;
+
+        setRows(result.data || []);
 
         // Extract pagination info from meta
-        if (response.meta?.pagination) {
-          const { total: totalRecords, total_pages } = response.meta.pagination;
+        if (result.meta?.pagination) {
+          const { total: totalRecords, total_pages } = result.meta.pagination;
           setTotal(totalRecords || 0);
           setTotalPages(total_pages || 0);
         } else {
           // Fallback jika meta tidak ada
-          setTotal(response.data?.length || 0);
+          setTotal(result.data?.length || 0);
           setTotalPages(1);
         }
       } else {

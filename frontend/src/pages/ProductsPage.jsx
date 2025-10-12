@@ -104,10 +104,16 @@ export default function ProductsPage() {
   // Save handler
   const handleSave = async (productData) => {
     try {
-      if (productData.id) {
-        await updateProduct(productData.id, productData);
+      const payload = Object.fromEntries(
+        Object.entries(productData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
+
+      if (payload.id) {
+        await updateProduct(payload.id, payload);
       } else {
-        await createProduct(productData);
+        await createProduct(payload);
       }
       setRefreshKey((prev) => prev + 1);
       handleCloseModal();

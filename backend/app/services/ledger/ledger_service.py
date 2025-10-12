@@ -20,8 +20,8 @@ class LedgerService:
     def list_ledger(self, request: ListRequest):
         ledger = self.db.query(Ledger)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             ledger = ledger.filter(
                 or_(
                     Ledger.ref_code.ilike(like),

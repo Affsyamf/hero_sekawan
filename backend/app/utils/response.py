@@ -1,5 +1,5 @@
-# utils/response.py
 import math
+import os
 from typing import Any, Optional, Dict, List, Callable
 from fastapi.responses import JSONResponse
 from fastapi import status
@@ -7,7 +7,6 @@ from sqlalchemy import func
 from sqlalchemy.orm import Query
 
 from app.utils.datatable.request import ListRequest
-
 
 class APIResponse:
     """
@@ -20,7 +19,6 @@ class APIResponse:
             status_code: int = 200,
             message: str = "Operation Successful",
             data: Any = None,
-            success: Optional[bool] = None,
             errors: Optional[List[str]] = None,
             meta: Optional[Dict[str, Any]] = None
     ):
@@ -28,12 +26,7 @@ class APIResponse:
         Constructor untuk direct instantiation
         Usage: APIResponse(status_code=404, message="Client not found")
         """
-        # Auto determine success based on status code if not explicitly set
-        if success is None:
-            success = 200 <= status_code < 400
-
         response_data = {
-            "success": success,
             "message": message,
         }
 
@@ -56,8 +49,7 @@ class APIResponse:
         return self.response
 
     @staticmethod
-    def _create_response(
-            success: bool,
+    def _make_response(
             message: str,
             data: Any = None,
             status_code: int = 200,
@@ -66,7 +58,6 @@ class APIResponse:
     ) -> JSONResponse:
         """Base method untuk create response (for static methods)"""
         response_data = {
-            "success": success,
             "message": message,
         }
 
@@ -94,28 +85,11 @@ class APIResponse:
             meta: Optional[Dict[str, Any]] = None
     ) -> JSONResponse:
         """200 OK Response"""
-        return cls._create_response(
-            success=True,
+        return cls._make_response(
             message=message,
             data=data,
             status_code=status.HTTP_200_OK,
             meta=meta
-        )
-
-    @classmethod
-    def ok_but_failed(
-            cls,
-            message: str = "Operation Unsuccessful",
-            data: Any = None,
-            errors: Optional[List[str]] = None
-    ) -> JSONResponse:
-        """200 OK tapi operasi gagal (business logic failure)"""
-        return cls._create_response(
-            success=False,  # ❌ Operation failed
-            message=message,
-            data=data,
-            status_code=status.HTTP_200_OK,  # ✅ HTTP OK
-            errors=errors
         )
 
     @classmethod
@@ -125,8 +99,7 @@ class APIResponse:
             data: Any = None
     ) -> JSONResponse:
         """201 Created Response"""
-        return cls._create_response(
-            success=True,
+        return cls._make_response(
             message=message,
             data=data,
             status_code=status.HTTP_201_CREATED
@@ -138,11 +111,14 @@ class APIResponse:
     def bad_request(
             cls,
             message: str = "Bad request",
-            errors: Optional[List[str]] = None
+            errors: Optional[List[str]] = None,
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """400 Bad Request Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_400_BAD_REQUEST,
             errors=errors
@@ -151,11 +127,14 @@ class APIResponse:
     @classmethod
     def unauthorized(
             cls,
-            message: str = "Unauthorized access"
+            message: str = "Unauthorized access",
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """401 Unauthorized Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_401_UNAUTHORIZED
         )
@@ -163,11 +142,14 @@ class APIResponse:
     @classmethod
     def forbidden(
             cls,
-            message: str = "Access forbidden"
+            message: str = "Access forbidden",
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """403 Forbidden Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_403_FORBIDDEN
         )
@@ -175,11 +157,14 @@ class APIResponse:
     @classmethod
     def not_found(
             cls,
-            message: str = "Resource not found"
+            message: str = "Resource not found",
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """404 Not Found Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_404_NOT_FOUND
         )
@@ -188,11 +173,14 @@ class APIResponse:
     def conflict(
             cls,
             message: str = "Resource conflict",
-            errors: Optional[List[str]] = None
+            errors: Optional[List[str]] = None,
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """409 Conflict Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_409_CONFLICT,
             errors=errors
@@ -202,11 +190,14 @@ class APIResponse:
     def validation_error(
             cls,
             message: str = "Validation failed",
-            errors: Optional[List[str]] = None
+            errors: Optional[List[str]] = None,
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """422 Validation Error Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             errors=errors
@@ -215,11 +206,14 @@ class APIResponse:
     @classmethod
     def internal_error(
             cls,
-            message: str = "Internal server error"
+            message: str = "Internal server error",
+            error_detail: Optional[str] = None
     ) -> JSONResponse:
         """500 Internal Server Error Response"""
-        return cls._create_response(
-            success=False,
+        env_mode = os.getenv("ENV_MODE", "production").lower()
+        if env_mode == "development" and error_detail:
+            message = f"{message}: {error_detail}"
+        return cls._make_response(
             message=message,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
@@ -259,7 +253,7 @@ class APIResponse:
 
         # Hitung total records
         total = query.order_by(None).count() or 0
-        
+
         # Ambil data dengan pagination
         items = (
             query

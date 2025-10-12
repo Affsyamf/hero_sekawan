@@ -20,8 +20,8 @@ class DesignService:
     def list_design(self, request: ListRequest):
         design = self.db.query(Design)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             design = design.filter(
                 or_(
                     Design.code.ilike(like),

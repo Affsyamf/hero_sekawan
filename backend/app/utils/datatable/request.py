@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator, field_validator, model_validator
 class ListRequest(BaseModel):
     page: Optional[int] = 1
     page_size: Optional[int] = 10
-    search: Optional[str] = None
+    q: Optional[str] = None
     require_filter: Optional[bool] = False  # opsional, default False
 
     @field_validator("page")
@@ -24,11 +24,11 @@ class ListRequest(BaseModel):
 
     @property
     def search_str(self) -> str:
-        return (self.search or "").strip()
+        return (self.q or "").strip()
 
     # ✅ Model validator untuk cek filter wajib
     @model_validator(mode="after")
     def check_required_filter(self):
-        if self.require_filter and not self.search:
+        if self.require_filter and not self.q:
             raise ValueError("Filter is required but missing")
         return self

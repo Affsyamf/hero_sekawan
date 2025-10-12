@@ -20,8 +20,8 @@ class DesignTypeService:
     def list_design_type(self, request: ListRequest):
         design_type = self.db.query(DesignType)
 
-        if request.search:
-            like = f"%{request.search}%"
+        if request.q:
+            like = f"%{request.q}%"
             design_type = design_type.filter(
                 or_(
                     DesignType.name.ilike(like),
