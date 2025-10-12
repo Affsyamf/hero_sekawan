@@ -13,7 +13,9 @@ import Modal from "../../ui/modal/Modal";
 import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
 import Button from "../../ui/button/Button";
-import { useTemp } from "../../../hooks/useTemp";
+import { searchDesign } from "../../../services/design_service";
+import DropdownServer from "../../ui/dropdown-server/DropdownServer";
+import { searchProduct } from "../../../services/product_service";
 
 export default function ColorKitchenForm({
   entry = null,
@@ -31,24 +33,6 @@ export default function ColorKitchenForm({
   const [details, setDetails] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  const { value: designsInTemp = [] } = useTemp("designs:working-list", []);
-  const { value: productsInTemp = [] } = useTemp("products:working-list", []);
-
-  const designOptions = useMemo(() => {
-    return designsInTemp.map((x) => ({
-      id: x.id,
-      code: x.code,
-    }));
-  }, [designsInTemp]);
-
-  const productOptions = useMemo(() => {
-    return productsInTemp.map((x) => ({
-      id: x.id,
-      name: x.name,
-      code: x.code,
-    }));
-  }, [productsInTemp]);
 
   useEffect(() => {
     if (isOpen) {
@@ -248,25 +232,24 @@ export default function ColorKitchenForm({
           </Form.Group>
 
           <Form.Group>
-            <Form.Label htmlFor="design_id" required>
+            <Form.Label htmlFor="design_id">
               <div className="flex items-center gap-2">
                 <Palette className="w-3.5 h-3.5 text-primary" />
                 Design
               </div>
             </Form.Label>
-            <select
-              id="design_id"
+            <DropdownServer
+              apiService={searchDesign}
+              placeholder="Ketik untuk mencari design..."
+              onChange={(selectedId) =>
+                handleInputChange("design_id", selectedId)
+              }
               value={formData.design_id}
-              onChange={(e) => handleInputChange("design_id", e.target.value)}
-              className={inputClassName("design_id")}
-            >
-              <option value="">Select Design</option>
-              {designOptions.map((design) => (
-                <option key={design.id} value={design.id}>
-                  {design.code}
-                </option>
-              ))}
-            </select>
+              contentItem="name"
+              valueKey="id" // ✅ Return hanya ID
+              displayKey="name" // ✅ Tampilkan name di input
+              name="design_id"
+            />
             <Form.Error>{errors.design_id}</Form.Error>
           </Form.Group>
 
@@ -351,28 +334,18 @@ export default function ColorKitchenForm({
                     className="transition-colors duration-150 hover:bg-background/30"
                   >
                     <td className="p-3">
-                      <select
+                      <DropdownServer
+                        apiService={searchProduct}
+                        placeholder="Select Product"
                         value={detail.product_id}
-                        onChange={(e) =>
-                          handleUpdateDetail(
-                            detail.id,
-                            "product_id",
-                            e.target.value
-                          )
+                        onChange={(productId) =>
+                          handleUpdateDetail(detail.id, "product_id", productId)
                         }
-                        className={`w-full px-2 py-1.5 text-xs rounded border transition-all duration-200 bg-surface text-primary-text focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary hover:border-primary/40 ${
-                          errors[`detail_product_${index}`]
-                            ? "border-danger focus:ring-danger/20 focus:border-danger"
-                            : "border-default"
-                        }`}
-                      >
-                        <option value="">Select Product</option>
-                        {productOptions.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.code} - {product.name}
-                          </option>
-                        ))}
-                      </select>
+                        name="detail.product_id"
+                        valueKey="id"
+                        displayKey="name"
+                        contentItem="name"
+                      />
                       {errors[`detail_product_${index}`] && (
                         <p className="mt-1 text-xs text-danger">
                           {errors[`detail_product_${index}`]}

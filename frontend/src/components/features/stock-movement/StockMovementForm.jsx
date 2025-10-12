@@ -12,6 +12,8 @@ import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
 import Button from "../../ui/button/Button";
 import { useTemp } from "../../../hooks/useTemp";
+import DropdownServer from "../../ui/dropdown-server/DropdownServer";
+import { searchProduct } from "../../../services/product_service";
 
 export default function StockMovementForm({
   stockMovement = null,
@@ -26,16 +28,6 @@ export default function StockMovementForm({
   const [details, setDetails] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  const { value: productsInTemp = [] } = useTemp("products:working-list", []);
-
-  const productOptions = useMemo(() => {
-    return productsInTemp.map((x) => ({
-      id: x.id,
-      name: x.name,
-      code: x.code,
-    }));
-  }, [productsInTemp]);
 
   useEffect(() => {
     if (isOpen) {
@@ -244,28 +236,18 @@ export default function StockMovementForm({
                     className="transition-colors duration-150 hover:bg-background/30"
                   >
                     <td className="p-3">
-                      <select
+                      <DropdownServer
+                        apiService={searchProduct}
+                        placeholder="Select Product"
                         value={detail.product_id}
-                        onChange={(e) =>
-                          handleUpdateDetail(
-                            detail.id,
-                            "product_id",
-                            e.target.value
-                          )
+                        onChange={(productId) =>
+                          handleUpdateDetail(detail.id, "product_id", productId)
                         }
-                        className={`w-full px-2 py-1.5 text-xs rounded border transition-all duration-200 bg-surface text-primary-text focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary hover:border-primary/40 ${
-                          errors[`detail_product_${index}`]
-                            ? "border-danger focus:ring-danger/20 focus:border-danger"
-                            : "border-default"
-                        }`}
-                      >
-                        <option value="">Select Product</option>
-                        {productOptions.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.code} - {product.name}
-                          </option>
-                        ))}
-                      </select>
+                        name="detail.product_id"
+                        valueKey="id"
+                        displayKey="name"
+                        contentItem="name"
+                      />
                       {errors[`detail_product_${index}`] && (
                         <p className="mt-1 text-xs text-danger">
                           {errors[`detail_product_${index}`]}

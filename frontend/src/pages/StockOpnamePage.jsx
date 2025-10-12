@@ -1,61 +1,22 @@
 import MainLayout from "../layouts/MainLayout/MainLayout";
 import Table from "../components/ui/table/Table";
 import StockOpnameForm from "../components/features/stock-opname/StockOpnameForm";
-import ImportStockOpnameModal from "../components/features/stock-opname/ImportStockOpnameModal"
+import ImportStockOpnameModal from "../components/features/stock-opname/ImportStockOpnameModal";
 import { useState } from "react";
-import { Edit2, Trash2, Eye, Upload} from "lucide-react";
+import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { useTemp } from "../hooks/useTemp";
 import { formatDate } from "../utils/helpers";
-
-const SAMPLE_STOCK_OPNAME_ENTRIES = [];
+import {
+  createStockOpname,
+  searchStockOpname,
+  updateStockOpname,
+} from "../services/stock_opname_service";
 
 export default function StockOpnamePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
-
-  const { value: entries = SAMPLE_STOCK_OPNAME_ENTRIES, set: setEntries } =
-    useTemp("stock-opname-entries:working-list", SAMPLE_STOCK_OPNAME_ENTRIES);
-  const { value: products = [] } = useTemp("products:working-list", []);
-
-  const fetchEntries = async (params) => {
-    const { page, pageSize, search, sortBy, sortDir, dateRange } = params;
-    let filtered = [...entries];
-
-    if (search) {
-      const s = search.toLowerCase();
-      filtered = filtered.filter(
-        (e) =>
-          e.code?.toLowerCase().includes(s) ||
-          products
-            .find((p) => p.id === e.product_id)
-            ?.name?.toLowerCase()
-            .includes(s)
-      );
-    }
-
-    if (dateRange.start && dateRange.end) {
-      filtered = filtered.filter((e) => {
-        const d = new Date(e.date);
-        return d >= new Date(dateRange.start) && d <= new Date(dateRange.end);
-      });
-    }
-
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aVal = a[sortBy],
-          bVal = b[sortBy];
-        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    return { rows: filtered.slice(start, start + pageSize), total };
-  };
 
   const columns = [
     {
@@ -143,7 +104,7 @@ export default function StockOpnamePage() {
     },
   ];
 
-  const actions = (row) => (
+  const renderActions = (row) => (
     <div className="flex items-center gap-2">
       <button
         onClick={() => {
@@ -178,16 +139,29 @@ export default function StockOpnamePage() {
     </div>
   );
 
-  const save = (data) => {
-    setEntries((prev) => {
-      const c = Array.isArray(prev) ? prev : [];
-      if (data.id)
-        return c.map((e) => (e.id === data.id ? { ...e, ...data } : e));
-      const id = c.length ? Math.max(...c.map((e) => e.id || 0)) + 1 : 1;
-      return [...c, { ...data, id }];
-    });
+  const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelected(null);
+  };
+
+  const handleSave = async (stockOpnameData) => {
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(stockOpnameData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
+
+      if (payload.id) {
+        await updateStockOpname(payload.id, payload);
+      } else {
+        await createStockOpname(payload);
+      }
+      setRefresh((prev) => prev + 1);
+      handleCloseModal();
+    } catch (error) {
+      alert("Failed to save stock opname: " + error.message);
+    }
   };
 
   return (
@@ -215,8 +189,8 @@ export default function StockOpnamePage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={fetchEntries}
-            actions={actions}
+            fetchData={searchStockOpname}
+            actions={renderActions}
             onCreate={() => {
               setSelected(null);
               setIsModalOpen(true);
@@ -232,7 +206,7 @@ export default function StockOpnamePage() {
               setIsModalOpen(false);
               setSelected(null);
             }}
-            onSave={save}
+            onSave={handleSave}
           />
 
           <ImportStockOpnameModal
