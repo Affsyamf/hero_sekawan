@@ -1,17 +1,17 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import ProductForm from "../components/features/product/ProductForm";
-import ImportProductModal from "../components/features/product/ImportProductModal";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import ProductForm from "../../components/features/product/ProductForm";
+import ImportProductModal from "../../components/features/product/ImportProductModal";
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
+import { useTemp } from "../../hooks/useTemp";
 import {
   createProduct,
   deleteProduct,
   searchProduct,
   updateProduct,
-} from "../services/product_service";
-import { searchAccount } from "../services/account_service";
+} from "../../services/product_service";
+import { searchAccount } from "../../services/account_service";
 
 const SAMPLE_PRODUCTS = [];
 

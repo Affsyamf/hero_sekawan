@@ -1,8 +1,8 @@
-import { useTheme } from "../contexts/ThemeContext";
-import Card from "../components/ui/card/Card";
-import Button from "../components/ui/button/Button";
-import Table from "../components/ui/table/Table";
-import Chart from "../components/ui/chart/Chart";
+import { useTheme } from "../../contexts/ThemeContext";
+import Card from "../../components/ui/card/Card";
+import Button from "../../components/ui/button/Button";
+import Table from "../../components/ui/table/Table";
+import Chart from "../../components/ui/chart/Chart";
 import {
   TrendingUp,
   TrendingDown,
@@ -12,7 +12,7 @@ import {
   Download,
   Droplets,
 } from "lucide-react";
-import { MainLayout } from "../layouts";
+import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {

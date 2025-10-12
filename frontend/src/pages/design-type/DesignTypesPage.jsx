@@ -1,15 +1,15 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import DesignTypeForm from "../components/features/design-type/DesignTypeForm";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import DesignTypeForm from "../../components/features/design-type/DesignTypeForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
+import { useTemp } from "../../hooks/useTemp";
 import {
   createDesignType,
   deleteDesignType,
   searchDesignType,
   updateDesignType,
-} from "../services/design_type_service";
+} from "../../services/design_type_service";
 
 const SAMPLE_DESIGN_TYPES = [];
 

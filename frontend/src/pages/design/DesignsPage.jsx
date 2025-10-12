@@ -1,12 +1,12 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import DesignForm from "../components/features/design/DesignForm";
-import ImportDesignModal from "../components/features/design/ImportDesignModal";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import DesignForm from "../../components/features/design/DesignForm";
+import ImportDesignModal from "../../components/features/design/ImportDesignModal";
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
-import { createDesign, deleteDesign, searchDesign, updateDesign } from "../services/design_service";
-import { searchDesignType } from "../services/design_type_service";
+import { useTemp } from "../../hooks/useTemp";
+import { createDesign, deleteDesign, searchDesign, updateDesign } from "../../services/design_service";
+import { searchDesignType } from "../../services/design_type_service";
 
 const SAMPLE_DESIGNS = [];
 

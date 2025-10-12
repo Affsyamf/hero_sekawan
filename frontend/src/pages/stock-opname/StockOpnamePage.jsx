@@ -1,14 +1,18 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import StockMovementForm from "../components/features/stock-movement/StockMovementForm";
-import ImportStockMovementModal from "../components/features/stock-movement/ImportStockMovementModal";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import StockOpnameForm from "../../components/features/stock-opname/StockOpnameForm";
+import ImportStockOpnameModal from "../../components/features/stock-opname/ImportStockOpnameModal";
 import { useState } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
-import { formatDate } from "../utils/helpers";
-import { createStockMovement, searchStockMovement, updateStockMovement } from "../services/stock_movement_service";
+import { useTemp } from "../../hooks/useTemp";
+import { formatDate } from "../../utils/helpers";
+import {
+  createStockOpname,
+  searchStockOpname,
+  updateStockOpname,
+} from "../../services/stock_opname_service";
 
-export default function StockMovementsPage() {
+export default function StockOpnamePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -17,7 +21,7 @@ export default function StockMovementsPage() {
   const columns = [
     {
       key: "code",
-      label: "Movement Code",
+      label: "Code",
       sortable: true,
       render: (v) => <span className="font-medium text-primary-text">{v}</span>,
     },
@@ -38,14 +42,65 @@ export default function StockMovementsPage() {
       ),
     },
     {
-      key: "total",
-      label: "Total Qty",
+      key: "system_qty",
+      label: "System Qty",
       sortable: false,
-      render: (v) => (
-        <span className="font-medium text-primary">
-          {v?.reduce((s, d) => s + (d.quantity || 0), 0) || 0}
-        </span>
-      ),
+      render: (_, row) => {
+        const total = row.details?.reduce(
+          (sum, d) => sum + (parseFloat(d.system_quantity) || 0),
+          0
+        );
+        return (
+          <span className="text-secondary-text">
+            {total?.toFixed(2) || "0.00"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "physical_qty",
+      label: "Physical Qty",
+      sortable: false,
+      render: (_, row) => {
+        const total = row.details?.reduce(
+          (sum, d) => sum + (parseFloat(d.physical_quantity) || 0),
+          0
+        );
+        return (
+          <span className="text-secondary-text">
+            {total?.toFixed(2) || "0.00"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "difference",
+      label: "Difference",
+      sortable: false,
+      render: (_, row) => {
+        const systemTotal = row.details?.reduce(
+          (sum, d) => sum + (parseFloat(d.system_quantity) || 0),
+          0
+        );
+        const physicalTotal = row.details?.reduce(
+          (sum, d) => sum + (parseFloat(d.physical_quantity) || 0),
+          0
+        );
+        const diff = systemTotal - physicalTotal;
+        return (
+          <span
+            className={`font-medium ${
+              diff > 0
+                ? "text-red-600"
+                : diff < 0
+                ? "text-green-600"
+                : "text-secondary-text"
+            }`}
+          >
+            {diff?.toFixed(2) || "0.00"}
+          </span>
+        );
+      },
     },
   ];
 
@@ -73,8 +128,8 @@ export default function StockMovementsPage() {
       </button>
       <button
         onClick={() => {
-          if (confirm(`Delete ${row.code}?`))
-            setStockMovements((p) => p.filter((sm) => sm.id !== row.id));
+          if (confirm(`Delete stock opname ${row.code}?`))
+            setEntries((p) => p.filter((e) => e.id !== row.id));
         }}
         className="p-1.5 text-red-600 hover:bg-red-50 rounded"
         title="Delete"
@@ -89,23 +144,23 @@ export default function StockMovementsPage() {
     setSelected(null);
   };
 
-  const handleSave = async (stockMovementData) => {
+  const handleSave = async (stockOpnameData) => {
     try {
       const payload = Object.fromEntries(
-        Object.entries(stockMovementData).filter(
+        Object.entries(stockOpnameData).filter(
           ([_, value]) => value != null && value !== ""
         )
       );
 
       if (payload.id) {
-        await updateStockMovement(payload.id, payload);
+        await updateStockOpname(payload.id, payload);
       } else {
-        await createStockMovement(payload);
+        await createStockOpname(payload);
       }
       setRefresh((prev) => prev + 1);
       handleCloseModal();
     } catch (error) {
-      alert("Failed to save stock movement: " + error.message);
+      alert("Failed to save stock opname: " + error.message);
     }
   };
 
@@ -114,10 +169,11 @@ export default function StockMovementsPage() {
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl">
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Stock Movement Management
+            Stock Opname Management
           </h1>
           <p className="mb-6 text-secondary-text">
-            Track stock movements with detailed product quantities.
+            Record and manage physical inventory counts with system quantity
+            comparison.
           </p>
 
           <div className="mb-4">
@@ -133,7 +189,7 @@ export default function StockMovementsPage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={searchStockMovement}
+            fetchData={searchStockOpname}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);
@@ -143,8 +199,8 @@ export default function StockMovementsPage() {
             dateFilterKey="date"
           />
 
-          <StockMovementForm
-            stockMovement={selected}
+          <StockOpnameForm
+            entry={selected}
             isOpen={isModalOpen}
             onClose={() => {
               setIsModalOpen(false);
@@ -152,7 +208,8 @@ export default function StockMovementsPage() {
             }}
             onSave={handleSave}
           />
-          <ImportStockMovementModal
+
+          <ImportStockOpnameModal
             isOpen={isImportOpen}
             onClose={() => setIsImportOpen(false)}
             onImportSuccess={() => setRefresh((p) => p + 1)}

@@ -1,15 +1,15 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import SupplierForm from "../components/features/supplier/SupplierForm";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import SupplierForm from "../../components/features/supplier/SupplierForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
+import { useTemp } from "../../hooks/useTemp";
 import {
   createSupplier,
   deleteSupplier,
   searchSupplier,
   updateSupplier,
-} from "../services/supplier_service";
+} from "../../services/supplier_service";
 
 const SAMPLE_SUPPLIERS = [];
 

@@ -1,10 +1,10 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import AccountForm from "../components/features/account/AccountForm";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import AccountForm from "../../components/features/account/AccountForm";
 import { useState } from "react";
 import { Edit2, Trash2, Eye } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
-import { createAccount, deleteAccount, searchAccount, updateAccount } from "../services/account_service";
+import { useTemp } from "../../hooks/useTemp";
+import { createAccount, deleteAccount, searchAccount, updateAccount } from "../../services/account_service";
 
 const SAMPLE_ACCOUNTS = [];
 

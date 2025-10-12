@@ -1,19 +1,19 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import PurchasingForm from "../components/features/purchasing/PurchasingForm";
-import ImportPurchasingModal from "../components/features/purchasing/ImportPurchasingModal";
-import ImportPurchasingTransactionModal from "../components/features/purchasing/ImportPurchasingTransactionModal";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import PurchasingForm from "../../components/features/purchasing/PurchasingForm";
+import ImportPurchasingModal from "../../components/features/purchasing/ImportPurchasingModal";
+import ImportPurchasingTransactionModal from "../../components/features/purchasing/ImportPurchasingTransactionModal";
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload, Database } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
-import { formatCurrency, formatDate } from "../utils/helpers";
+import { useTemp } from "../../hooks/useTemp";
+import { formatCurrency, formatDate } from "../../utils/helpers";
 import {
   createPurchasing,
   deletePurchasing,
   searchPurchasing,
   updatePurchasing,
-} from "../services/purchasing_service";
-import { searchSupplier } from "../services/supplier_service";
+} from "../../services/purchasing_service";
+import { searchSupplier } from "../../services/supplier_service";
 
 export default function PurchasingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);

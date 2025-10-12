@@ -1,18 +1,14 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import ColorKitchenForm from "../components/features/color-kitchen/ColorKitchenForm";
-import ImportColorKitchenModal from "../components/features/color-kitchen/ImportColorKitchenModal";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
+import ImportStockMovementModal from "../../components/features/stock-movement/ImportStockMovementModal";
 import { useState } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
-import { formatDate } from "../utils/helpers";
-import {
-  createColorKitchen,
-  searchColorKitchen,
-  updateColorKitchen,
-} from "../services/color_kitchen_service";
+import { useTemp } from "../../hooks/useTemp";
+import { formatDate } from "../../utils/helpers";
+import { createStockMovement, searchStockMovement, updateStockMovement } from "../../services/stock_movement_service";
 
-export default function ColorKitchensPage() {
+export default function StockMovementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -21,7 +17,7 @@ export default function ColorKitchensPage() {
   const columns = [
     {
       key: "code",
-      label: "No OPJ",
+      label: "Movement Code",
       sortable: true,
       render: (v) => <span className="font-medium text-primary-text">{v}</span>,
     },
@@ -34,33 +30,21 @@ export default function ColorKitchensPage() {
       ),
     },
     {
-      key: "design_id",
-      label: "Design",
-      sortable: true,
-      render: (v) => (
-        <span className="text-primary-text">
-          {designs.find((d) => d.id === v)?.code || "-"}
-        </span>
-      ),
-    },
-    {
-      key: "quantity",
-      label: "Quantity",
-      sortable: true,
-      render: (v) => <span className="text-secondary-text">{v}</span>,
-    },
-    {
-      key: "paste_quantity",
-      label: "Paste Qty",
-      sortable: true,
-      render: (v) => <span className="text-secondary-text">{v}</span>,
-    },
-    {
       key: "details",
       label: "Items",
       sortable: false,
       render: (v) => (
         <span className="text-secondary-text">{v?.length || 0}</span>
+      ),
+    },
+    {
+      key: "total",
+      label: "Total Qty",
+      sortable: false,
+      render: (v) => (
+        <span className="font-medium text-primary">
+          {v?.reduce((s, d) => s + (d.quantity || 0), 0) || 0}
+        </span>
       ),
     },
   ];
@@ -90,7 +74,7 @@ export default function ColorKitchensPage() {
       <button
         onClick={() => {
           if (confirm(`Delete ${row.code}?`))
-            setEntries((p) => p.filter((e) => e.id !== row.id));
+            setStockMovements((p) => p.filter((sm) => sm.id !== row.id));
         }}
         className="p-1.5 text-red-600 hover:bg-red-50 rounded"
         title="Delete"
@@ -105,23 +89,23 @@ export default function ColorKitchensPage() {
     setSelected(null);
   };
 
-  const handleSave = async (colorKitchenData) => {
+  const handleSave = async (stockMovementData) => {
     try {
       const payload = Object.fromEntries(
-        Object.entries(colorKitchenData).filter(
+        Object.entries(stockMovementData).filter(
           ([_, value]) => value != null && value !== ""
         )
       );
 
       if (payload.id) {
-        await updateColorKitchen(payload.id, payload);
+        await updateStockMovement(payload.id, payload);
       } else {
-        await createColorKitchen(payload);
+        await createStockMovement(payload);
       }
       setRefresh((prev) => prev + 1);
       handleCloseModal();
     } catch (error) {
-      alert("Failed to save color kitchen: " + error.message);
+      alert("Failed to save stock movement: " + error.message);
     }
   };
 
@@ -130,10 +114,10 @@ export default function ColorKitchensPage() {
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl">
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Color Kitchen Management
+            Stock Movement Management
           </h1>
           <p className="mb-6 text-secondary-text">
-            Manage color kitchen entries with design and product details.
+            Track stock movements with detailed product quantities.
           </p>
 
           <div className="mb-4">
@@ -149,7 +133,7 @@ export default function ColorKitchensPage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={searchColorKitchen}
+            fetchData={searchStockMovement}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);
@@ -159,8 +143,8 @@ export default function ColorKitchensPage() {
             dateFilterKey="date"
           />
 
-          <ColorKitchenForm
-            entry={selected}
+          <StockMovementForm
+            stockMovement={selected}
             isOpen={isModalOpen}
             onClose={() => {
               setIsModalOpen(false);
@@ -168,7 +152,7 @@ export default function ColorKitchensPage() {
             }}
             onSave={handleSave}
           />
-          <ImportColorKitchenModal
+          <ImportStockMovementModal
             isOpen={isImportOpen}
             onClose={() => setIsImportOpen(false)}
             onImportSuccess={() => setRefresh((p) => p + 1)}

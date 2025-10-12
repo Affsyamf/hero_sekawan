@@ -1,18 +1,18 @@
-import MainLayout from "../layouts/MainLayout/MainLayout";
-import Table from "../components/ui/table/Table";
-import StockOpnameForm from "../components/features/stock-opname/StockOpnameForm";
-import ImportStockOpnameModal from "../components/features/stock-opname/ImportStockOpnameModal";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import ColorKitchenForm from "../../components/features/color-kitchen/ColorKitchenForm";
+import ImportColorKitchenModal from "../../components/features/color-kitchen/ImportColorKitchenModal";
 import { useState } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../hooks/useTemp";
-import { formatDate } from "../utils/helpers";
+import { useTemp } from "../../hooks/useTemp";
+import { formatDate } from "../../utils/helpers";
 import {
-  createStockOpname,
-  searchStockOpname,
-  updateStockOpname,
-} from "../services/stock_opname_service";
+  createColorKitchen,
+  searchColorKitchen,
+  updateColorKitchen,
+} from "../../services/color_kitchen_service";
 
-export default function StockOpnamePage() {
+export default function ColorKitchensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -21,7 +21,7 @@ export default function StockOpnamePage() {
   const columns = [
     {
       key: "code",
-      label: "Code",
+      label: "No OPJ",
       sortable: true,
       render: (v) => <span className="font-medium text-primary-text">{v}</span>,
     },
@@ -34,73 +34,34 @@ export default function StockOpnamePage() {
       ),
     },
     {
+      key: "design_id",
+      label: "Design",
+      sortable: true,
+      render: (v) => (
+        <span className="text-primary-text">
+          {designs.find((d) => d.id === v)?.code || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "quantity",
+      label: "Quantity",
+      sortable: true,
+      render: (v) => <span className="text-secondary-text">{v}</span>,
+    },
+    {
+      key: "paste_quantity",
+      label: "Paste Qty",
+      sortable: true,
+      render: (v) => <span className="text-secondary-text">{v}</span>,
+    },
+    {
       key: "details",
       label: "Items",
       sortable: false,
       render: (v) => (
         <span className="text-secondary-text">{v?.length || 0}</span>
       ),
-    },
-    {
-      key: "system_qty",
-      label: "System Qty",
-      sortable: false,
-      render: (_, row) => {
-        const total = row.details?.reduce(
-          (sum, d) => sum + (parseFloat(d.system_quantity) || 0),
-          0
-        );
-        return (
-          <span className="text-secondary-text">
-            {total?.toFixed(2) || "0.00"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "physical_qty",
-      label: "Physical Qty",
-      sortable: false,
-      render: (_, row) => {
-        const total = row.details?.reduce(
-          (sum, d) => sum + (parseFloat(d.physical_quantity) || 0),
-          0
-        );
-        return (
-          <span className="text-secondary-text">
-            {total?.toFixed(2) || "0.00"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "difference",
-      label: "Difference",
-      sortable: false,
-      render: (_, row) => {
-        const systemTotal = row.details?.reduce(
-          (sum, d) => sum + (parseFloat(d.system_quantity) || 0),
-          0
-        );
-        const physicalTotal = row.details?.reduce(
-          (sum, d) => sum + (parseFloat(d.physical_quantity) || 0),
-          0
-        );
-        const diff = systemTotal - physicalTotal;
-        return (
-          <span
-            className={`font-medium ${
-              diff > 0
-                ? "text-red-600"
-                : diff < 0
-                ? "text-green-600"
-                : "text-secondary-text"
-            }`}
-          >
-            {diff?.toFixed(2) || "0.00"}
-          </span>
-        );
-      },
     },
   ];
 
@@ -128,7 +89,7 @@ export default function StockOpnamePage() {
       </button>
       <button
         onClick={() => {
-          if (confirm(`Delete stock opname ${row.code}?`))
+          if (confirm(`Delete ${row.code}?`))
             setEntries((p) => p.filter((e) => e.id !== row.id));
         }}
         className="p-1.5 text-red-600 hover:bg-red-50 rounded"
@@ -144,23 +105,23 @@ export default function StockOpnamePage() {
     setSelected(null);
   };
 
-  const handleSave = async (stockOpnameData) => {
+  const handleSave = async (colorKitchenData) => {
     try {
       const payload = Object.fromEntries(
-        Object.entries(stockOpnameData).filter(
+        Object.entries(colorKitchenData).filter(
           ([_, value]) => value != null && value !== ""
         )
       );
 
       if (payload.id) {
-        await updateStockOpname(payload.id, payload);
+        await updateColorKitchen(payload.id, payload);
       } else {
-        await createStockOpname(payload);
+        await createColorKitchen(payload);
       }
       setRefresh((prev) => prev + 1);
       handleCloseModal();
     } catch (error) {
-      alert("Failed to save stock opname: " + error.message);
+      alert("Failed to save color kitchen: " + error.message);
     }
   };
 
@@ -169,11 +130,10 @@ export default function StockOpnamePage() {
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl">
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Stock Opname Management
+            Color Kitchen Management
           </h1>
           <p className="mb-6 text-secondary-text">
-            Record and manage physical inventory counts with system quantity
-            comparison.
+            Manage color kitchen entries with design and product details.
           </p>
 
           <div className="mb-4">
@@ -189,7 +149,7 @@ export default function StockOpnamePage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={searchStockOpname}
+            fetchData={searchColorKitchen}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);
@@ -199,7 +159,7 @@ export default function StockOpnamePage() {
             dateFilterKey="date"
           />
 
-          <StockOpnameForm
+          <ColorKitchenForm
             entry={selected}
             isOpen={isModalOpen}
             onClose={() => {
@@ -208,8 +168,7 @@ export default function StockOpnamePage() {
             }}
             onSave={handleSave}
           />
-
-          <ImportStockOpnameModal
+          <ImportColorKitchenModal
             isOpen={isImportOpen}
             onClose={() => setIsImportOpen(false)}
             onImportSuccess={() => setRefresh((p) => p + 1)}
