@@ -14,9 +14,8 @@ from app.models import (
     StockMovement, 
     StockMovementDetail
 )
-
-from app.utils.normalise import normalise_product_name
 from app.utils.safe_parse import safe_str, safe_date, safe_number
+from app.utils.cost_helper import get_avg_cost_for_product
 
 class LapChemicalImportService(BaseImportService):
     def __init__(self, db: DB):
@@ -52,11 +51,29 @@ class LapChemicalImportService(BaseImportService):
             product = self.db.query(Product).filter_by(name=nama_brg.upper()).first()
             if not product:
                 inserted["errors"].append(
-                    {"row": excel_row, "reason": f"product not found: {nama_brg}"}
+                    {
+                        "row": excel_row, 
+                        "reason": f"product not found: {nama_brg}", 
+                        "code": code, 
+                        "qty": qty
+                    }
                 )
                 continue
 
-            # --- reuse or create StockMovement ---
+            # --- fetch cached avg cost ---
+            unit_cost = get_avg_cost_for_product(self.db, product.id)
+            if unit_cost is None:
+                inserted["errors"].append({
+                    "row": excel_row,
+                    "reason": f"no cached avg cost for product: {nama_brg}",
+                    "product_id": product.id,
+                    "code": code,
+                    "qty": qty
+                })
+                inserted["skipped"] += 1
+                continue
+
+            # --- reuse or create Stock_Movement ---
             key = (code, tanggal)
             if key not in movements_map:
                 movement = StockMovement(date=tanggal, code=code)
@@ -72,6 +89,7 @@ class LapChemicalImportService(BaseImportService):
                 quantity=qty,
                 product_id=product.id,
                 stock_movement_id=movement.id,
+                unit_cost_used=unit_cost,
             )
             self.db.add(detail)
             inserted["details"] += 1

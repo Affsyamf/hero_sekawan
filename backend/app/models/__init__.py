@@ -9,6 +9,8 @@ from .stock_movement import *
 from .color_kitchen import *
 from .stock_opname import *
 from .types import *
+from .analytics.product_avg_cost import *
+from .cache.product_avg_cost_cache import ProductAvgCostCache
 from .audit import *
 
 __all__ = [
@@ -30,4 +32,8 @@ __all__ = [
     "Account", "DesignType",
     # audit.py
     "AuditColumnLog",
+    # product_avg_cost.py
+    "ProductAvgCost",
+    # product_avg_cost_cache.py
+    "ProductAvgCostCache",
 ]

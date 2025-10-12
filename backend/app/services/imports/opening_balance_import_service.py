@@ -18,17 +18,18 @@ from app.models import (
 
 from app.utils.normalise import normalise_product_name
 from app.utils.safe_parse import safe_str, safe_date, safe_number
+from app.utils.cost_helper import update_avg_cost_for_products, refresh_product_avg_cost
 
 class OpeningBalanceImportService(BaseImportService):
     def __init__(self, db: DB):
         super().__init__(db)
 
     def get_or_create_system_supplier(self):
-        supplier = self.self.db.query(Supplier).filter_by(code="SYSTEM").first()
+        supplier = self.db.query(Supplier).filter_by(code="SYSTEM").first()
         if not supplier:
             supplier = Supplier(code="SYSTEM", name="System Opening Balance")
-            self.self.db.add(supplier)
-            self.self.db.commit()
+            self.db.add(supplier)
+            self.db.commit()
         return supplier
 
     def _run(self, file: UploadFile):
@@ -55,35 +56,39 @@ class OpeningBalanceImportService(BaseImportService):
         skipped = 0
         skipped_products = []
         added = 0
+        affected_products = set()
         
         for _, row in df.iterrows():
             prod_name = safe_str(normalise_product_name(row.get("NAMA BARANG")))
             if prod_name is None:
                 continue
             
-            qty = safe_number(row.get("SALDO AWAL"))
-            price_plus_ppn = safe_number(row.get("JUMLAH SALDO AWAL + PPN"))
-            if price_plus_ppn is None:
-                price_plus_ppn = safe_number(row.get("JUMLAH FISIK"))
-                dpp = price_plus_ppn
-                unit_price = dpp / qty if qty else 0
-                ppn = 0.0
-            else:
-                dpp = price_plus_ppn / 1.11
-                unit_price = dpp / qty if qty else 0
-                ppn = dpp * 0.11
+            end_qty = safe_number(row.get("FISIK"))
+
+            if end_qty == None or end_qty == 0:
+                skipped += 1
+                skipped_products.append({ "name": prod_name, "reason": "Saldo akhir 0"})
+                continue
+
+            price = safe_number(row.get("JUMLAH FISIK"))
+
+            init_qty = safe_number(row.get("SALDO AWAL"))
+
+            unit_price = price / end_qty
+            dpp = unit_price * init_qty
+            ppn = dpp * 0.11
             
             product = self.db.query(Product).filter_by(name=prod_name).first()
             if not product:
                 print(f"⚠️ Product not found: {prod_name}, skipping")
                 skipped += 1
-                skipped_products.append(prod_name)
+                skipped_products.append({"name": prod_name, "reason": "Product not found"})
                 continue
             
             detail = PurchasingDetail(
                 product=product,
                 purchasing=purchasing,
-                quantity=qty,
+                quantity=init_qty,
                 price=unit_price,
                 discount=0.0,
                 ppn=ppn,
@@ -93,9 +98,16 @@ class OpeningBalanceImportService(BaseImportService):
                 exchange_rate=0.0,
             )
             self.db.add(detail)
+            affected_products.add(product.id)
             added += 1
 
         self.db.commit()
+
+        if affected_products:
+            update_avg_cost_for_products(self.db.connection(), list(affected_products))
+
+        refresh_product_avg_cost(self.db)
+        
 
         return {
             "skipped": skipped,

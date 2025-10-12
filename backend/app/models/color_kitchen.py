@@ -22,6 +22,12 @@ class ColorKitchenBatchDetail(Base):
     id = Column(Integer, primary_key=True)
     quantity = Column(Numeric(18, 4), nullable=False)
 
+    unit_cost_used = Column(Numeric(18, 2), nullable=False)
+    total_cost = Column(
+        Numeric(18, 2),
+        Computed("quantity * unit_cost_used")
+    )
+
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     product = relationship("Product")
 
@@ -52,6 +58,12 @@ class ColorKitchenEntryDetail(Base):
     
     id = Column(Integer, primary_key=True)
     quantity = Column(Numeric(18, 4), nullable=False)
+
+    unit_cost_used = Column(Numeric(18, 2), nullable=False)
+    total_cost = Column(
+        Numeric(18, 2),
+        Computed("quantity * unit_cost_used")
+    )
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="color_kitchen_entry_details")

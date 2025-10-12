@@ -31,6 +31,7 @@ class Product(Base):
     color_kitchen_entry_details = relationship("ColorKitchenEntryDetail", back_populates="product")
     ledger_entries = relationship("Ledger", back_populates="product")
     stock_opname_details = relationship("StockOpnameDetail", back_populates="product")
+    avg_cost_cache = relationship("ProductAvgCostCache", uselist=False, back_populates="product")
 
 class Design(Base):
     __tablename__ = 'designs'
