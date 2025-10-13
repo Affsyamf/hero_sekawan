@@ -11,7 +11,7 @@ class StockMovement(Base):
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)
 
-    details = relationship("StockMovementDetail", back_populates="stock_movement")
+    details = relationship("StockMovementDetail", back_populates="stock_movement", lazy='subquery')
 
 class StockMovementDetail(Base):
     __tablename__ = 'stock_movement_details'
@@ -26,7 +26,7 @@ class StockMovementDetail(Base):
     )
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="stock_movement_details")
+    product = relationship("Product", back_populates="stock_movement_details", lazy='subquery')
 
     stock_movement_id = Column(Integer, ForeignKey('stock_movements.id'), nullable=False)
-    stock_movement = relationship("StockMovement", back_populates="details")
+    stock_movement = relationship("StockMovement", back_populates="details", lazy='subquery')

@@ -21,7 +21,18 @@ import SidebarFooter from "./SidebarFooter";
 // 👉 Config menu
 const menuItems = [
   { isHeader: true, text: "Main" },
-  { label: "Overview", icon: Home, path: "/" },
+  {
+    label: "Overview",
+    icon: Bag,
+    children: [
+      { label: "Overview", path: "/" },
+      { label: "Purchasing", icon: FileBarChart2, path: "/dashboard/purchasings" },
+      { label: "Color Kitchen", icon: FileBarChart2, path: "/dashboard/color-kitchens" },
+    ],
+  },
+  
+  // { label: "Overview", icon: Home, path: "/" },
+  
 
   { isHeader: true, text: "Master Data" },
   {
@@ -38,14 +49,14 @@ const menuItems = [
 
   { isHeader: true, text: "Transactions" },
   { label: "Purchasing", icon: ShoppingCart, path: "/purchasings" },
-  { label: "Stock Movement", icon: Package, path: "/stock-movements" }, 
-  { label: "Color Kitchen", icon: FlaskConical, path: "/color-kitchens" }, 
+  { label: "Stock Movement", icon: Package, path: "/stock-movements" },
+  { label: "Color Kitchen", icon: FlaskConical, path: "/color-kitchens" },
   { label: "Stock Opname", icon: ClipboardCheck, path: "/stock-opnames" },
 
   { isHeader: true, text: "Reports" },
   { label: "Reports", icon: FileBarChart2, path: "/reports/purchasings" },
 
-  // { isHeader: true, text: "Settings" },  
+  // { isHeader: true, text: "Settings" },
   // {
   //   label: "Settings",
   //   icon: Settings,

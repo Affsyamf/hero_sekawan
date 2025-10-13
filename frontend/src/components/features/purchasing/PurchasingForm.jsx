@@ -14,7 +14,6 @@ import Modal from "../../ui/modal/Modal";
 import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
 import Button from "../../ui/button/Button";
-import { useTemp } from "../../../hooks/useTemp";
 import { formatCurrency } from "../../../utils/helpers";
 import { searchProduct } from "../../../services/product_service";
 import { searchSupplier } from "../../../services/supplier_service";
@@ -31,33 +30,13 @@ export default function PurchasingForm({
     date: new Date().toISOString().split("T")[0],
     purchase_order: "",
     supplier_id: "",
+    supplier_name: "", // ✅ Untuk prefill dropdown
   });
   const [details, setDetails] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const { value: suppliersInTemp = [] } = useTemp("suppliers:working-list", []);
-  const { value: productsInTemp = [] } = useTemp("products:working-list", []);
-
-  // Memoized options - hanya di-generate ulang jika data berubah
-  // const supplierOptions = useMemo(() => {
-  //   return suppliersInTemp.map((x) => ({
-  //     id: x.id,
-  //     name: x.name,
-  //     code: x.code || `SUP-${x.id}`,
-  //   }));
-  // }, [suppliersInTemp]);
-
-  // const productOptions = useMemo(() => {
-  //   return productsInTemp.map((x) => ({
-  //     id: x.id,
-  //     name: x.name,
-  //     code: x.code,
-  //     price: x.price || 0,
-  //   }));
-  // }, [productsInTemp]);
-
-  // Initialize form saat modal dibuka
+  // ✅ Initialize form saat modal dibuka dengan prefill support
   useEffect(() => {
     if (isOpen) {
       setErrors({});
@@ -71,8 +50,25 @@ export default function PurchasingForm({
             new Date().toISOString().split("T")[0],
           purchase_order: purchasing.purchase_order || "",
           supplier_id: purchasing.supplier_id || "",
+          supplier_name: purchasing.supplier_name || "", // ✅ Untuk prefill
         });
-        setDetails(purchasing.details || []);
+        
+        // ✅ Map details dengan semua field termasuk product_name
+        const mappedDetails = (purchasing.details || []).map((detail) => ({
+          id: detail.id || Date.now() + Math.random(), // Unique ID
+          product_id: detail.product_id || "",
+          product_name: detail.product_name || "", // ✅ Untuk prefill
+          quantity: detail.quantity || 0,
+          price: detail.price || 0,
+          discount: detail.discount || 0,
+          ppn: detail.ppn || 0,
+          dpp: detail.dpp || 0,
+          tax_no: detail.tax_no || "",
+          exchange_rate: detail.exchange_rate || 1,
+          subtotal: detail.subtotal || 0,
+        }));
+        
+        setDetails(mappedDetails);
       } else {
         // Create mode
         setFormData({
@@ -80,6 +76,7 @@ export default function PurchasingForm({
           date: new Date().toISOString().split("T")[0],
           purchase_order: "",
           supplier_id: "",
+          supplier_name: "",
         });
         setDetails([]);
       }
@@ -94,13 +91,14 @@ export default function PurchasingForm({
     }
   };
 
-  // Detail handlers - Child mengelola detail items sendiri
+  // ✅ Add detail dengan ID unik
   const handleAddDetail = () => {
     setDetails((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id: Date.now() + Math.random(), // Unique ID
         product_id: "",
+        product_name: "", // ✅ Untuk prefill
         quantity: 0,
         price: 0,
         discount: 0,
@@ -117,7 +115,7 @@ export default function PurchasingForm({
     setDetails((prev) => prev.filter((detail) => detail.id !== detailId));
   };
 
-  // Calculation logic - Child menghitung subtotal sendiri
+  // Calculation logic
   const calculateDetailSubtotal = (detail, field, value) => {
     const qty =
       field === "quantity"
@@ -145,23 +143,24 @@ export default function PurchasingForm({
     return { dpp, subtotal };
   };
 
-  const handleUpdateDetail = (detailId, field, value) => {
+  // ✅ Update detail dengan support auto-fill dari product object
+  const handleUpdateDetail = (detailId, field, value, fullObject = null) => {
     setDetails((prev) =>
       prev.map((detail) => {
         if (detail.id === detailId) {
           const updated = { ...detail, [field]: value };
 
-          // Auto-fill price saat product dipilih
-          if (field === "product_id" && value) {
-            const product = productOptions.find(
-              (p) => p.id === parseInt(value)
-            );
-            if (product) {
-              updated.price = product.price;
+          // ✅ Auto-fill dari product object
+          if (field === "product_id" && fullObject) {
+            if (fullObject.price) {
+              updated.price = fullObject.price;
+            }
+            if (fullObject.name) {
+              updated.product_name = fullObject.name; // ✅ Simpan untuk prefill
             }
           }
 
-          // Recalculate jika field yang affect calculation
+          // Recalculate if needed
           if (
             ["quantity", "price", "discount", "ppn", "exchange_rate"].includes(
               field
@@ -183,7 +182,7 @@ export default function PurchasingForm({
     );
   };
 
-  // Summary calculations - Child hitung summary sendiri
+  // Summary calculations
   const summary = useMemo(() => {
     const totalItems = details.length;
     const totalDPP = details.reduce((sum, d) => sum + (d.dpp || 0), 0);
@@ -193,7 +192,7 @@ export default function PurchasingForm({
     return { totalItems, totalDPP, totalPPN, grandTotal };
   }, [details]);
 
-  // Validation - Child validate sendiri
+  // Validation
   const validateForm = () => {
     const newErrors = {};
 
@@ -229,13 +228,12 @@ export default function PurchasingForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit handler - Child handle submit sendiri
+  // Submit handler
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // Pass data ke parent untuk disimpan
       await onSave({ ...formData, details, id: purchasing?.id });
     } catch (error) {
       console.error("Error saving purchasing:", error);
@@ -243,19 +241,6 @@ export default function PurchasingForm({
       setLoading(false);
     }
   };
-
-  // Reusable input class generator
-  const inputClassName = (field) => `
-    w-full px-3 py-2 rounded-lg border transition-all duration-200 
-    bg-surface text-primary-text placeholder-secondary-text text-sm
-    focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-    hover:border-primary/40
-    ${
-      errors[field]
-        ? "border-danger focus:ring-danger/20 focus:border-danger"
-        : "border-default"
-    }
-  `;
 
   return (
     <Modal
@@ -348,18 +333,25 @@ export default function PurchasingForm({
             <DropdownServer
               apiService={searchSupplier}
               placeholder="Ketik untuk mencari supplier..."
-              onChange={(selectedId) =>
-                handleInputChange("supplier_id", selectedId)
-              }
+              onChange={(selectedId, selectedObject) => {
+                handleInputChange("supplier_id", selectedId);
+                // ✅ Simpan supplier name
+                if (selectedObject) {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    supplier_name: selectedObject.name 
+                  }));
+                }
+              }}
               value={formData.supplier_id}
+              initialLabel={formData.supplier_name} // ✅ Prefill label
               contentItem="name"
-              valueKey="id" // ✅ Return hanya ID
-              displayKey="name" // ✅ Tampilkan name di input
+              valueKey="id"
+              displayKey="name"
               name="supplier_id"
             />
             <Form.Error>{errors.supplier_id}</Form.Error>
           </Form.Group>
-
         </div>
 
         {/* Product Details */}
@@ -423,13 +415,20 @@ export default function PurchasingForm({
                   >
                     <td className="p-3">
                       <DropdownServer
+                        key={`product-${detail.id}-${detail.product_id}`} // ✅ Unique key
                         apiService={searchProduct}
                         placeholder="Select Product"
                         value={detail.product_id}
-                        onChange={(productId) =>
-                          handleUpdateDetail(detail.id, "product_id", productId)
-                        }
-                        name="detail.product_id"
+                        initialLabel={detail.product_name} // ✅ Prefill label
+                        onChange={(productId, productObject) => {
+                          handleUpdateDetail(
+                            detail.id,
+                            "product_id",
+                            productId,
+                            productObject // Pass full object
+                          );
+                        }}
+                        name={`product_${detail.id}`} // ✅ Unique name
                         valueKey="id"
                         displayKey="name"
                         contentItem="name"

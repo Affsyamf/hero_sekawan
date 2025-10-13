@@ -24,14 +24,14 @@ class Product(Base):
     unit = Column(String, nullable=True)
 
     account_id = Column(Integer, ForeignKey('accounts.id'))
-    account = relationship("Account", back_populates="products", lazy='noload')
+    account = relationship("Account", back_populates="products", lazy='subquery')
 
-    purchasing_details = relationship("PurchasingDetail", back_populates="product")
-    stock_movement_details = relationship("StockMovementDetail", back_populates="product")
-    color_kitchen_entry_details = relationship("ColorKitchenEntryDetail", back_populates="product")
-    ledger_entries = relationship("Ledger", back_populates="product")
-    stock_opname_details = relationship("StockOpnameDetail", back_populates="product")
-    avg_cost_cache = relationship("ProductAvgCostCache", uselist=False, back_populates="product")
+    purchasing_details = relationship("PurchasingDetail", back_populates="product", lazy='subquery')
+    stock_movement_details = relationship("StockMovementDetail", back_populates="product", lazy='subquery')
+    color_kitchen_entry_details = relationship("ColorKitchenEntryDetail", back_populates="product", lazy='subquery')
+    ledger_entries = relationship("Ledger", back_populates="product", lazy='subquery')
+    stock_opname_details = relationship("StockOpnameDetail", back_populates="product", lazy='subquery')
+    avg_cost_cache = relationship("ProductAvgCostCache", uselist=False, back_populates="product", lazy='subquery')
 
 class Design(Base):
     __tablename__ = 'designs'
@@ -40,6 +40,6 @@ class Design(Base):
     code = Column(String, nullable=False, unique=True)
     
     type_id = Column(Integer, ForeignKey("design_types.id"), nullable=False)
-    type = relationship("DesignType", back_populates="designs")
+    type = relationship("DesignType", back_populates="designs", lazy='subquery')
 
     color_kitchen_entries = relationship("ColorKitchenEntry", back_populates="design", lazy='subquery')

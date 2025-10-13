@@ -13,7 +13,7 @@ class ColorKitchenBatch(Base):
     code = Column(String, nullable=False)  # Generated group code
     
     entries = relationship("ColorKitchenEntry", back_populates="batch", lazy='subquery')
-    details = relationship("ColorKitchenBatchDetail", back_populates="batch")
+    details = relationship("ColorKitchenBatchDetail", back_populates="batch", lazy='subquery')
 
 
 class ColorKitchenBatchDetail(Base):
@@ -32,7 +32,7 @@ class ColorKitchenBatchDetail(Base):
     product = relationship("Product")
 
     batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"), nullable=False)
-    batch = relationship("ColorKitchenBatch", back_populates="details")
+    batch = relationship("ColorKitchenBatch", back_populates="details", lazy='subquery')
     
 class ColorKitchenEntry(Base):
     __tablename__ = "color_kitchen_entries"
@@ -44,14 +44,14 @@ class ColorKitchenEntry(Base):
     paste_quantity = Column(Numeric(18, 2), nullable=False)
 
     design_id = Column(Integer, ForeignKey("designs.id"), nullable=False)
-    design = relationship("Design", back_populates="color_kitchen_entries")
+    design = relationship("Design", back_populates="color_kitchen_entries", lazy='subquery')
 
     # link to batch (shared dyestuff)
     batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"))
-    batch = relationship("ColorKitchenBatch", back_populates="entries")
+    batch = relationship("ColorKitchenBatch", back_populates="entries", lazy='subquery')
 
     # auxiliaries (per OPJ)
-    details = relationship("ColorKitchenEntryDetail", back_populates="color_kitchen_entry")
+    details = relationship("ColorKitchenEntryDetail", back_populates="color_kitchen_entry", lazy='subquery')
 
 class ColorKitchenEntryDetail(Base):
     __tablename__ = 'color_kitchen_entry_details'
@@ -66,7 +66,7 @@ class ColorKitchenEntryDetail(Base):
     )
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="color_kitchen_entry_details")
+    product = relationship("Product", back_populates="color_kitchen_entry_details", lazy='subquery')
 
     color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id'), nullable=False)
-    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details")
+    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details", lazy='subquery')

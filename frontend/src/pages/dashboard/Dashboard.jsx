@@ -8,70 +8,112 @@ import {
   TrendingDown,
   DollarSign,
   AlertTriangle,
-  Filter,
   Download,
   Droplets,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
+import {
+  getDashboardData,
+  getTransactions,
+  exportTransactions,
+  downloadCSVFile,
+  getFilenameFromHeaders,
+} from "../../services/dashboard_service";
+import {
+  formatNumber,
+  formatCompactCurrency,
+  formatDateTime,
+  capitalize,
+} from "../../utils/helpers";
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("1 Bulan");
+  const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
 
-  // Fetch main dashboard data
-  // useEffect(() => {
-  //   const fetchDashboardData = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const response = await dashboardApi.getDashboard({ 
-  //         period: period,
-  //       });
-        
-  //       if (response.success) {
-  //         setDashboardData(response.data);
-  //       }
-  //     } catch (error) {
-  //       console.error('Error fetching dashboard:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  // Fetch dashboard data
+  useEffect(() => {
+    fetchDashboardData();
+  }, [period]);
 
-  //   fetchDashboardData();
-  // }, [period]);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await getDashboardData(period);
+      setDashboardData(response.data.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      // Optional: Add toast notification
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // // Fetch function untuk Table component
-  // const fetchTransactions = async (params) => {
-  //   try {
-  //     const response = await dashboardApi.getDashboardTransactions({
-  //       page: params.page,
-  //       page_size: params.pageSize,
-  //       search: params.search || "",
-  //       date_start: params.dateRange?.start || undefined,
-  //       date_end: params.dateRange?.end || undefined,
-  //       sort_by: params.sortBy || undefined,
-  //       sort_dir: params.sortDir || "desc",
-  //     });
-      
-  //     if (response.success) {
-  //       return response.data;
-  //     }
-  //     return { rows: [], total: 0 };
-  //   } catch (error) {
-  //     console.error('Error fetching transactions:', error);
-  //     return { rows: [], total: 0 };
-  //   }
-  // };
+  // Fetch transactions for table
+  const fetchTransactions = async (params) => {
+    try {
+      const response = await getTransactions({
+        page: params.page || 1,
+        page_size: params.pageSize || 10,
+        ...params.filters,
+      });
+
+      return {
+        data: response.data.data,
+        total: response.data.total,
+        page: response.data.page,
+        pageSize: response.data.page_size,
+      };
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      return {
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 10,
+      };
+    }
+  };
+
+  // Export function - using backend CSV export
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const response = await exportTransactions();
+
+      // Get filename from headers
+      const filename = getFilenameFromHeaders(response.headers);
+
+      // Download file
+      downloadCSVFile(response.data, filename);
+
+      // Optional: Show success notification
+      console.log("Export successful!");
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      // Optional: Show error notification
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Format trend value with sign
+  const formatTrend = (trend) => {
+    const sign = trend > 0 ? "+" : "";
+    return `${sign}${trend}%`;
+  };
 
   // Transaction columns definition
   const transactionColumns = [
-    { 
-      key: "date", 
+    {
+      key: "date",
       label: "Tanggal",
-      sortable: true 
+      sortable: true,
+      render: (value) => formatDateTime(value),
     },
     {
       key: "type",
@@ -94,15 +136,15 @@ export default function Dashboard() {
         );
       },
     },
-    { 
-      key: "ref", 
+    {
+      key: "ref",
       label: "Referensi",
-      sortable: true
+      sortable: true,
     },
-    { 
-      key: "product", 
+    {
+      key: "product",
       label: "Product",
-      sortable: true
+      sortable: true,
     },
     {
       key: "qty",
@@ -115,14 +157,15 @@ export default function Dashboard() {
           }`}
         >
           {value > 0 ? "+" : ""}
-          {value}
+          {formatNumber(value)}
         </span>
       ),
     },
-    { 
-      key: "location", 
+    {
+      key: "location",
       label: "Lokasi",
-      sortable: true
+      sortable: true,
+      render: (value) => capitalize(value),
     },
   ];
 
@@ -145,19 +188,26 @@ export default function Dashboard() {
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <p className="text-gray-600">No data available</p>
+            <button
+              onClick={fetchDashboardData}
+              className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </MainLayout>
     );
   }
 
-  const { metrics, stock_flow, stock_location, top_products, design_cost } = dashboardData;
+  const { metrics, stock_flow, stock_location, top_products, design_cost } =
+    dashboardData;
 
   // Calculate total stock for donut center
   const totalStock = stock_location.reduce((sum, item) => sum + item.value, 0);
 
-  // Calculate design cost trend (dummy data for line chart - you can enhance this later)
-  const designCostTrend = design_cost.map(d => d.orders);
+  // Calculate design cost trend (using orders count)
+  const designCostTrend = design_cost.map((d) => d.orders);
 
   // Calculate total cost for trend chart
   const totalDesignCost = design_cost.reduce((sum, d) => sum + d.cost, 0);
@@ -176,7 +226,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select 
+            <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -185,8 +235,13 @@ export default function Dashboard() {
               <option>3 Bulan</option>
               <option>6 Bulan</option>
             </select>
-            <Button icon={Filter} label="Filter" variant="secondary" />
-            <Button icon={Download} label="Export" variant="primary" />
+            <Button
+              icon={Download}
+              label={exporting ? "Exporting..." : "Export"}
+              variant="primary"
+              onClick={handleExport}
+              disabled={exporting}
+            />
           </div>
         </div>
 
@@ -194,29 +249,29 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Chart.Metric
             title="Total Stock Masuk (Bulan Ini)"
-            value={`${metrics.stock_masuk.value.toLocaleString()} kg`}
-            trend={`${metrics.stock_masuk.trend > 0 ? '+' : ''}${metrics.stock_masuk.trend}%`}
+            value={`${formatNumber(metrics.stock_masuk.value)} kg`}
+            trend={formatTrend(metrics.stock_masuk.trend)}
             icon={TrendingUp}
           />
 
           <Chart.Metric
             title="Total Stock Keluar (Bulan Ini)"
-            value={`${metrics.stock_keluar.value.toLocaleString()} kg`}
-            trend={`${metrics.stock_keluar.trend > 0 ? '+' : ''}${metrics.stock_keluar.trend}%`}
+            value={`${formatNumber(metrics.stock_keluar.value)} kg`}
+            trend={formatTrend(metrics.stock_keluar.trend)}
             icon={TrendingDown}
           />
 
           <Chart.Metric
             title="Total Cost Produksi"
-            value={`Rp ${(metrics.cost_produksi.value / 1000000).toFixed(1)} Jt`}
-            trend={`${metrics.cost_produksi.trend > 0 ? '+' : ''}${metrics.cost_produksi.trend}%`}
+            value={formatCompactCurrency(metrics.cost_produksi.value)}
+            trend={formatTrend(metrics.cost_produksi.trend)}
             icon={DollarSign}
           />
 
           <Chart.Metric
             title="Selisih Stock Opname"
-            value={`${metrics.selisih_opname.value.toLocaleString()} kg`}
-            trend={`${metrics.selisih_opname.trend > 0 ? '+' : ''}${metrics.selisih_opname.trend}%`}
+            value={`${formatNumber(metrics.selisih_opname.value)} kg`}
+            trend={formatTrend(metrics.selisih_opname.trend)}
             icon={AlertTriangle}
           />
         </div>
@@ -232,10 +287,14 @@ export default function Dashboard() {
                 subtitle="Monitoring alur stock purchasing hingga usage"
                 datasets={[
                   { key: "stockMasuk", label: "Stock Masuk", color: "success" },
-                  { key: "stockKeluar", label: "Stock Keluar", color: "primary" },
+                  {
+                    key: "stockKeluar",
+                    label: "Stock Keluar",
+                    color: "primary",
+                  },
                 ]}
                 periods={["6 Bulan", "3 Bulan", "1 Bulan"]}
-                onFetchData={stock_flow}
+                onFetchData={() => stock_flow}
                 showSummary={true}
               />
             </Card>
@@ -249,7 +308,7 @@ export default function Dashboard() {
                 value: totalStock.toFixed(0),
                 label: "Total %",
               }}
-              title="Stock Per Product"
+              title="Stock Per Lokasi"
               className="w-full h-full"
             />
           </div>
@@ -276,10 +335,15 @@ export default function Dashboard() {
                       value={item.value}
                       maxValue={item.maxValue}
                       color={
-                        index === 0 ? "error" :
-                        index === 1 ? "primary" :
-                        index === 2 ? "warning" :
-                        index === 3 ? "success" : "info"
+                        index === 0
+                          ? "error"
+                          : index === 1
+                          ? "primary"
+                          : index === 2
+                          ? "warning"
+                          : index === 3
+                          ? "success"
+                          : "info"
                       }
                     />
                   </div>
@@ -308,16 +372,20 @@ export default function Dashboard() {
                         {item.design}
                       </p>
                       <p className="text-xs text-gray-600">
-                        {item.orders} orders
+                        {formatNumber(item.orders)} orders
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-gray-900">
-                      Rp {(item.cost / 1000000).toFixed(1)}jt
+                      {formatCompactCurrency(item.cost)}
                     </p>
                     <p className="text-xs text-gray-600">
-                      @{item.orders > 0 ? (item.cost / item.orders / 1000).toFixed(0) : 0}k/order
+                      @
+                      {item.orders > 0
+                        ? formatCompactCurrency(item.cost / item.orders)
+                        : "Rp 0"}
+                      /order
                     </p>
                   </div>
                 </div>
@@ -331,19 +399,25 @@ export default function Dashboard() {
           {/* Design Cost Trend */}
           <Chart.Line
             data={designCostTrend}
-            value={`Rp ${(totalDesignCost / 1000000).toFixed(1)} Jt`}
-            trend={design_cost.length > 0 ? 12.5 : 0}
+            value={formatCompactCurrency(totalDesignCost)}
+            trend={design_cost.length > 1 ? 12.5 : 0}
             title="Trend Cost Produksi"
           />
 
-          {/* Stock Movement by Product */}
+          {/* Stock Movement by Location */}
           <Card>
             <h3 className="mb-4 text-sm font-semibold text-gray-900 md:text-base">
-              Distribusi Stock Berdasarkan Product
+              Distribusi Stock Berdasarkan Lokasi
             </h3>
             <div className="space-y-3">
               {stock_location.map((item, idx) => {
-                const progressColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
+                const progressColors = [
+                  "#3b82f6",
+                  "#8b5cf6",
+                  "#10b981",
+                  "#f59e0b",
+                  "#ef4444",
+                ];
                 return (
                   <div key={idx}>
                     <div className="flex items-center justify-between mb-1.5">
@@ -359,7 +433,8 @@ export default function Dashboard() {
                         className="h-2.5 transition-all duration-500 rounded-full"
                         style={{
                           width: `${item.value}%`,
-                          backgroundColor: progressColors[idx % progressColors.length],
+                          backgroundColor:
+                            progressColors[idx % progressColors.length],
                         }}
                       />
                     </div>

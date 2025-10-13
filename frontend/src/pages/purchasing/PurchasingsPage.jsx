@@ -70,22 +70,18 @@ export default function PurchasingsPage() {
       },
     },
     {
-      key: "details",
+      key: "item_count",
       label: "Items",
       sortable: false,
       render: (v) => (
-        <span className="text-secondary-text">{v?.length || 0}</span>
+        <span className="text-secondary-text">{v || 0}</span>
       ),
     },
     {
-      key: "total",
+      key: "total_amount",
       label: "Total Amount",
       sortable: false,
-      render: (v) => (
-        <span className="font-medium text-primary">
-          {formatCurrency(v?.reduce((s, d) => s + (d.subtotal || 0), 0) || 0)}
-        </span>
-      ),
+      render: (v) => <span className="font-medium text-primary">{formatCurrency(v || 0)}</span>
     },
   ];
 
@@ -93,7 +89,7 @@ export default function PurchasingsPage() {
     <div className="flex items-center gap-2">
       <button
         onClick={() => {
-          selectedPurchasing(row);
+          setSelectedPurchasing(row);
           setIsModalOpen(true);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200"
@@ -103,7 +99,7 @@ export default function PurchasingsPage() {
       </button>
       <button
         onClick={() => {
-          selectedPurchasing(row);
+          setSelectedPurchasing(row);
           setIsModalOpen(true);
         }}
         className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all duration-200"

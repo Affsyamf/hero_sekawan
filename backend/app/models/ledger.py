@@ -19,4 +19,4 @@ class Ledger(Base):
     quantity_out = Column(Numeric(18, 2), server_default=text("0.00"))
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="ledger_entries")
+    product = relationship("Product", back_populates="ledger_entries", lazy='subquery')

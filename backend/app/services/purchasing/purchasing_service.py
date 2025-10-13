@@ -2,23 +2,27 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_
+from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.purchasing_input_models import PurchasingCreate, PurchasingUpdate
-from app.services.common.audit_logger import AuditLoggerService
 from app.core.database import Session, get_db
 from app.models import Purchasing, PurchasingDetail
 from app.utils.datatable.request import ListRequest
-from app.utils.deps import DB
 from app.utils.response import APIResponse
-
 
 class PurchasingService:
     def __init__(self, db = Depends(get_db)):
         self.db = db
 
     def list_purchasing(self, request: ListRequest):
-        purchasing = self.db.query(Purchasing)
+        purchasing = self.db.query(
+            Purchasing,
+            func.count(PurchasingDetail.id).label('item_count'),
+            func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label('total_amount')
+        ).outerjoin(Purchasing.details)\
+         .outerjoin(Purchasing.supplier)\
+         .group_by(Purchasing.id)
 
         if request.q:
             like = f"%{request.q}%"
@@ -27,12 +31,27 @@ class PurchasingService:
                     Purchasing.code.ilike(like),
                     Purchasing.purchase_order.ilike(like),
                 )
-            ).order_by(Purchasing.id.desc())
+            )
+        
+        purchasing = purchasing.order_by(Purchasing.id.desc())
 
-        return APIResponse.paginated(purchasing, request)
+        return APIResponse.paginated(purchasing, request, lambda row: {
+            "id": row.Purchasing.id,
+            "date": row.Purchasing.date.isoformat() if row.Purchasing.date else None,
+            "code": row.Purchasing.code,
+            "purchase_order": row.Purchasing.purchase_order,
+            "supplier_id": row.Purchasing.supplier_id,
+            "supplier_name": row.Purchasing.supplier.name if row.Purchasing.supplier else None,
+            "details": [],
+            "item_count": row.item_count or 0,
+            "total_amount": float(row.total_amount) if row.total_amount else 0,
+        })
 
     def get_purchasing(self, purchasing_id: int):
-        purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
+        purchasing = self.db.query(Purchasing).options(
+            joinedload(Purchasing.supplier),
+            joinedload(Purchasing.details).joinedload(PurchasingDetail.product)
+        ).filter(Purchasing.id == purchasing_id).first()
 
         if not purchasing:
             return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
@@ -66,85 +85,111 @@ class PurchasingService:
         return APIResponse.ok(data=response)
 
     def create_purchasing(self, request: PurchasingCreate):
-        purchasing = Purchasing(
-            date=request.date,
-            code=request.code,
-            purchase_order=request.purchase_order,
-            supplier_id=request.supplier_id
-        )
-        self.db.add(purchasing)
-        self.db.flush()
+        try:
+            # Create purchasing header
+            purchasing = Purchasing(
+                date=request.date,
+                code=request.code,
+                purchase_order=request.purchase_order,
+                supplier_id=request.supplier_id
+            )
+            self.db.add(purchasing)
+            self.db.flush()  # Get purchasing.id
 
-        if request.details:
-            for detail_data in request.details:
-                detail = PurchasingDetail(
-                    purchasing_id=purchasing.id,
-                    product_id=detail_data.product_id,
-                    quantity=detail_data.quantity,
-                    price=detail_data.price,
-                    discount=detail_data.discount,
-                    ppn=detail_data.ppn,
-                    pph=detail_data.pph,
-                    dpp=detail_data.dpp,
-                    tax_no=detail_data.tax_no,
-                    exchange_rate=detail_data.exchange_rate
-                )
-                self.db.add(detail)
+            # Create purchasing details
+            if request.details:
+                for detail_data in request.details:
+                    detail = PurchasingDetail(
+                        purchasing_id=purchasing.id,
+                        product_id=detail_data.product_id,
+                        quantity=detail_data.quantity,
+                        price=detail_data.price,
+                        discount=detail_data.discount,
+                        ppn=detail_data.ppn,
+                        pph=detail_data.pph,
+                        dpp=detail_data.dpp,
+                        tax_no=detail_data.tax_no,
+                        exchange_rate=detail_data.exchange_rate
+                    )
+                    self.db.add(detail)
 
-        return APIResponse.created()
+            # ✅ COMMIT - CRITICAL!
+            self.db.commit()
+            self.db.refresh(purchasing)
+
+            return APIResponse.created(message=f"Purchasing '{purchasing.code}' created successfully.")
+        
+        except Exception as e:
+            self.db.rollback()  # ✅ Rollback jika error
+            raise HTTPException(status_code=500, detail=f"Failed to create purchasing: {str(e)}")
 
     def update_purchasing(self, purchasing_id: int, request: PurchasingUpdate):
-        purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
-        if not purchasing:
-            return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
+        try:
+            purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
+            if not purchasing:
+                return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
 
-        if request.date is not None:
-            purchasing.date = request.date
-        if request.code is not None:
-            purchasing.code = request.code
-        if request.purchase_order is not None:
-            purchasing.purchase_order = request.purchase_order
-        if request.supplier_id is not None:
-            purchasing.supplier_id = request.supplier_id
+            # Update header
+            if request.date is not None:
+                purchasing.date = request.date
+            if request.code is not None:
+                purchasing.code = request.code
+            if request.purchase_order is not None:
+                purchasing.purchase_order = request.purchase_order
+            if request.supplier_id is not None:
+                purchasing.supplier_id = request.supplier_id
 
-        if request.details is not None:
+            # Update details
+            if request.details is not None:
+                # Delete old details
+                self.db.query(PurchasingDetail).filter(
+                    PurchasingDetail.purchasing_id == purchasing_id
+                ).delete(synchronize_session=False)
+
+                # Insert new details
+                for detail_data in request.details:
+                    detail = PurchasingDetail(
+                        purchasing_id=purchasing_id,
+                        product_id=detail_data.product_id,
+                        quantity=detail_data.quantity,
+                        price=detail_data.price,
+                        discount=detail_data.discount,
+                        ppn=detail_data.ppn,
+                        pph=detail_data.pph,
+                        dpp=detail_data.dpp,
+                        tax_no=detail_data.tax_no,
+                        exchange_rate=detail_data.exchange_rate
+                    )
+                    self.db.add(detail)
+
+            # ✅ COMMIT - CRITICAL!
+            self.db.commit()
+            
+            return APIResponse.ok(message=f"Purchasing ID '{purchasing_id}' updated successfully.")
+        
+        except Exception as e:
+            self.db.rollback()  # ✅ Rollback jika error
+            raise HTTPException(status_code=500, detail=f"Failed to update purchasing: {str(e)}")
+
+    def delete_purchasing(self, purchasing_id: int):
+        try:
+            purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
+            if not purchasing:
+                return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
+
+            # Delete details first (foreign key)
             self.db.query(PurchasingDetail).filter(
                 PurchasingDetail.purchasing_id == purchasing_id
             ).delete(synchronize_session=False)
 
-            for detail_data in request.details:
-                detail = PurchasingDetail(
-                    purchasing_id=purchasing_id,
-                    product_id=detail_data.product_id,
-                    quantity=detail_data.quantity,
-                    price=detail_data.price,
-                    discount=detail_data.discount,
-                    ppn=detail_data.ppn,
-                    pph=detail_data.pph,
-                    dpp=detail_data.dpp,
-                    tax_no=detail_data.tax_no,
-                    exchange_rate=detail_data.exchange_rate
-                )
-                self.db.add(detail)
+            # Delete purchasing
+            self.db.delete(purchasing)
 
-        new_data = {
-            "date": purchasing.date.isoformat() if purchasing.date else None,
-            "code": purchasing.code,
-            "purchase_order": purchasing.purchase_order,
-            "supplier_id": purchasing.supplier_id,
-        }
+            # ✅ COMMIT - CRITICAL!
+            self.db.commit()
+
+            return APIResponse.ok(message=f"Purchasing ID '{purchasing_id}' deleted successfully.")
         
-        return APIResponse.ok(f"Purchasing ID '{purchasing_id}' updated.")
-
-    def delete_purchasing(self, purchasing_id: int):
-        purchasing = self.db.query(Purchasing).filter(Purchasing.id == purchasing_id).first()
-        if not purchasing:
-            return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
-
-        self.db.query(PurchasingDetail).filter(
-            PurchasingDetail.purchasing_id == purchasing_id
-        ).delete(synchronize_session=False)
-
-        self.db.delete(purchasing)
-
-        return APIResponse.ok(f"Purchasing ID '{purchasing_id}' deleted.")
+        except Exception as e:
+            self.db.rollback()  # ✅ Rollback jika error
+            raise HTTPException(status_code=500, detail=f"Failed to delete purchasing: {str(e)}")

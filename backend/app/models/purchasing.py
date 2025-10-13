@@ -14,11 +14,11 @@ class Purchasing(Base):
     purchase_order = Column(String, nullable=True) # PO Number
 
     supplier_id = Column(Integer, ForeignKey('suppliers.id'), nullable=False)
-    supplier = relationship("Supplier", back_populates="purchasings")
+    supplier = relationship("Supplier", back_populates="purchasings", lazy='subquery')
 
     # purchase_order_id = Column(Intege) # Future relation to PurchaseOrder if needed
 
-    details = relationship("PurchasingDetail", back_populates="purchasing")
+    details = relationship("PurchasingDetail", back_populates="purchasing", lazy='subquery')
 
 class PurchasingDetail(Base):
     __tablename__ = 'purchasing_details'
@@ -34,7 +34,7 @@ class PurchasingDetail(Base):
     exchange_rate = Column(Numeric(18, 2), server_default=text("0.00"))
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="purchasing_details")
+    product = relationship("Product", back_populates="purchasing_details", lazy='subquery')
 
     purchasing_id = Column(Integer, ForeignKey('purchasings.id'), nullable=False)
-    purchasing = relationship("Purchasing", back_populates="details")
+    purchasing = relationship("Purchasing", back_populates="details", lazy='subquery')

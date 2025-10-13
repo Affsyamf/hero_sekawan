@@ -1,28 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel
 
-
 # ===============================
-# 1️⃣ Purchasing
-# ===============================
-class PurchasingCreate(BaseModel):
-    date: Optional[datetime] = None
-    code: Optional[str] = None           # No Bukti
-    purchase_order: Optional[str] = None # PO Number
-    supplier_id: int                     # Required (ForeignKey to Supplier)
-
-
-class PurchasingUpdate(BaseModel):
-    date: Optional[datetime] = None
-    code: Optional[str] = None
-    purchase_order: Optional[str] = None
-    supplier_id: Optional[int] = None
-
-
-# ===============================
-# 2️⃣ PurchasingDetail
+#  PurchasingDetail
 # ===============================
 class PurchasingDetailCreate(BaseModel):
     quantity: Decimal
@@ -34,9 +16,8 @@ class PurchasingDetailCreate(BaseModel):
     tax_no: Optional[str] = None
     exchange_rate: Optional[Decimal] = Decimal("0.00")
     product_id: int
-    purchasing_id: int
-
-
+    # purchasing_id: int
+    
 class PurchasingDetailUpdate(BaseModel):
     quantity: Optional[Decimal] = None
     price: Optional[Decimal] = None
@@ -47,4 +28,25 @@ class PurchasingDetailUpdate(BaseModel):
     tax_no: Optional[str] = None
     exchange_rate: Optional[Decimal] = None
     product_id: Optional[int] = None
-    purchasing_id: Optional[int] = None
+    # purchasing_id: Optional[int] = None
+    
+    
+# ===============================
+#  Purchasing
+# ===============================
+class PurchasingCreate(BaseModel):
+    date: Optional[datetime] = None
+    code: Optional[str] = None           # No Bukti
+    purchase_order: Optional[str] = None # PO Number
+    supplier_id: int                     # Required (ForeignKey to Supplier)
+    details: List[PurchasingDetailCreate] = []
+
+
+class PurchasingUpdate(BaseModel):
+    date: Optional[datetime] = None
+    code: Optional[str] = None
+    purchase_order: Optional[str] = None
+    supplier_id: Optional[int] = None
+    details: Optional[List[PurchasingDetailUpdate]] = None
+
+
