@@ -20,7 +20,7 @@ export default function Table({
   pageSizeOptions = [5, 10, 20, 50],
   dateFilterKey = "date",
   showNumbering = true,
-  showDateRangeFilter = false, // New prop untuk mengontrol date range filter
+  showDateRangeFilter = true, // New prop untuk mengontrol date range filter
 }) {
   const { colors } = useTheme();
 
@@ -48,7 +48,7 @@ export default function Table({
         sortable: false,
         render: (_, __, index) => (
           <span
-            className="font-medium"
+            className="text-xs font-medium"
             style={{ color: colors.text.secondary }}
           >
             {(page - 1) * pageSize + index + 1}.
@@ -145,15 +145,15 @@ export default function Table({
     >
       {/* Toolbar */}
       <div
-        className="px-6 py-4 border-b"
+        className="px-4 py-3 border-b"
         style={{ borderColor: colors.border.primary }}
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-sm">
             <Search
-              className="absolute text-gray-400 -translate-y-1/2 left-3 top-1/2"
-              size={18}
+              className="absolute text-gray-400 -translate-y-1/2 left-2.5 top-1/2"
+              size={16}
             />
             <input
               type="text"
@@ -163,7 +163,7 @@ export default function Table({
                 setPage(1);
                 setSearch(e.target.value);
               }}
-              className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               style={{
                 background: colors.background.primary,
                 border: `1px solid ${colors.border.primary}`,
@@ -180,9 +180,9 @@ export default function Table({
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-all duration-200",
+                    "flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all duration-200",
                     (dateRange.start || dateRange.end) &&
-                      "ring-2 ring-blue-500/20"
+                      "ring-1 ring-blue-500/30"
                   )}
                   style={{
                     background: colors.background.primary,
@@ -190,25 +190,25 @@ export default function Table({
                     color: colors.text.primary,
                   }}
                 >
-                  <Calendar size={16} />
+                  <Calendar size={14} />
                   <span>Date Range</span>
                   {(dateRange.start || dateRange.end) && (
-                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                   )}
                 </button>
 
                 {/* Dropdown Filter */}
                 {showFilters && (
                   <div
-                    className="absolute right-0 z-10 p-4 mt-2 rounded-lg shadow-lg top-full w-80"
+                    className="absolute right-0 z-10 p-3 mt-1 rounded-lg shadow-lg top-full w-72"
                     style={{
                       background: colors.background.card,
                       border: `1px solid ${colors.border.primary}`,
                     }}
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                       <span
-                        className="text-sm font-medium"
+                        className="text-xs font-medium"
                         style={{ color: colors.text.primary }}
                       >
                         Filter by Date
@@ -217,14 +217,14 @@ export default function Table({
                         onClick={() => setShowFilters(false)}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <X size={16} />
+                        <X size={14} />
                       </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       <div>
                         <label
-                          className="block text-xs mb-1.5"
+                          className="block mb-1 text-xs"
                           style={{ color: colors.text.secondary }}
                         >
                           Start Date
@@ -239,7 +239,7 @@ export default function Table({
                             }));
                             setPage(1);
                           }}
-                          className="w-full px-3 py-2 text-sm transition-all rounded-lg"
+                          className="w-full px-2.5 py-1.5 text-xs transition-all rounded-lg"
                           style={{
                             background: colors.background.primary,
                             border: `1px solid ${colors.border.primary}`,
@@ -250,7 +250,7 @@ export default function Table({
 
                       <div>
                         <label
-                          className="block text-xs mb-1.5"
+                          className="block mb-1 text-xs"
                           style={{ color: colors.text.secondary }}
                         >
                           End Date
@@ -265,7 +265,7 @@ export default function Table({
                             }));
                             setPage(1);
                           }}
-                          className="w-full px-3 py-2 text-sm transition-all rounded-lg"
+                          className="w-full px-2.5 py-1.5 text-xs transition-all rounded-lg"
                           style={{
                             background: colors.background.primary,
                             border: `1px solid ${colors.border.primary}`,
@@ -277,7 +277,7 @@ export default function Table({
                       {(dateRange.start || dateRange.end) && (
                         <button
                           onClick={clearDateRange}
-                          className="w-full py-2 text-sm text-red-500 transition-all rounded-lg hover:bg-red-50"
+                          className="w-full py-1.5 text-xs text-red-500 transition-all rounded-lg hover:bg-red-50"
                         >
                           Clear Filters
                         </button>
@@ -302,9 +302,9 @@ export default function Table({
         {loading && rows.length > 0 && (
           <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-xs">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+              <div className="w-6 h-6 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
               <span
-                className="text-sm"
+                className="text-xs"
                 style={{ color: colors.text.secondary }}
               >
                 Loading...
@@ -316,7 +316,7 @@ export default function Table({
         <table className="w-full">
           <thead>
             <tr
-              className="border-b-2"
+              className="border-b"
               style={{
                 background: colors.background.card,
                 borderColor: colors.border.primary,
@@ -338,18 +338,18 @@ export default function Table({
                     })
                   }
                   className={cn(
-                    "px-6 py-4 text-left text-sm font-semibold",
+                    "px-4 py-2.5 text-left text-xs font-semibold",
                     col.sortable &&
                       "cursor-pointer select-none transition-all hover:bg-gray-50"
                   )}
                   style={{ color: colors.text.primary }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {col.label}
                     {col.sortable && (
                       <div className="flex flex-col">
                         <ChevronUp
-                          size={12}
+                          size={10}
                           className={cn(
                             "transition-all",
                             sortConfig.key === col.key &&
@@ -359,9 +359,9 @@ export default function Table({
                           )}
                         />
                         <ChevronDown
-                          size={12}
+                          size={10}
                           className={cn(
-                            "transition-all -mt-1",
+                            "transition-all -mt-0.5",
                             sortConfig.key === col.key &&
                               sortConfig.direction === "desc"
                               ? "text-blue-500"
@@ -375,7 +375,7 @@ export default function Table({
               ))}
               {actions && (
                 <th
-                  className="px-6 py-4 text-sm font-semibold text-left"
+                  className="px-4 py-2.5 text-xs font-semibold text-left"
                   style={{ color: colors.text.primary }}
                 >
                   Actions
@@ -389,11 +389,11 @@ export default function Table({
               <tr>
                 <td
                   colSpan={displayColumns.length + (actions ? 1 : 0)}
-                  className="py-16 text-sm text-center"
+                  className="py-12 text-xs text-center"
                   style={{ color: colors.text.secondary }}
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                    <div className="w-6 h-6 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
                     <span>Loading data...</span>
                   </div>
                 </td>
@@ -402,20 +402,20 @@ export default function Table({
               <tr>
                 <td
                   colSpan={displayColumns.length + (actions ? 1 : 0)}
-                  className="py-16 text-sm text-center"
+                  className="py-12 text-xs text-center"
                   style={{ color: "#ef4444" }}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div
-                      className="flex items-center justify-center w-12 h-12 rounded-full"
+                      className="flex items-center justify-center w-10 h-10 rounded-full"
                       style={{ background: "#fee2e2" }}
                     >
-                      <X size={20} style={{ color: "#ef4444" }} />
+                      <X size={18} style={{ color: "#ef4444" }} />
                     </div>
                     <span>{error}</span>
                     <button
                       onClick={loadData}
-                      className="px-4 py-2 mt-2 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                      className="px-3 py-1.5 mt-1 text-xs text-white bg-blue-500 rounded-lg hover:bg-blue-600"
                     >
                       Retry
                     </button>
@@ -441,7 +441,7 @@ export default function Table({
                   {displayColumns.map((col) => (
                     <td
                       key={col.key}
-                      className="px-6 py-4 text-sm"
+                      className="px-4 py-2.5 text-xs"
                       style={{ color: colors.text.primary }}
                     >
                       {col.render
@@ -450,7 +450,7 @@ export default function Table({
                     </td>
                   ))}
                   {actions && (
-                    <td className="px-6 py-4 text-sm">{actions(row)}</td>
+                    <td className="px-4 py-2.5 text-xs">{actions(row)}</td>
                   )}
                 </tr>
               ))
@@ -458,16 +458,16 @@ export default function Table({
               <tr>
                 <td
                   colSpan={displayColumns.length + (actions ? 1 : 0)}
-                  className="py-16 text-sm text-center"
+                  className="py-12 text-xs text-center"
                   style={{ color: colors.text.secondary }}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <div
-                      className="flex items-center justify-center w-12 h-12 rounded-full"
+                      className="flex items-center justify-center w-10 h-10 rounded-full"
                       style={{ background: colors.background.primary }}
                     >
                       <Filter
-                        size={20}
+                        size={18}
                         style={{ color: colors.text.secondary }}
                       />
                     </div>
@@ -482,24 +482,24 @@ export default function Table({
 
       {/* Pagination */}
       <div
-        className="flex items-center justify-between px-6 py-4 border-t"
+        className="flex items-center justify-between px-4 py-3 border-t"
         style={{ borderColor: colors.border.primary }}
       >
         {/* Left: Rows per page + Results info */}
-        <div className="flex items-center gap-6">
-          <div className="relative flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <div className="relative flex items-center gap-2">
             <span
-              className="text-sm font-medium"
+              className="text-xs font-medium"
               style={{ color: colors.text.primary }}
             >
               {pageSize}
             </span>
             <button
               onClick={() => setShowPageSizeMenu(!showPageSizeMenu)}
-              className="p-1 transition-all rounded hover:bg-gray-100"
+              className="p-0.5 transition-all rounded hover:bg-gray-100"
             >
               <ChevronDown
-                size={16}
+                size={14}
                 style={{ color: colors.text.secondary }}
                 className={cn(
                   "transition-transform",
@@ -511,7 +511,7 @@ export default function Table({
             {/* Page Size Menu */}
             {showPageSizeMenu && (
               <div
-                className="absolute left-0 z-10 w-20 py-1 mb-1 rounded-lg shadow-lg bottom-full"
+                className="absolute left-0 z-10 w-16 py-0.5 mb-1 rounded-lg shadow-lg bottom-full"
                 style={{
                   background: colors.background.card,
                   border: `1px solid ${colors.border.primary}`,
@@ -522,7 +522,7 @@ export default function Table({
                     key={size}
                     onClick={() => handlePageSizeChange(size)}
                     className={cn(
-                      "w-full px-4 py-2 text-sm text-left transition-all hover:bg-gray-100",
+                      "w-full px-3 py-1.5 text-xs text-left transition-all hover:bg-gray-100",
                       size === pageSize &&
                         "bg-blue-50 text-blue-600 font-medium"
                     )}
@@ -534,7 +534,7 @@ export default function Table({
             )}
           </div>
 
-          <span className="text-sm" style={{ color: colors.text.secondary }}>
+          <span className="text-xs" style={{ color: colors.text.secondary }}>
             {total > 0 ? (
               <>
                 Results: {(page - 1) * pageSize + 1} -{" "}
@@ -547,11 +547,11 @@ export default function Table({
         </div>
 
         {/* Right: Page navigation */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className="px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+            className="px-3 py-1.5 text-xs font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
             style={{
               color: colors.text.secondary,
             }}
@@ -566,7 +566,7 @@ export default function Table({
               <>
                 <button
                   onClick={() => setPage(1)}
-                  className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
+                  className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
                   style={{
                     background: colors.background.primary,
                     color: colors.text.primary,
@@ -576,7 +576,7 @@ export default function Table({
                 </button>
                 {page > 3 && (
                   <span
-                    className="px-1 text-sm"
+                    className="px-0.5 text-xs"
                     style={{ color: colors.text.secondary }}
                   >
                     ...
@@ -589,7 +589,7 @@ export default function Table({
             {page > 1 && (
               <button
                 onClick={() => setPage(page - 1)}
-                className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
+                className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
                 style={{
                   background: colors.background.primary,
                   color: colors.text.primary,
@@ -601,7 +601,7 @@ export default function Table({
 
             {/* Current page */}
             <button
-              className="min-w-[28px] h-7 text-sm font-medium rounded-md px-2"
+              className="min-w-[24px] h-6 text-xs font-medium rounded-md px-1.5"
               style={{
                 background: colors.background.primary,
                 color: colors.primary,
@@ -615,7 +615,7 @@ export default function Table({
             {page < totalPages && (
               <button
                 onClick={() => setPage(page + 1)}
-                className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
+                className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
                 style={{
                   background: colors.background.primary,
                   color: colors.text.primary,
@@ -630,7 +630,7 @@ export default function Table({
               <>
                 {page < totalPages - 2 && (
                   <span
-                    className="px-1 text-sm"
+                    className="px-0.5 text-xs"
                     style={{ color: colors.text.secondary }}
                   >
                     ...
@@ -638,7 +638,7 @@ export default function Table({
                 )}
                 <button
                   onClick={() => setPage(totalPages)}
-                  className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
+                  className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
                   style={{
                     background: colors.background.primary,
                     color: colors.text.primary,
@@ -653,7 +653,7 @@ export default function Table({
           <button
             disabled={page === totalPages || totalPages === 0}
             onClick={() => setPage((p) => p + 1)}
-            className="px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+            className="px-3 py-1.5 text-xs font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
             style={{
               color: colors.text.primary,
             }}
@@ -665,3 +665,4 @@ export default function Table({
     </div>
   );
 }
+ 

@@ -1,5 +1,6 @@
 import MainLayout from "../../layouts/MainLayout/MainLayout";
 import Table from "../../components/ui/table/Table";
+import Button from "../../components/ui/button/Button";
 import ProductForm from "../../components/features/product/ProductForm";
 import ImportProductModal from "../../components/features/product/ImportProductModal";
 import { useState, useEffect } from "react";
@@ -173,13 +174,12 @@ export default function ProductsPage() {
 
           {/* Import Button */}
           <div className="mb-4">
-            <button
+            <Button
+              icon={Upload}
+              label="Import from Excel"
               onClick={handleImport}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
-            >
-              <Upload className="w-4 h-4" />
-              Import from Excel
-            </button>
+              className="bg-green-600 hover:bg-green-700"
+            />
           </div>
 
           <Table
@@ -192,6 +192,7 @@ export default function ProductsPage() {
               setIsModalOpen(true);
             }}
             pageSizeOptions={[10, 20, 50, 100]}
+            showDateRangeFilter={false}
           />
 
           <ProductForm

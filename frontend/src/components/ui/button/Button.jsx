@@ -13,7 +13,7 @@ export default function Button({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${className}`}
+      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${className}`}
       style={{
         background: colors.primary,
         color: colors.text.inverse,
@@ -21,7 +21,7 @@ export default function Button({
       {...props}
     >
       {/* Icon */}
-      {Icon && <Icon size={16} className="mr-2" />}
+      {Icon && <Icon size={14} className="mr-1.5" />}
 
       {/* Label */}
       <span>{label}</span>
@@ -30,7 +30,7 @@ export default function Button({
       {showDropdown && (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4 ml-2"
+          className="w-3 h-3 ml-1.5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
