@@ -5,6 +5,9 @@ import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
 import Button from "../../ui/button/Button";
 import { useTemp } from "../../../hooks/useTemp";
+import DropdownServer from "../../ui/dropdown-server/DropdownServer";
+import { searchProduct } from "../../../services/product_service";
+import { searchAccount } from "../../../services/account_service";
 
 export default function ProductForm({
   product = null,
@@ -190,20 +193,18 @@ export default function ProductForm({
               Account
             </div>
           </Form.Label>
-          <select
-            id="account_id"
+          <DropdownServer
+            apiService={searchAccount}
+            placeholder="Ketik untuk mencari account..."
+            onChange={(selectedValue) =>
+              handleInputChange("account_id", selectedValue)
+            }
             value={formData.account_id}
-            onChange={(e) => handleInputChange("account_id", e.target.value)}
-            className={inputClassName("account_id")}
-          >
-            <option value="">Select Account (Optional)</option>
-            {accountOptions.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.code} - {account.name}
-              </option>
-            ))}
-          </select>
-          {/* <Form.Helper>Link this product to an accounting account</Form.Helper> */}
+            contentItem="name"
+            valueKey="id" // ✅ Return hanya ID
+            displayKey="name" // ✅ Tampilkan name di input
+            name="account_id"
+          />
         </Form.Group>
       </div>
     </Modal>

@@ -5,18 +5,18 @@ from datetime import datetime
 
 from app.models import Base
 
-class Color_Kitchen_Batch(Base):
+class ColorKitchenBatch(Base):
     __tablename__ = "color_kitchen_batches"
 
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)  # Generated group code
     
-    entries = relationship("Color_Kitchen_Entry", back_populates="batch")
-    details = relationship("Color_Kitchen_Batch_Detail", back_populates="batch")
+    entries = relationship("ColorKitchenEntry", back_populates="batch", lazy='subquery')
+    details = relationship("ColorKitchenBatchDetail", back_populates="batch")
 
 
-class Color_Kitchen_Batch_Detail(Base):
+class ColorKitchenBatchDetail(Base):
     __tablename__ = "color_kitchen_batch_details"
 
     id = Column(Integer, primary_key=True)
@@ -32,9 +32,9 @@ class Color_Kitchen_Batch_Detail(Base):
     product = relationship("Product")
 
     batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"), nullable=False)
-    batch = relationship("Color_Kitchen_Batch", back_populates="details")
+    batch = relationship("ColorKitchenBatch", back_populates="details")
     
-class Color_Kitchen_Entry(Base):
+class ColorKitchenEntry(Base):
     __tablename__ = "color_kitchen_entries"
 
     id = Column(Integer, primary_key=True)
@@ -48,12 +48,12 @@ class Color_Kitchen_Entry(Base):
 
     # link to batch (shared dyestuff)
     batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"))
-    batch = relationship("Color_Kitchen_Batch", back_populates="entries")
+    batch = relationship("ColorKitchenBatch", back_populates="entries")
 
     # auxiliaries (per OPJ)
-    details = relationship("Color_Kitchen_Entry_Detail", back_populates="color_kitchen_entry")
+    details = relationship("ColorKitchenEntryDetail", back_populates="color_kitchen_entry")
 
-class Color_Kitchen_Entry_Detail(Base):
+class ColorKitchenEntryDetail(Base):
     __tablename__ = 'color_kitchen_entry_details'
     
     id = Column(Integer, primary_key=True)
@@ -69,4 +69,4 @@ class Color_Kitchen_Entry_Detail(Base):
     product = relationship("Product", back_populates="color_kitchen_entry_details")
 
     color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id'), nullable=False)
-    color_kitchen_entry = relationship("Color_Kitchen_Entry", back_populates="details")
+    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details")

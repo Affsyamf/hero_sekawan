@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime, Text, Numeric, Computed
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey, DateTime, Text, Numeric, Computed, text
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -15,8 +15,8 @@ class Ledger(Base):
     ref = Column(enum_column(LedgerRef), nullable=False)
     ref_code = Column(String, nullable=False)
     location = Column(enum_column(LedgerLocation), nullable=False)
-    quantity_in = Column(Numeric(18, 2), default=0.0)
-    quantity_out = Column(Numeric(18, 2), default=0.0)
+    quantity_in = Column(Numeric(18, 2), server_default=text("0.00"))
+    quantity_out = Column(Numeric(18, 2), server_default=text("0.00"))
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     product = relationship("Product", back_populates="ledger_entries")

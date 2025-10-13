@@ -1,0 +1,225 @@
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import Table from "../../components/ui/table/Table";
+import PurchasingForm from "../../components/features/purchasing/PurchasingForm";
+import ImportPurchasingModal from "../../components/features/purchasing/ImportPurchasingModal";
+import ImportPurchasingTransactionModal from "../../components/features/purchasing/ImportPurchasingTransactionModal";
+import { useState, useEffect } from "react";
+import { Edit2, Trash2, Eye, Upload, Database } from "lucide-react";
+import { useTemp } from "../../hooks/useTemp";
+import { formatCurrency, formatDate } from "../../utils/helpers";
+import {
+  createPurchasing,
+  deletePurchasing,
+  searchPurchasing,
+  updatePurchasing,
+} from "../../services/purchasing_service";
+import { searchSupplier } from "../../services/supplier_service";
+
+export default function PurchasingsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportMDOpen, setIsImportMDOpen] = useState(false);
+  const [isImportTrxOpen, setIsImportTrxOpen] = useState(false);
+  const [selectedPurchasing, setSelectedPurchasing] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [suppliers, setSuppliers] = useState([]);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const response = await searchSupplier({}); // bisa tambahkan filter jika ada
+        setSuppliers(response.data?.data || []);
+      } catch (error) {
+        console.error("Failed to fetch accounts:", error);
+      }
+    };
+    fetchSuppliers();
+  }, []);
+
+  const columns = [
+    {
+      key: "code",
+      label: "No Bukti",
+      sortable: true,
+      render: (v) => <span className="font-medium text-primary-text">{v}</span>,
+    },
+    {
+      key: "date",
+      label: "Date",
+      sortable: true,
+      render: (v) => (
+        <span className="text-secondary-text">{formatDate(v)}</span>
+      ),
+    },
+    {
+      key: "purchase_order",
+      label: "PO Number",
+      sortable: true,
+      render: (v) => <span className="text-secondary-text">{v || "-"}</span>,
+    },
+    {
+      key: "supplier_id",
+      label: "Supplier",
+      sortable: true,
+      render: (value) => {
+        const supplier = (suppliers || []).find((a) => a.id === value);
+        return (
+          <span className="text-primary-text">
+            {supplier ? `${supplier.code} - ${supplier.name}` : "-"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "details",
+      label: "Items",
+      sortable: false,
+      render: (v) => (
+        <span className="text-secondary-text">{v?.length || 0}</span>
+      ),
+    },
+    {
+      key: "total",
+      label: "Total Amount",
+      sortable: false,
+      render: (v) => (
+        <span className="font-medium text-primary">
+          {formatCurrency(v?.reduce((s, d) => s + (d.subtotal || 0), 0) || 0)}
+        </span>
+      ),
+    },
+  ];
+
+  const renderActions = (row) => (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => {
+          selectedPurchasing(row);
+          setIsModalOpen(true);
+        }}
+        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200"
+        title="View Details"
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => {
+          selectedPurchasing(row);
+          setIsModalOpen(true);
+        }}
+        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all duration-200"
+        title="Edit"
+      >
+        <Edit2 className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => handleDelete(row)}
+        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all duration-200"
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+
+  const handleSave = async (productData) => {
+    try {
+      const payload = Object.fromEntries(
+        Object.entries(productData).filter(
+          ([_, value]) => value != null && value !== ""
+        )
+      );
+
+      if (payload.id) {
+        await updatePurchasing(payload.id, payload);
+      } else {
+        await createPurchasing(payload);
+      }
+      setRefreshKey((prev) => prev + 1);
+
+      setIsModalOpen(false);
+      setSelectedPurchasing(null);
+    } catch (error) {
+      alert("Failed to save product: " + error.message);
+    }
+  };
+
+  const handleDelete = async (row) => {
+    if (
+      window.confirm(`Are you sure you want to delete product ${row.name}?`)
+    ) {
+      try {
+        await deletePurchasing(row.id);
+        setRefreshKey((prev) => prev + 1);
+      } catch (error) {
+        alert("Failed to delete: " + error.message);
+      }
+    }
+  };
+
+  return (
+    <MainLayout>
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-7xl">
+          <h1 className="mb-1 text-2xl font-bold text-primary-text">
+            Purchasing Management
+          </h1>
+          <p className="mb-6 text-secondary-text">
+            Manage product purchases from suppliers with detailed tracking and
+            calculations.
+          </p>
+
+          <div className="flex gap-3 mb-4">
+            <button
+              onClick={() => setIsImportMDOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            >
+              <Database className="w-4 h-4" />
+              Import Data Master
+            </button>
+            <button
+              onClick={() => setIsImportTrxOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              <Upload className="w-4 h-4" />
+              Import Purchasing
+            </button>
+          </div>
+
+          <Table
+            key={refreshKey}
+            columns={columns}
+            fetchData={searchPurchasing}
+            actions={renderActions}
+            onCreate={() => {
+              setSelectedPurchasing(null);
+              setIsModalOpen(true);
+            }}
+            pageSizeOptions={[10, 20, 50, 100]}
+            dateFilterKey="date"
+          />
+
+          <PurchasingForm
+            purchasing={selectedPurchasing}
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedPurchasing(null);
+            }}
+            onSave={handleSave}
+          />
+
+          <ImportPurchasingModal
+            isOpen={isImportMDOpen}
+            onClose={() => setIsImportMDOpen(false)}
+            onImportSuccess={() => setRefreshKey((p) => p + 1)}
+          />
+          <ImportPurchasingTransactionModal
+            isOpen={isImportTrxOpen}
+            onClose={() => setIsImportTrxOpen(false)}
+            onImportSuccess={() => setRefreshKey((p) => p + 1)}
+          />
+        </div>
+      </div>
+    </MainLayout>
+  );
+}

@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { ChevronUp, ChevronDown, Plus, Search, Calendar, Filter, X } from "lucide-react";
+import {
+  ChevronUp,
+  ChevronDown,
+  Plus,
+  Search,
+  Calendar,
+  Filter,
+  X,
+} from "lucide-react";
 import { cn } from "../../../utils/cn";
 import { useTheme } from "../../../contexts/ThemeContext";
 import Button from "../button/Button";
@@ -11,12 +19,16 @@ export default function Table({
   onCreate,
   pageSizeOptions = [5, 10, 20, 50],
   dateFilterKey = "date",
+  showNumbering = true,
 }) {
   const { colors } = useTheme();
 
+  const [displayColumns, setDisplayColumns] = useState([]);
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({});
@@ -25,24 +37,77 @@ export default function Table({
   const [pageSize, setPageSize] = useState(pageSizeOptions[0]);
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [showFilters, setShowFilters] = useState(false);
+  const [showPageSizeMenu, setShowPageSizeMenu] = useState(false);
+
+  useEffect(() => {
+    if (showNumbering) {
+      const numberingColumn = {
+        key: "_number",
+        label: "No.",
+        sortable: false,
+        render: (_, __, index) => (
+          <span
+            className="font-medium"
+            style={{ color: colors.text.secondary }}
+          >
+            {(page - 1) * pageSize + index + 1}.
+          </span>
+        ),
+      };
+
+      setDisplayColumns([numberingColumn, ...columns]);
+    } else {
+      setDisplayColumns(columns);
+    }
+  }, [showNumbering, columns, page, pageSize]);
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      const params = {
-        page,
-        pageSize,
-        search,
-        filters,
-        sortBy: sortConfig.key,
-        sortDir: sortConfig.direction,
-        dateRange,
-      };
-      const result = await fetchData(params);
-      setRows(result.rows);
-      setTotal(result.total);
+      const params = Object.fromEntries(
+        Object.entries({
+          page,
+          page_size: pageSize,
+          q: search,
+          filters,
+          sortBy: sortConfig.key,
+          sortDir: sortConfig.direction,
+          dateRange,
+        }).filter(([, v]) => v !== null && v !== undefined && v !== "")
+      );
+
+      const response = await fetchData(params);
+
+      // Handle response structure: { success, message, data, meta }
+      if (response.status == 200) {
+        const result = response.data;
+
+        setRows(result.data || []);
+
+        // Extract pagination info from meta
+        if (result.meta?.pagination) {
+          const { total: totalRecords, total_pages } = result.meta.pagination;
+          setTotal(totalRecords || 0);
+          setTotalPages(total_pages || 0);
+        } else {
+          // Fallback jika meta tidak ada
+          setTotal(result.data?.length || 0);
+          setTotalPages(1);
+        }
+      } else {
+        setError(response.message || "Failed to fetch data");
+        setRows([]);
+        setTotal(0);
+        setTotalPages(0);
+      }
     } catch (err) {
       console.error("Table fetch error:", err);
+      setError(err.message || "An error occurred while fetching data");
+      setRows([]);
+      setTotal(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
@@ -52,13 +117,19 @@ export default function Table({
     loadData();
   }, [page, pageSize, search, filters, sortConfig, dateRange]);
 
-  const totalPages = Math.ceil(total / pageSize);
-
   const clearDateRange = () => {
     setDateRange({ start: "", end: "" });
+    setSearch("");
+    setPage(1);
   };
 
   const hasActiveFilters = dateRange.start || dateRange.end || search;
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setPage(1); // Reset ke halaman pertama
+    setShowPageSizeMenu(false);
+  };
 
   return (
     <div
@@ -130,7 +201,10 @@ export default function Table({
                   }}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium" style={{ color: colors.text.primary }}>
+                    <span
+                      className="text-sm font-medium"
+                      style={{ color: colors.text.primary }}
+                    >
                       Filter by Date
                     </span>
                     <button
@@ -143,15 +217,22 @@ export default function Table({
 
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs mb-1.5" style={{ color: colors.text.secondary }}>
+                      <label
+                        className="block text-xs mb-1.5"
+                        style={{ color: colors.text.secondary }}
+                      >
                         Start Date
                       </label>
                       <input
                         type="date"
                         value={dateRange.start}
-                        onChange={(e) =>
-                          setDateRange((prev) => ({ ...prev, start: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setDateRange((prev) => ({
+                            ...prev,
+                            start: e.target.value,
+                          }));
+                          setPage(1);
+                        }}
                         className="w-full px-3 py-2 text-sm transition-all rounded-lg"
                         style={{
                           background: colors.background.primary,
@@ -162,15 +243,22 @@ export default function Table({
                     </div>
 
                     <div>
-                      <label className="block text-xs mb-1.5" style={{ color: colors.text.secondary }}>
+                      <label
+                        className="block text-xs mb-1.5"
+                        style={{ color: colors.text.secondary }}
+                      >
                         End Date
                       </label>
                       <input
                         type="date"
                         value={dateRange.end}
-                        onChange={(e) =>
-                          setDateRange((prev) => ({ ...prev, end: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setDateRange((prev) => ({
+                            ...prev,
+                            end: e.target.value,
+                          }));
+                          setPage(1);
+                        }}
                         className="w-full px-3 py-2 text-sm transition-all rounded-lg"
                         style={{
                           background: colors.background.primary,
@@ -194,23 +282,40 @@ export default function Table({
             </div>
 
             {/* Create Button */}
-            {onCreate && <Button icon={Plus} label="Create" onClick={onCreate} />}
+            {onCreate && (
+              <Button icon={Plus} label="Create" onClick={onCreate} />
+            )}
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
+        {/* Overlay Loading untuk subsequent loads (ketika sudah ada data) */}
+        {loading && rows.length > 0 && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-xs">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 border-2 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+              <span
+                className="text-sm"
+                style={{ color: colors.text.secondary }}
+              >
+                Loading...
+              </span>
+            </div>
+          </div>
+        )}
+
         <table className="w-full">
           <thead>
-            <tr 
+            <tr
               className="border-b-2"
-              style={{ 
+              style={{
                 background: colors.background.card,
-                borderColor: colors.border.primary 
+                borderColor: colors.border.primary,
               }}
             >
-              {columns.map((col) => (
+              {displayColumns.map((col) => (
                 <th
                   key={col.key}
                   onClick={() =>
@@ -227,7 +332,8 @@ export default function Table({
                   }
                   className={cn(
                     "px-6 py-4 text-left text-sm font-semibold",
-                    col.sortable && "cursor-pointer select-none transition-all"
+                    col.sortable &&
+                      "cursor-pointer select-none transition-all hover:bg-gray-50"
                   )}
                   style={{ color: colors.text.primary }}
                 >
@@ -235,21 +341,23 @@ export default function Table({
                     {col.label}
                     {col.sortable && (
                       <div className="flex flex-col">
-                        <ChevronUp 
-                          size={12} 
+                        <ChevronUp
+                          size={12}
                           className={cn(
                             "transition-all",
-                            sortConfig.key === col.key && sortConfig.direction === "asc"
-                              ? "text-blue-500" 
+                            sortConfig.key === col.key &&
+                              sortConfig.direction === "asc"
+                              ? "text-blue-500"
                               : "text-gray-300"
                           )}
                         />
-                        <ChevronDown 
-                          size={12} 
+                        <ChevronDown
+                          size={12}
                           className={cn(
                             "transition-all -mt-1",
-                            sortConfig.key === col.key && sortConfig.direction === "desc"
-                              ? "text-blue-500" 
+                            sortConfig.key === col.key &&
+                              sortConfig.direction === "desc"
+                              ? "text-blue-500"
                               : "text-gray-300"
                           )}
                         />
@@ -270,10 +378,10 @@ export default function Table({
           </thead>
 
           <tbody>
-            {loading ? (
+            {loading && rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={columns.length + (actions ? 1 : 0)}
+                  colSpan={displayColumns.length + (actions ? 1 : 0)}
                   className="py-16 text-sm text-center"
                   style={{ color: colors.text.secondary }}
                 >
@@ -283,28 +391,55 @@ export default function Table({
                   </div>
                 </td>
               </tr>
+            ) : error ? (
+              <tr>
+                <td
+                  colSpan={displayColumns.length + (actions ? 1 : 0)}
+                  className="py-16 text-sm text-center"
+                  style={{ color: "#ef4444" }}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div
+                      className="flex items-center justify-center w-12 h-12 rounded-full"
+                      style={{ background: "#fee2e2" }}
+                    >
+                      <X size={20} style={{ color: "#ef4444" }} />
+                    </div>
+                    <span>{error}</span>
+                    <button
+                      onClick={loadData}
+                      className="px-4 py-2 mt-2 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </td>
+              </tr>
             ) : rows.length > 0 ? (
               rows.map((row, i) => (
                 <tr
-                  key={i}
+                  key={row.id || i}
                   className="transition-all duration-150 border-b"
                   style={{
                     borderColor: colors.border.primary,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = colors.background.primary + "20";
+                    e.currentTarget.style.background =
+                      colors.background.primary + "20";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "transparent";
                   }}
                 >
-                  {columns.map((col) => (
+                  {displayColumns.map((col) => (
                     <td
                       key={col.key}
                       className="px-6 py-4 text-sm"
                       style={{ color: colors.text.primary }}
                     >
-                      {col.render ? col.render(row[col.key], row) : row[col.key]}
+                      {col.render
+                        ? col.render(row[col.key], row, i)
+                        : row[col.key] ?? "-"}
                     </td>
                   ))}
                   {actions && (
@@ -315,13 +450,19 @@ export default function Table({
             ) : (
               <tr>
                 <td
-                  colSpan={columns.length + (actions ? 1 : 0)}
+                  colSpan={displayColumns.length + (actions ? 1 : 0)}
                   className="py-16 text-sm text-center"
                   style={{ color: colors.text.secondary }}
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full" style={{ background: colors.background.primary }}>
-                      <Filter size={20} style={{ color: colors.text.secondary }} />
+                    <div
+                      className="flex items-center justify-center w-12 h-12 rounded-full"
+                      style={{ background: colors.background.primary }}
+                    >
+                      <Filter
+                        size={20}
+                        style={{ color: colors.text.secondary }}
+                      />
                     </div>
                     <span>No data found</span>
                   </div>
@@ -339,17 +480,62 @@ export default function Table({
       >
         {/* Left: Rows per page + Results info */}
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium" style={{ color: colors.text.primary }}>
+          <div className="relative flex items-center gap-3">
+            <span
+              className="text-sm font-medium"
+              style={{ color: colors.text.primary }}
+            >
               {pageSize}
             </span>
-            <button className="p-1 transition-all rounded hover:bg-opacity-10">
-              <ChevronUp size={16} style={{ color: colors.text.secondary }} />
+            <button
+              onClick={() => setShowPageSizeMenu(!showPageSizeMenu)}
+              className="p-1 transition-all rounded hover:bg-gray-100"
+            >
+              <ChevronDown
+                size={16}
+                style={{ color: colors.text.secondary }}
+                className={cn(
+                  "transition-transform",
+                  showPageSizeMenu && "rotate-180"
+                )}
+              />
             </button>
+
+            {/* Page Size Menu */}
+            {showPageSizeMenu && (
+              <div
+                className="absolute left-0 z-10 w-20 py-1 mb-1 rounded-lg shadow-lg bottom-full"
+                style={{
+                  background: colors.background.card,
+                  border: `1px solid ${colors.border.primary}`,
+                }}
+              >
+                {pageSizeOptions.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => handlePageSizeChange(size)}
+                    className={cn(
+                      "w-full px-4 py-2 text-sm text-left transition-all hover:bg-gray-100",
+                      size === pageSize &&
+                        "bg-blue-50 text-blue-600 font-medium"
+                    )}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          
+
           <span className="text-sm" style={{ color: colors.text.secondary }}>
-            Results: {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, total)} of {total}
+            {total > 0 ? (
+              <>
+                Results: {(page - 1) * pageSize + 1} -{" "}
+                {Math.min(page * pageSize, total)} of {total}
+              </>
+            ) : (
+              "No results"
+            )}
           </span>
         </div>
 
@@ -358,7 +544,7 @@ export default function Table({
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className="px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-opacity-80"
+            className="px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
             style={{
               color: colors.text.secondary,
             }}
@@ -373,7 +559,7 @@ export default function Table({
               <>
                 <button
                   onClick={() => setPage(1)}
-                  className="w-6 h-6 text-sm font-medium transition-all rounded-md hover:bg-opacity-80"
+                  className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
                   style={{
                     background: colors.background.primary,
                     color: colors.text.primary,
@@ -382,7 +568,12 @@ export default function Table({
                   1
                 </button>
                 {page > 3 && (
-                  <span className="px-1 text-sm" style={{ color: colors.text.secondary }}>...</span>
+                  <span
+                    className="px-1 text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    ...
+                  </span>
                 )}
               </>
             )}
@@ -391,7 +582,7 @@ export default function Table({
             {page > 1 && (
               <button
                 onClick={() => setPage(page - 1)}
-                className="w-6 h-6 text-sm font-medium transition-all rounded-md hover:bg-opacity-80"
+                className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
                 style={{
                   background: colors.background.primary,
                   color: colors.text.primary,
@@ -403,7 +594,7 @@ export default function Table({
 
             {/* Current page */}
             <button
-              className="w-6 h-6 text-sm font-medium rounded-md"
+              className="min-w-[28px] h-7 text-sm font-medium rounded-md px-2"
               style={{
                 background: colors.background.primary,
                 color: colors.primary,
@@ -417,7 +608,7 @@ export default function Table({
             {page < totalPages && (
               <button
                 onClick={() => setPage(page + 1)}
-                className="w-6 h-6 text-sm font-medium transition-all rounded-md hover:bg-opacity-80"
+                className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
                 style={{
                   background: colors.background.primary,
                   color: colors.text.primary,
@@ -431,11 +622,16 @@ export default function Table({
             {page < totalPages - 1 && (
               <>
                 {page < totalPages - 2 && (
-                  <span className="px-1 text-sm" style={{ color: colors.text.secondary }}>...</span>
+                  <span
+                    className="px-1 text-sm"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    ...
+                  </span>
                 )}
                 <button
                   onClick={() => setPage(totalPages)}
-                  className="w-6 h-6 text-sm font-medium transition-all rounded-md hover:bg-opacity-80"
+                  className="min-w-[28px] h-7 text-sm font-medium transition-all rounded-md hover:bg-gray-100 px-2"
                   style={{
                     background: colors.background.primary,
                     color: colors.text.primary,
@@ -450,7 +646,7 @@ export default function Table({
           <button
             disabled={page === totalPages || totalPages === 0}
             onClick={() => setPage((p) => p + 1)}
-            className="px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-opacity-80"
+            className="px-4 py-2 text-sm font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
             style={{
               color: colors.text.primary,
             }}

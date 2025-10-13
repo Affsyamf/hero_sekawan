@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 
 from app.models import (
     Design,
-    Design_Type
+    DesignType
 )
 
 from app.utils.normalise import normalise_design_name, normalise_design_type
@@ -20,9 +20,9 @@ class MasterDataLapCkImportService(BaseImportService):
 
     def get_or_create_design_type(self, raw_value: str):
         normalized = normalise_design_type(raw_value)
-        dtype = self.db.query(Design_Type).filter_by(name=normalized).first()
+        dtype = self.db.query(DesignType).filter_by(name=normalized).first()
         if not dtype:
-            dtype = Design_Type(name=normalized)
+            dtype = DesignType(name=normalized)
             self.db.add(dtype)
             self.db.flush()  # assign ID before commit
         return dtype

@@ -9,10 +9,10 @@ from collections import defaultdict
 from fastapi import HTTPException
 
 from app.models import (
-    Color_Kitchen_Batch,
-    Color_Kitchen_Batch_Detail,
-    Color_Kitchen_Entry,
-    Color_Kitchen_Entry_Detail,
+    ColorKitchenBatch,
+    ColorKitchenBatchDetail,
+    ColorKitchenEntry,
+    ColorKitchenEntryDetail,
     Product,
     Design,
 )
@@ -134,7 +134,7 @@ class ColorKitchenImportService(BaseImportService):
             
         # ----------- insert pass -----------
         for b in parsed["batches"]:
-            batch = Color_Kitchen_Batch(
+            batch = ColorKitchenBatch(
                 code=b["code"],
                 date=datetime.fromisoformat(b["date"]) if b["date"] else datetime.utcnow(),
             )
@@ -143,12 +143,13 @@ class ColorKitchenImportService(BaseImportService):
             # batch-level details
             for d in b.get("details", []):
                 product = self.db.query(Product).filter_by(name=d["product_name"]).first()
+                
                 unit_cost = get_avg_cost_for_product(self.db, product.id)
                 if unit_cost is None:
                     print(f"⚠️ No avg cost for product {d['product_name']}, skipping cost stamping")
                     continue
 
-                detail = Color_Kitchen_Batch_Detail(
+                detail = ColorKitchenBatchDetail(
                     product=product,
                     quantity=d["quantity"],
                     batch=batch,
@@ -168,7 +169,7 @@ class ColorKitchenImportService(BaseImportService):
                     # print(f"⚠️ Skipping entry with no matching design: {e['design']}")
                     continue
 
-                entry = Color_Kitchen_Entry(
+                entry = ColorKitchenEntry(
                     code=e["code"],
                     date=datetime.fromisoformat(e["date"]) if e["date"] else datetime.utcnow(),
                     rolls=e.get("rolls") or 0,
@@ -180,12 +181,13 @@ class ColorKitchenImportService(BaseImportService):
 
                 for d in e.get("details", []):
                     product = self.db.query(Product).filter_by(name=d["product_name"]).first()
+                    
                     unit_cost = get_avg_cost_for_product(self.db, product.id)
                     if unit_cost is None:
                         print(f"⚠️ No avg cost for product {d['product_name']}, skipping cost stamping")
                         continue
 
-                    detail = Color_Kitchen_Entry_Detail(
+                    detail = ColorKitchenEntryDetail(
                         product=product,
                         quantity=d["quantity"],
                         color_kitchen_entry=entry,

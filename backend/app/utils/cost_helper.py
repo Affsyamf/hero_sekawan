@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Connection, Engine
 
-from app.models import ProductAvgCost, Purchasing_Detail, Purchasing, ProductAvgCostCache
+from app.models import ProductAvgCost, PurchasingDetail, Purchasing, ProductAvgCostCache
 
 def refresh_product_avg_cost(db: Session):
     """

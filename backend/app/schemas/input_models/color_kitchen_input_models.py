@@ -1,0 +1,68 @@
+from typing import Optional
+from datetime import datetime
+from decimal import Decimal
+from pydantic import BaseModel
+
+
+# ===============================
+# 1️⃣ ColorKitchenBatch
+# ===============================
+class ColorKitchenBatchCreate(BaseModel):
+    date: Optional[datetime] = None
+    code: str
+
+
+class ColorKitchenBatchUpdate(BaseModel):
+    date: Optional[datetime] = None
+    code: Optional[str] = None
+
+
+# ===============================
+# 2️⃣ ColorKitchenBatchDetail
+# ===============================
+class ColorKitchenBatchDetailCreate(BaseModel):
+    quantity: Decimal
+    product_id: int
+    batch_id: int
+
+
+class ColorKitchenBatchDetailUpdate(BaseModel):
+    quantity: Optional[Decimal] = None
+    product_id: Optional[int] = None
+    batch_id: Optional[int] = None
+
+
+# ===============================
+# 3️⃣ ColorKitchenEntry
+# ===============================
+class ColorKitchenEntryCreate(BaseModel):
+    date: Optional[datetime] = None
+    code: str
+    rolls: Optional[int] = None
+    paste_quantity: Decimal
+    design_id: int
+    batch_id: Optional[int] = None
+
+
+class ColorKitchenEntryUpdate(BaseModel):
+    date: Optional[datetime] = None
+    code: Optional[str] = None
+    rolls: Optional[int] = None
+    paste_quantity: Optional[Decimal] = None
+    design_id: Optional[int] = None
+    batch_id: Optional[int] = None
+
+
+# ===============================
+# 4️⃣ ColorKitchenEntryDetail
+# ===============================
+class ColorKitchenEntryDetailCreate(BaseModel):
+    quantity: Decimal
+    product_id: int
+    color_kitchen_entry_id: int
+
+
+class ColorKitchenEntryDetailUpdate(BaseModel):
+    quantity: Optional[Decimal] = None
+    product_id: Optional[int] = None
+    color_kitchen_entry_id: Optional[int] = None

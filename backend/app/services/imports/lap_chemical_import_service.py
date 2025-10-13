@@ -11,8 +11,8 @@ from openpyxl import load_workbook
 
 from app.models import (
     Product,
-    Stock_Movement, 
-    Stock_Movement_Detail
+    StockMovement, 
+    StockMovementDetail
 )
 from app.utils.safe_parse import safe_str, safe_date, safe_number
 from app.utils.cost_helper import get_avg_cost_for_product
@@ -32,7 +32,7 @@ class LapChemicalImportService(BaseImportService):
         df = df.iloc[:, :-2]  # drop trailing junk cols
 
         inserted = {"movements": 0, "details": 0, "skipped": 0, "errors": []}
-        movements_map = {}  # (code, date) -> Stock_Movement
+        movements_map = {}  # (code, date) -> StockMovement
 
         for idx, row in df.iterrows():
             excel_row = idx + 5  # offset since header=4
@@ -76,7 +76,7 @@ class LapChemicalImportService(BaseImportService):
             # --- reuse or create Stock_Movement ---
             key = (code, tanggal)
             if key not in movements_map:
-                movement = Stock_Movement(date=tanggal, code=code)
+                movement = StockMovement(date=tanggal, code=code)
                 self.db.add(movement)
                 self.db.flush()  # ensure movement.id available
                 movements_map[key] = movement
@@ -84,8 +84,8 @@ class LapChemicalImportService(BaseImportService):
             else:
                 movement = movements_map[key]
 
-            # --- create Stock_Movement_Detail ---
-            detail = Stock_Movement_Detail(
+            # --- create StockMovementDetail ---
+            detail = StockMovementDetail(
                 quantity=qty,
                 product_id=product.id,
                 stock_movement_id=movement.id,

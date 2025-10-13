@@ -1,0 +1,169 @@
+from datetime import datetime
+
+from fastapi import HTTPException
+from fastapi.params import Depends
+from sqlalchemy import or_
+
+from app.schemas.input_models.color_kitchen_input_models import ColorKitchenEntryCreate, ColorKitchenEntryUpdate
+from app.services.common.audit_logger import AuditLoggerService
+from app.core.database import Session, get_db
+from app.models import ColorKitchenEntry, ColorKitchenEntryDetail
+from app.utils.datatable.request import ListRequest
+from app.utils.deps import DB
+from app.utils.response import APIResponse
+
+
+class ColorKitchenEntryService:
+    def __init__(self, db = Depends(get_db)):
+        self.db = db
+
+    def list_color_kitchen_entry(self, request: ListRequest):
+        entry = self.db.query(ColorKitchenEntry)
+
+        if request.q:
+            like = f"%{request.q}%"
+            entry = entry.filter(
+                or_(
+                    ColorKitchenEntry.code.ilike(like),
+                )
+            ).order_by(ColorKitchenEntry.id.desc())
+
+        return APIResponse.paginated(entry, request)
+
+    def get_color_kitchen_entry(self, entry_id: int):
+        entry = self.db.query(ColorKitchenEntry).filter(ColorKitchenEntry.id == entry_id).first()
+
+        if not entry:
+            raise HTTPException(status_code=404, detail=f"Color Kitchen Entry ID '{entry_id}' not found.")
+
+        details = []
+        for detail in entry.details:
+            details.append({
+                "id": detail.id,
+                "product_id": detail.product_id,
+                "product_name": detail.product.name if detail.product else None,
+                "quantity": float(detail.quantity) if detail.quantity else 0,
+            })
+
+        response = {
+            "id": entry.id,
+            "code": entry.code,
+            "date": entry.date.isoformat() if entry.date else None,
+            "rolls": entry.rolls,
+            "paste_quantity": float(entry.paste_quantity) if entry.paste_quantity else 0,
+            "design_id": entry.design_id,
+            "design_code": entry.design.code if entry.design else None,
+            "batch_id": entry.batch_id,
+            "batch_code": entry.batch.code if entry.batch else None,
+            "details": details,
+        }
+
+        return APIResponse.ok(data=response)
+
+    def create_color_kitchen_entry(self, request: ColorKitchenEntryCreate):
+        entry = ColorKitchenEntry(
+            code=request.code,
+            date=request.date,
+            rolls=request.rolls,
+            paste_quantity=request.paste_quantity,
+            design_id=request.design_id,
+            batch_id=request.batch_id
+        )
+        self.db.add(entry)
+        self.db.flush()
+
+        if request.details:
+            for detail_data in request.details:
+                detail = ColorKitchenEntryDetail(
+                    color_kitchen_entry_id=entry.id,
+                    product_id=detail_data.product_id,
+                    quantity=detail_data.quantity
+                )
+                self.db.add(detail)
+
+        return APIResponse.created()
+
+    def update_color_kitchen_entry(self, entry_id: int, request: ColorKitchenEntryUpdate):
+        entry = self.db.query(ColorKitchenEntry).filter(ColorKitchenEntry.id == entry_id).first()
+        if not entry:
+            raise HTTPException(status_code=404, detail=f"Color Kitchen Entry ID '{entry_id}' not found.")
+
+        old_data = {
+            "code": entry.code,
+            "date": entry.date.isoformat() if entry.date else None,
+            "rolls": entry.rolls,
+            "paste_quantity": float(entry.paste_quantity) if entry.paste_quantity else 0,
+            "design_id": entry.design_id,
+            "batch_id": entry.batch_id,
+        }
+
+        if request.code is not None:
+            entry.code = request.code
+        if request.date is not None:
+            entry.date = request.date
+        if request.rolls is not None:
+            entry.rolls = request.rolls
+        if request.paste_quantity is not None:
+            entry.paste_quantity = request.paste_quantity
+        if request.design_id is not None:
+            entry.design_id = request.design_id
+        if request.batch_id is not None:
+            entry.batch_id = request.batch_id
+
+        if request.details is not None:
+            self.db.query(ColorKitchenEntryDetail).filter(
+                ColorKitchenEntryDetail.color_kitchen_entry_id == entry_id
+            ).delete(synchronize_session=False)
+
+            for detail_data in request.details:
+                detail = ColorKitchenEntryDetail(
+                    color_kitchen_entry_id=entry_id,
+                    product_id=detail_data.product_id,
+                    quantity=detail_data.quantity
+                )
+                self.db.add(detail)
+
+        new_data = {
+            "code": entry.code,
+            "date": entry.date.isoformat() if entry.date else None,
+            "rolls": entry.rolls,
+            "paste_quantity": float(entry.paste_quantity) if entry.paste_quantity else 0,
+            "design_id": entry.design_id,
+            "batch_id": entry.batch_id,
+        }
+
+        AuditLoggerService(self.db).log_update(
+            table_name=ColorKitchenEntry.__tablename__,
+            record_id=entry_id,
+            old_data=old_data,
+            new_data=new_data,
+            changed_by="system"
+        )
+
+        return APIResponse.ok(f"Color Kitchen Entry ID '{entry_id}' updated.")
+
+    def delete_color_kitchen_entry(self, entry_id: int):
+        entry = self.db.query(ColorKitchenEntry).filter(ColorKitchenEntry.id == entry_id).first()
+        if not entry:
+            raise HTTPException(status_code=404, detail=f"Color Kitchen Entry ID '{entry_id}' not found.")
+
+        old_data = {
+            key: value
+            for key, value in vars(entry).items()
+            if not key.startswith("_")
+        }
+
+        self.db.query(ColorKitchenEntryDetail).filter(
+            ColorKitchenEntryDetail.color_kitchen_entry_id == entry_id
+        ).delete(synchronize_session=False)
+
+        AuditLoggerService(self.db).log_delete(
+            table_name=ColorKitchenEntry.__tablename__,
+            record_id=entry_id,
+            old_data=old_data,
+            changed_by="system"
+        )
+
+        self.db.delete(entry)
+
+        return APIResponse.ok(f"Color Kitchen Entry ID '{entry_id}' deleted.")
