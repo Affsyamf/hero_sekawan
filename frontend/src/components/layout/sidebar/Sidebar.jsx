@@ -45,12 +45,12 @@ const menuItems = [
   { isHeader: true, text: "Reports" },
   { label: "Reports", icon: FileBarChart2, path: "/reports/purchasings" },
 
-  { isHeader: true, text: "Settings" },
-  {
-    label: "Settings",
-    icon: Settings,
-    children: [{ label: "Jenis Barang", path: "/production-estimate" }],
-  },
+  // { isHeader: true, text: "Settings" },  
+  // {
+  //   label: "Settings",
+  //   icon: Settings,
+  //   children: [{ label: "Jenis Barang", path: "/production-estimate" }],
+  // },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

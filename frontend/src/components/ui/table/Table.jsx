@@ -20,6 +20,7 @@ export default function Table({
   pageSizeOptions = [5, 10, 20, 50],
   dateFilterKey = "date",
   showNumbering = true,
+  showDateRangeFilter = false, // New prop untuk mengontrol date range filter
 }) {
   const { colors } = useTheme();
 
@@ -74,7 +75,7 @@ export default function Table({
           filters,
           sortBy: sortConfig.key,
           sortDir: sortConfig.direction,
-          dateRange,
+          ...(showDateRangeFilter && { dateRange }), // Only include dateRange if filter is enabled
         }).filter(([, v]) => v !== null && v !== undefined && v !== "")
       );
 
@@ -123,7 +124,10 @@ export default function Table({
     setPage(1);
   };
 
-  const hasActiveFilters = dateRange.start || dateRange.end || search;
+  // Update hasActiveFilters to only check dateRange if showDateRangeFilter is true
+  const hasActiveFilters = showDateRangeFilter
+    ? dateRange.start || dateRange.end || search
+    : search;
 
   const handlePageSizeChange = (newSize) => {
     setPageSize(newSize);
@@ -170,116 +174,119 @@ export default function Table({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Date Range Filter */}
-            <div className="relative">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-all duration-200",
-                  hasActiveFilters && "ring-2 ring-blue-500/20"
-                )}
-                style={{
-                  background: colors.background.primary,
-                  border: `1px solid ${colors.border.primary}`,
-                  color: colors.text.primary,
-                }}
-              >
-                <Calendar size={16} />
-                <span>Date Range</span>
-                {hasActiveFilters && (
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                )}
-              </button>
-
-              {/* Dropdown Filter */}
-              {showFilters && (
-                <div
-                  className="absolute right-0 z-10 p-4 mt-2 rounded-lg shadow-lg top-full w-80"
+            {/* Date Range Filter - Conditional Rendering */}
+            {showDateRangeFilter && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-all duration-200",
+                    (dateRange.start || dateRange.end) &&
+                      "ring-2 ring-blue-500/20"
+                  )}
                   style={{
-                    background: colors.background.card,
+                    background: colors.background.primary,
                     border: `1px solid ${colors.border.primary}`,
+                    color: colors.text.primary,
                   }}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className="text-sm font-medium"
-                      style={{ color: colors.text.primary }}
-                    >
-                      Filter by Date
-                    </span>
-                    <button
-                      onClick={() => setShowFilters(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
+                  <Calendar size={16} />
+                  <span>Date Range</span>
+                  {(dateRange.start || dateRange.end) && (
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  )}
+                </button>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label
-                        className="block text-xs mb-1.5"
-                        style={{ color: colors.text.secondary }}
+                {/* Dropdown Filter */}
+                {showFilters && (
+                  <div
+                    className="absolute right-0 z-10 p-4 mt-2 rounded-lg shadow-lg top-full w-80"
+                    style={{
+                      background: colors.background.card,
+                      border: `1px solid ${colors.border.primary}`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: colors.text.primary }}
                       >
-                        Start Date
-                      </label>
-                      <input
-                        type="date"
-                        value={dateRange.start}
-                        onChange={(e) => {
-                          setDateRange((prev) => ({
-                            ...prev,
-                            start: e.target.value,
-                          }));
-                          setPage(1);
-                        }}
-                        className="w-full px-3 py-2 text-sm transition-all rounded-lg"
-                        style={{
-                          background: colors.background.primary,
-                          border: `1px solid ${colors.border.primary}`,
-                          color: colors.text.primary,
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label
-                        className="block text-xs mb-1.5"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        End Date
-                      </label>
-                      <input
-                        type="date"
-                        value={dateRange.end}
-                        onChange={(e) => {
-                          setDateRange((prev) => ({
-                            ...prev,
-                            end: e.target.value,
-                          }));
-                          setPage(1);
-                        }}
-                        className="w-full px-3 py-2 text-sm transition-all rounded-lg"
-                        style={{
-                          background: colors.background.primary,
-                          border: `1px solid ${colors.border.primary}`,
-                          color: colors.text.primary,
-                        }}
-                      />
-                    </div>
-
-                    {hasActiveFilters && (
+                        Filter by Date
+                      </span>
                       <button
-                        onClick={clearDateRange}
-                        className="w-full py-2 text-sm text-red-500 transition-all rounded-lg hover:bg-red-50"
+                        onClick={() => setShowFilters(false)}
+                        className="text-gray-400 hover:text-gray-600"
                       >
-                        Clear Filters
+                        <X size={16} />
                       </button>
-                    )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label
+                          className="block text-xs mb-1.5"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          Start Date
+                        </label>
+                        <input
+                          type="date"
+                          value={dateRange.start}
+                          onChange={(e) => {
+                            setDateRange((prev) => ({
+                              ...prev,
+                              start: e.target.value,
+                            }));
+                            setPage(1);
+                          }}
+                          className="w-full px-3 py-2 text-sm transition-all rounded-lg"
+                          style={{
+                            background: colors.background.primary,
+                            border: `1px solid ${colors.border.primary}`,
+                            color: colors.text.primary,
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          className="block text-xs mb-1.5"
+                          style={{ color: colors.text.secondary }}
+                        >
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          value={dateRange.end}
+                          onChange={(e) => {
+                            setDateRange((prev) => ({
+                              ...prev,
+                              end: e.target.value,
+                            }));
+                            setPage(1);
+                          }}
+                          className="w-full px-3 py-2 text-sm transition-all rounded-lg"
+                          style={{
+                            background: colors.background.primary,
+                            border: `1px solid ${colors.border.primary}`,
+                            color: colors.text.primary,
+                          }}
+                        />
+                      </div>
+
+                      {(dateRange.start || dateRange.end) && (
+                        <button
+                          onClick={clearDateRange}
+                          className="w-full py-2 text-sm text-red-500 transition-all rounded-lg hover:bg-red-50"
+                        >
+                          Clear Filters
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Create Button */}
             {onCreate && (
