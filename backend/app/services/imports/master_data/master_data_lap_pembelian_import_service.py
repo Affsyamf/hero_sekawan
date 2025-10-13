@@ -38,7 +38,7 @@ class MasterDataLapPembelianImportService(BaseImportService):
 
         summary = {
             "accounts": {"inserted": 0, "skipped": 0},
-            "products": {"inserted": 0, "skipped": 0},
+            "products": {"inserted": 0, "skipped": 0, "reason": []},
             "suppliers": {"inserted": 0, "skipped": 0},
         }
 
@@ -61,6 +61,8 @@ class MasterDataLapPembelianImportService(BaseImportService):
                         ))
                         summary["accounts"]["inserted"] += 1
 
+                        self.db.flush()
+
             # --- Products ---
             raw_name = row.get("NAMA BARANG")
             if pd.notna(raw_name):
@@ -78,6 +80,9 @@ class MasterDataLapPembelianImportService(BaseImportService):
                     existing = self.db.query(Product).filter_by(name=name).first()
                     if existing:
                         summary["products"]["skipped"] += 1
+                    if account_id == None:
+                        summary["products"]["skipped"] += 1
+                        summary["products"]["reason"].append(f"Account {acc_no} Not Found: {name}")
                     else:
                         self.db.add(Product(
                             code=None,
