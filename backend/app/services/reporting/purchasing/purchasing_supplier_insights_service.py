@@ -1,0 +1,162 @@
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from app.models import Purchasing, Purchasing_Detail, Product, Supplier
+from app.services.reporting.base_reporting_service import BaseReportService
+
+
+class PurchasingSupplierInsightsService(BaseReportService):
+    """
+    Service for supplier-level purchasing analytics.
+    Includes:
+      - Top 5 Suppliers by total spend
+      - Highest spending supplier + product combo
+      - Unique supplier count
+      - Supplier concentration ratio (top 3 %)
+    """
+
+    def run(self, filters):
+        filters = self.normalize_filters(filters)
+        return {
+            "top_suppliers": self._get_top_suppliers(filters),
+            "highest_spend_combo": self._get_highest_spend_combo(filters),
+            "unique_supplier_count": self._get_unique_supplier_count(filters),
+            "concentration_ratio": self._get_supplier_concentration(filters),
+        }
+
+    # ------------------------------------------------------
+    # Top 5 Suppliers (by total purchase value)
+    # ------------------------------------------------------
+    def _get_top_suppliers(self, filters):
+        db: Session = self.db
+        start_date = filters.get("start_date")
+        end_date = filters.get("end_date")
+
+        q = (
+            db.query(
+                Supplier.name.label("supplier"),
+                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_spent"),
+            )
+            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Supplier, Supplier.id == Purchasing.supplier_id)
+        )
+
+        if start_date:
+            q = q.filter(Purchasing.date >= start_date)
+        if end_date:
+            q = q.filter(Purchasing.date <= end_date)
+
+        results = (
+            q.group_by(Supplier.id, Supplier.name)
+            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .limit(5)
+            .all()
+        )
+        total = sum(float(r.total_spent or 0) for r in results)
+
+        return [
+            {
+                "supplier": r.supplier,
+                "total_spent": float(r.total_spent or 0),
+                "percentage": round((float(r.total_spent or 0) / total) * 100, 2) if total else 0,
+            }
+            for r in results
+        ]
+
+    # ------------------------------------------------------
+    # Top 5 Spending Supplier + Product Combo
+    # ------------------------------------------------------
+    def _get_highest_spend_combo(self, filters):
+        db: Session = self.db
+        start_date = filters.get("start_date")
+        end_date = filters.get("end_date")
+
+        q = (
+            db.query(
+                Supplier.name.label("supplier"),
+                Product.name.label("product"),
+                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
+            )
+            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Supplier, Supplier.id == Purchasing.supplier_id)
+            .join(Product, Product.id == Purchasing_Detail.product_id)
+
+        )
+
+        if start_date:
+            q = q.filter(Purchasing.date >= start_date)
+        if end_date:
+            q = q.filter(Purchasing.date <= end_date)
+
+        q = (
+            q.group_by(Supplier.name, Product.name)
+            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .limit(5)
+            .all()
+        
+        )
+
+        return [
+            {
+                "supplier": r.supplier,
+                "product": r.product,
+                "total_value": float(r.total_value or 0),
+            } for r in q
+        ]
+
+    # ------------------------------------------------------
+    # Unique Supplier Count
+    # ------------------------------------------------------
+    def _get_unique_supplier_count(self, filters):
+        db: Session = self.db
+        start_date = filters.get("start_date")
+        end_date = filters.get("end_date")
+
+        q = db.query(func.count(func.distinct(Purchasing.supplier_id)))
+
+        if start_date:
+            q = q.filter(Purchasing.date >= start_date)
+        if end_date:
+            q = q.filter(Purchasing.date <= end_date)
+
+        count = q.scalar() or 0
+        return {"unique_suppliers": count}
+
+    # ------------------------------------------------------
+    # Supplier Concentration Ratio (Top 3)
+    # ------------------------------------------------------
+    def _get_supplier_concentration(self, filters):
+        db: Session = self.db
+        start_date = filters.get("start_date")
+        end_date = filters.get("end_date")
+
+        base_q = (
+            db.query(
+                Supplier.name.label("supplier"),
+                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_spent"),
+            )
+            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Supplier, Supplier.id == Purchasing.supplier_id)
+            .group_by(Supplier.id, Supplier.name)
+            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .filter(Supplier.name != "System Opening Balance")
+        )
+
+        if start_date:
+            base_q = base_q.filter(Purchasing.date >= start_date)
+        if end_date:
+            base_q = base_q.filter(Purchasing.date <= end_date)
+
+        results = base_q.all()
+        if not results:
+            return {"top_3_ratio": 0, "total_spent": 0}
+
+        total_spent = sum(float(r.total_spent or 0) for r in results)
+        top3_spent = sum(float(r.total_spent or 0) for r in results[:3])
+        ratio = (top3_spent / total_spent * 100) if total_spent else 0
+
+        return {
+            "total_spent": round(total_spent, 2),
+            "top_3_total": round(top3_spent, 2),
+            "top_3_ratio": round(ratio, 2),
+            "suppliers": [r.supplier for r in results[:3]]
+        }

@@ -22,6 +22,7 @@ from app.api.stock_movement.routes import stock_movement_router
 from app.api.stock_opname.routes import stock_opname_router
 from app.api.ledger.routes import ledger_router
 
+from app.api.reporting.purchasing_report import router as purchasing_report_router
 
 load_dotenv()
 
@@ -56,6 +57,7 @@ app.include_router(color_kitchen_entry_router)
 app.include_router(stock_movement_router)
 app.include_router(stock_opname_router)
 app.include_router(ledger_router)
+app.include_router(purchasing_report_router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -81,3 +83,6 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         message=exc.detail
     )()
+
+from app.api.imports.routes import excel_import_router
+
