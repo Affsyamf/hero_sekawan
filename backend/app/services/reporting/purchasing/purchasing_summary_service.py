@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models import Product, Account, Purchasing, Purchasing_Detail, ProductAvgCostCache
+from app.models import Product, Account, Purchasing, PurchasingDetail, ProductAvgCostCache
 from app.models.enum.account_enum import AccountType
 from app.services.reporting.base_reporting_service import BaseReportService
 
@@ -30,12 +30,12 @@ class PurchasingSummaryService(BaseReportService):
 
         q = (
             db.query(
-                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
-                func.sum(Purchasing_Detail.quantity).label("total_qty"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
+                func.sum(PurchasingDetail.quantity).label("total_qty"),
             )
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
         )
 
         # Filters
@@ -55,17 +55,17 @@ class PurchasingSummaryService(BaseReportService):
         # Goods / Service split
         # --------------------------------------------------
         goods_total = (
-            db.query(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price))
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .filter(Account.account_type == AccountType.Goods.value)
         )
         jasa_total = (
-            db.query(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price))
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .filter(Account.account_type == AccountType.Service.value)
         )
         if start_date:
@@ -82,10 +82,10 @@ class PurchasingSummaryService(BaseReportService):
         # Highest Purchase (by invoice total)
         # --------------------------------------------------
         highest_purchase_value = (
-            db.query(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price))
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .group_by(Purchasing.id)
-            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(1)
             .scalar()
         ) or 0

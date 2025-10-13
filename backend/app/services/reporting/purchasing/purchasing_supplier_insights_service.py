@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models import Purchasing, Purchasing_Detail, Product, Supplier
+from app.models import Purchasing, PurchasingDetail, Product, Supplier
 from app.services.reporting.base_reporting_service import BaseReportService
 
 
@@ -34,9 +34,9 @@ class PurchasingSupplierInsightsService(BaseReportService):
         q = (
             db.query(
                 Supplier.name.label("supplier"),
-                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_spent"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_spent"),
             )
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Supplier, Supplier.id == Purchasing.supplier_id)
         )
 
@@ -47,7 +47,7 @@ class PurchasingSupplierInsightsService(BaseReportService):
 
         results = (
             q.group_by(Supplier.id, Supplier.name)
-            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(5)
             .all()
         )
@@ -74,11 +74,11 @@ class PurchasingSupplierInsightsService(BaseReportService):
             db.query(
                 Supplier.name.label("supplier"),
                 Product.name.label("product"),
-                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
             )
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Supplier, Supplier.id == Purchasing.supplier_id)
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
 
         )
 
@@ -89,7 +89,7 @@ class PurchasingSupplierInsightsService(BaseReportService):
 
         q = (
             q.group_by(Supplier.name, Product.name)
-            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(5)
             .all()
         
@@ -132,12 +132,12 @@ class PurchasingSupplierInsightsService(BaseReportService):
         base_q = (
             db.query(
                 Supplier.name.label("supplier"),
-                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_spent"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_spent"),
             )
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Supplier, Supplier.id == Purchasing.supplier_id)
             .group_by(Supplier.id, Supplier.name)
-            .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+            .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .filter(Supplier.name != "System Opening Balance")
         )
 

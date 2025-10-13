@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from datetime import timedelta
-from app.models import Purchasing, Purchasing_Detail, Product, Account
+from app.models import Purchasing, PurchasingDetail, Product, Account
 from app.services.reporting.base_reporting_service import BaseReportService
 
 
@@ -45,25 +45,25 @@ class PurchasingTrendService(BaseReportService):
         # Compute category-based sums
         goods_sum = func.sum(
             case(
-                (Account.account_type == "goods", Purchasing_Detail.quantity * Purchasing_Detail.price),
+                (Account.account_type == "goods", PurchasingDetail.quantity * PurchasingDetail.price),
                 else_=0
             )
         ).label("goods_value")
 
         service_sum = func.sum(
             case(
-                (Account.account_type == "service", Purchasing_Detail.quantity * Purchasing_Detail.price),
+                (Account.account_type == "service", PurchasingDetail.quantity * PurchasingDetail.price),
                 else_=0
             )
         ).label("service_value")
 
-        total_sum = func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value")
+        total_sum = func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value")
 
         # Base query
         q = (
             db.query(period_expr, goods_sum, service_sum, total_sum)
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
             .group_by(period_expr)
             .order_by(period_expr)

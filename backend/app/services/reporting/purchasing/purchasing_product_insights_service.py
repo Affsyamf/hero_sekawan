@@ -4,8 +4,8 @@ from datetime import timedelta
 from app.models import (
     Product,
     Purchasing,
-    Purchasing_Detail,
-    Stock_Movement_Detail,
+    PurchasingDetail,
+    StockMovementDetail,
     ProductAvgCostCache,
 )
 from app.services.reporting.base_reporting_service import BaseReportService
@@ -43,11 +43,11 @@ class PurchasingProductInsightsService(BaseReportService):
         q = (
             db.query(
                 Product.name.label("product"),
-                func.sum(Purchasing_Detail.quantity).label("total_qty"),
-                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
+                func.sum(PurchasingDetail.quantity).label("total_qty"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
             )
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .join(ProductAvgCostCache, ProductAvgCostCache.product_id == Product.id)
         )
 
@@ -58,7 +58,7 @@ class PurchasingProductInsightsService(BaseReportService):
 
         q = (
             q.group_by(Product.name)
-            .order_by(func.sum(Purchasing_Detail.quantity).desc())
+            .order_by(func.sum(PurchasingDetail.quantity).desc())
             .limit(5)
             .all()
         )
@@ -94,9 +94,9 @@ class PurchasingProductInsightsService(BaseReportService):
     #         db.query(
     #             Product.id.label("product_id"),
     #             Product.name.label("product"),
-    #             func.avg(Purchasing_Detail.price).label("avg_cost_current"),
+    #             func.avg(PurchasingDetail.price).label("avg_cost_current"),
     #         )
-    #         .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+    #         .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
     #         .filter(Purchasing.date >= start_date, Purchasing.date <= end_date)
     #         .group_by(Product.id, Product.name)
     #     ).subquery()
@@ -105,9 +105,9 @@ class PurchasingProductInsightsService(BaseReportService):
     #     prev_q = (
     #         db.query(
     #             Product.id.label("product_id"),
-    #             func.avg(Purchasing_Detail.price).label("avg_cost_previous"),
+    #             func.avg(PurchasingDetail.price).label("avg_cost_previous"),
     #         )
-    #         .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+    #         .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
     #         .filter(Purchasing.date >= prev_start, Purchasing.date <= prev_end)
     #         .group_by(Product.id)
     #     ).subquery()
@@ -150,18 +150,18 @@ class PurchasingProductInsightsService(BaseReportService):
     #     start_date = filters.get("start_date")
     #     end_date = filters.get("end_date")
 
-    #     total_value = func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price)
-    #     total_qty = func.sum(Purchasing_Detail.quantity)
+    #     total_value = func.sum(PurchasingDetail.quantity * PurchasingDetail.price)
+    #     total_qty = func.sum(PurchasingDetail.quantity)
 
     #     q = (
     #         db.query(
     #             Product.name.label("product"),
-    #             func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price / Purchasing_Detail.quantity).label("avg_unit_cost"),
+    #             func.sum(PurchasingDetail.quantity * PurchasingDetail.price / PurchasingDetail.quantity).label("avg_unit_cost"),
     #         )
-    #         .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+    #         .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
     #         .group_by(Product.name)
-    #         .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price / Purchasing_Detail.quantity).desc())
-    #         .filter(Purchasing_Detail.quantity > 0)
+    #         .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price / PurchasingDetail.quantity).desc())
+    #         .filter(PurchasingDetail.quantity > 0)
     #     )
     #     if start_date:
     #         q = q.filter(Purchasing.date >= start_date)
@@ -187,20 +187,20 @@ class PurchasingProductInsightsService(BaseReportService):
             db.query(
                 Product.id.label("product_id"),
                 Product.name.label("product"),
-                func.sum(Purchasing_Detail.quantity).label("total_purchased"),
+                func.sum(PurchasingDetail.quantity).label("total_purchased"),
             )
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .group_by(Product.id, Product.name)
         ).subquery()
 
         # Total consumed (from stock movements)
         consumed_q = (
             db.query(
-                Stock_Movement_Detail.product_id.label("product_id"),
-                func.sum(Stock_Movement_Detail.quantity).label("total_consumed"),
+                StockMovementDetail.product_id.label("product_id"),
+                func.sum(StockMovementDetail.quantity).label("total_consumed"),
             )
-            .group_by(Stock_Movement_Detail.product_id)
+            .group_by(StockMovementDetail.product_id)
         ).subquery()
 
         q = (

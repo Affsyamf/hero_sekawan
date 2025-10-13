@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models import Purchasing, Purchasing_Detail, Product, Account
+from app.models import Purchasing, PurchasingDetail, Product, Account
 from app.models.enum.account_enum import AccountType
 from app.services.reporting.base_reporting_service import BaseReportService
 
@@ -32,11 +32,11 @@ class PurchasingBreakdownService(BaseReportService):
         q = (
             db.query(
                 Account.account_type.label("type"),
-                func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
             )
-            .join(Product, Product.id == Purchasing_Detail.product_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
-            .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .group_by(Account.account_type)
             .order_by(Account.account_type)
         )
@@ -69,14 +69,14 @@ class PurchasingBreakdownService(BaseReportService):
                 db.query(
                     Account.id.label("account_id"),
                     Account.name.label("account_name"),
-                    func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
+                    func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
                 )
-                .join(Product, Product.id == Purchasing_Detail.product_id)
+                .join(Product, Product.id == PurchasingDetail.product_id)
                 .join(Account, Account.id == Product.account_id)
-                .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+                .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
                 .filter(Account.account_type == parent_type)
                 .group_by(Account.id, Account.name)
-                .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+                .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             )
 
         elif level == "account":
@@ -84,15 +84,15 @@ class PurchasingBreakdownService(BaseReportService):
             q = (
                 db.query(
                     Product.name.label("product"),
-                    func.sum(Purchasing_Detail.quantity).label("total_qty"),
-                    func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).label("total_value"),
+                    func.sum(PurchasingDetail.quantity).label("total_qty"),
+                    func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
                 )
-                .join(Product, Product.id == Purchasing_Detail.product_id)
+                .join(Product, Product.id == PurchasingDetail.product_id)
                 .join(Account, Account.id == Product.account_id)
-                .join(Purchasing, Purchasing.id == Purchasing_Detail.purchasing_id)
+                .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
                 .filter(Account.id == parent_account_id)
                 .group_by(Product.name)
-                .order_by(func.sum(Purchasing_Detail.quantity * Purchasing_Detail.price).desc())
+                .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             )
         else:
             raise ValueError("Invalid level. Must be 'account_type' or 'account'.")
