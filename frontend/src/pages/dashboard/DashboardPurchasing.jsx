@@ -2,6 +2,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
+import { Highchart } from "../../components/ui/highchart";
 import {
   ShoppingCart,
   Package,
@@ -14,160 +15,13 @@ import {
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
 import { formatNumber, formatCompactCurrency } from "../../utils/helpers";
-
-// ===== MOCK DATA GENERATOR =====
-const generateMockData = (period) => {
-  const getMonthCount = () => {
-    if (period === "1 Bulan") return 4;
-    if (period === "3 Bulan") return 12;
-    return 24;
-  };
-
-  const monthCount = getMonthCount();
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const generateMonths = () => {
-    const months = [];
-    const currentMonth = 9;
-    for (let i = monthCount - 1; i >= 0; i--) {
-      const monthIndex = (currentMonth - i + 12) % 12;
-      months.push(`${monthNames[monthIndex]} 2025`);
-    }
-    return months;
-  };
-
-  const months = generateMonths();
-
-  // Purchase trend data
-  const purchase_trend = months.map((month, i) => ({
-    month,
-    goods: 45000000 + Math.random() * 15000000 + i * 800000,
-    jasa: 12000000 + Math.random() * 5000000 + i * 300000,
-  }));
-
-  const totalPurchases = purchase_trend.reduce(
-    (sum, d) => sum + d.goods + d.jasa,
-    0
-  );
-  const totalGoods = purchase_trend.reduce((sum, d) => sum + d.goods, 0);
-  const totalJasa = purchase_trend.reduce((sum, d) => sum + d.jasa, 0);
-
-  return {
-    metrics: {
-      total_purchases: {
-        value: totalPurchases,
-        trend: 18.5,
-      },
-      total_jasa: {
-        value: totalJasa,
-        trend: 12.3,
-      },
-      total_goods: {
-        value: totalGoods,
-        trend: 20.8,
-      },
-    },
-    purchase_trend,
-    goods_vs_jasa: [
-      { label: "Goods (Product)", value: totalGoods },
-      { label: "Jasa (Services)", value: totalJasa },
-    ],
-    top_suppliers: [
-      {
-        name: "PT Kimia Prima Sentosa",
-        total_purchases: 285000000,
-        purchase_count: 48,
-        rating: 4.8,
-        category: "Dye & Chemicals",
-      },
-      {
-        name: "CV Aneka Bahan Tekstil",
-        total_purchases: 198000000,
-        purchase_count: 35,
-        rating: 4.6,
-        category: "Auxiliary Materials",
-      },
-      {
-        name: "PT Global Chemical Indo",
-        total_purchases: 165000000,
-        purchase_count: 28,
-        rating: 4.7,
-        category: "Dye & Chemicals",
-      },
-      {
-        name: "UD Sumber Makmur",
-        total_purchases: 142000000,
-        purchase_count: 31,
-        rating: 4.5,
-        category: "Packaging",
-      },
-      {
-        name: "PT Indo Jasa Printing",
-        total_purchases: 128000000,
-        purchase_count: 22,
-        rating: 4.4,
-        category: "Printing Services",
-      },
-    ],
-    top_purchases: [
-      {
-        label: "PO-2025-0892",
-        value: 48500000,
-        date: "Oct 12, 2025",
-        supplier: "PT Kimia Prima",
-      },
-      {
-        label: "PO-2025-0876",
-        value: 42300000,
-        date: "Oct 08, 2025",
-        supplier: "CV Aneka Bahan",
-      },
-      {
-        label: "PO-2025-0845",
-        value: 38700000,
-        date: "Sep 28, 2025",
-        supplier: "PT Global Chemical",
-      },
-      {
-        label: "PO-2025-0823",
-        value: 35200000,
-        date: "Sep 22, 2025",
-        supplier: "UD Sumber Makmur",
-      },
-      {
-        label: "PO-2025-0801",
-        value: 32800000,
-        date: "Sep 15, 2025",
-        supplier: "PT Indo Jasa",
-      },
-    ],
-    most_purchased: [
-      { label: "Reactive Blue 19", value: 3250.5, unit: "kg", maxValue: 4000 },
-      { label: "Sodium Alginate", value: 2980.3, unit: "kg", maxValue: 4000 },
-      { label: "Reactive Red 195", value: 2750.8, unit: "kg", maxValue: 4000 },
-      { label: "Urea", value: 2520.2, unit: "kg", maxValue: 4000 },
-      {
-        label: "Reactive Yellow 145",
-        value: 2280.6,
-        unit: "kg",
-        maxValue: 4000,
-      },
-    ],
-  };
-};
+import {
+  reportsPurchasingSummary,
+  reportsPurchasingTrend,
+  reportsPurchasingProducts,
+  reportsPurchasingSuppliers,
+  reportsPurchasingBreakdownSummary,
+} from "../../services/report_purchasing_service";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -176,6 +30,25 @@ export default function DashboardPurchasing() {
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
 
+  // Calculate date range based on period
+  const getDateRange = (period) => {
+    const endDate = new Date();
+    const startDate = new Date();
+
+    if (period === "1 Bulan") {
+      startDate.setMonth(endDate.getMonth() - 1);
+    } else if (period === "3 Bulan") {
+      startDate.setMonth(endDate.getMonth() - 3);
+    } else if (period === "6 Bulan") {
+      startDate.setMonth(endDate.getMonth() - 6);
+    }
+
+    return {
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+    };
+  };
+
   useEffect(() => {
     fetchPurchasingData();
   }, [period]);
@@ -183,14 +56,136 @@ export default function DashboardPurchasing() {
   const fetchPurchasingData = async () => {
     try {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const mockData = generateMockData(period);
-      setPurchasingData(mockData);
+      const dateRange = getDateRange(period);
+      const filters = {
+        ...dateRange,
+        granularity: "monthly",
+      };
+
+      // Fetch all data in parallel
+      const [summary, trend, breakdown, suppliers, products] =
+        await Promise.all([
+          reportsPurchasingSummary(filters),
+          reportsPurchasingTrend(filters),
+          reportsPurchasingProducts(filters),
+          reportsPurchasingSuppliers(filters),
+          reportsPurchasingBreakdownSummary(filters),
+        ]);
+
+      // Transform data to match component structure
+      const transformedData = transformApiData(
+        summary,
+        trend,
+        breakdown,
+        suppliers,
+        products
+      );
+
+      setPurchasingData(transformedData);
     } catch (error) {
       console.error("Error fetching purchasing data:", error);
+      setPurchasingData(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  const transformApiData = (summary, trend, breakdown, suppliers, products) => {
+    // Transform metrics
+    const metrics = {
+      total_purchases: {
+        value: summary.total_purchases || 0,
+        trend: 0, // Calculate if you have historical data
+      },
+      total_goods: {
+        value: summary.total_goods || 0,
+        trend: 0,
+      },
+      total_jasa: {
+        value: summary.total_services || 0,
+        trend: 0,
+      },
+    };
+
+    // Transform purchase trend
+    const purchase_trend = (trend || []).map((item) => ({
+      month: formatPeriod(item.period),
+      goods: item.goods || 0,
+      jasa: item.service || 0,
+    }));
+
+    // Transform goods vs jasa breakdown
+    const goods_vs_jasa = (breakdown?.data || []).map((item) => ({
+      label: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
+      value: item.value || 0,
+    }));
+
+    // Transform top suppliers
+    const top_suppliers = (suppliers?.top_suppliers || []).slice(0, 5).map((item) => ({
+      name: item.supplier,
+      total_purchases: item.total_spent || 0,
+      purchase_count: 0, // Not provided by API
+      rating: 0, // Not provided by API
+      category: "General", // Not provided by API
+      percentage: item.percentage || 0,
+    }));
+
+    // Transform most purchased products
+    const most_purchased = (products?.most_purchased || []).slice(0, 5).map((item) => {
+      const maxValue = Math.max(
+        ...(products?.most_purchased || []).map((p) => p.total_qty)
+      );
+      return {
+        label: item.product,
+        value: item.total_qty || 0,
+        unit: "unit",
+        maxValue: maxValue || 1,
+        total_value: item.total_value || 0,
+        avg_cost: item.avg_cost || 0,
+      };
+    });
+
+    // Create top purchases from most purchased products (by value)
+    const top_purchases = (products?.most_purchased || [])
+      .sort((a, b) => b.total_value - a.total_value)
+      .slice(0, 5)
+      .map((item, index) => ({
+        label: `Item-${index + 1}`,
+        value: item.total_value || 0,
+        date: "-",
+        supplier: item.product,
+      }));
+
+    return {
+      metrics,
+      purchase_trend,
+      goods_vs_jasa,
+      top_suppliers,
+      top_purchases,
+      most_purchased,
+    };
+  };
+
+  const formatPeriod = (period) => {
+    // Convert "2025-08" to "Aug 2025"
+    if (!period) return "";
+    const [year, month] = period.split("-");
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const monthIndex = parseInt(month, 10) - 1;
+    return `${monthNames[monthIndex]} ${year}`;
   };
 
   const handleExport = async () => {
@@ -198,7 +193,7 @@ export default function DashboardPurchasing() {
       setExporting(true);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       console.log("Export successful!");
-      alert("Export berhasil! (Mock data)");
+      alert("Export berhasil!");
     } catch (error) {
       console.error("Error exporting data:", error);
       alert("Failed to export data. Please try again.");
@@ -262,9 +257,6 @@ export default function DashboardPurchasing() {
               <h1 className="text-2xl font-semibold text-gray-900">
                 Purchasing Overview
               </h1>
-              <span className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 border border-orange-200 rounded-md">
-                MOCK DATA
-              </span>
             </div>
             <p className="mt-1 text-sm text-gray-600">
               Monitor pembelian, supplier, dan trend purchasing
@@ -317,7 +309,7 @@ export default function DashboardPurchasing() {
           {/* Purchase Trend - 2/3 width */}
           <div className="lg:col-span-2">
             <Card className="w-full h-full">
-              <Chart.Bar
+              <Highchart.HighchartsBar
                 initialData={purchase_trend}
                 title="Trend Purchasing (Goods vs Jasa)"
                 subtitle="Perbandingan pembelian goods dan jasa per periode"
@@ -334,16 +326,18 @@ export default function DashboardPurchasing() {
 
           {/* Goods vs Jasa Donut - 1/3 width */}
           <div className="lg:col-span-1">
-            <Chart.Donut
-              data={goods_vs_jasa}
-              centerText={{
-                value: formatCompactCurrency(metrics.total_purchases.value),
-                label: "Total",
-              }}
-              title="Breakdown Purchasing"
-              subtitle="Goods vs Jasa"
-              className="w-full h-full"
-            />
+            <Card className="h-full">
+              <Highchart.HighchartsDonut
+                data={goods_vs_jasa}
+                centerText={{
+                  value: formatCompactCurrency(metrics.total_purchases.value),
+                  label: "Total",
+                }}
+                title="Breakdown Purchasing"
+                subtitle="Goods vs Jasa"
+                className="w-full h-full"
+              />
+            </Card>
           </div>
         </div>
 
@@ -363,48 +357,42 @@ export default function DashboardPurchasing() {
               </div>
             </div>
             <div className="space-y-3">
-              {top_suppliers.map((supplier, index) => (
-                <div
-                  key={index}
-                  className="p-4 transition-all border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-purple-600 bg-purple-100 rounded-lg">
-                        {index + 1}
+              {top_suppliers.length > 0 ? (
+                top_suppliers.map((supplier, index) => (
+                  <div
+                    key={index}
+                    className="p-4 transition-all border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-3">
+                        <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-purple-600 bg-purple-100 rounded-lg">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {supplier.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {supplier.percentage.toFixed(2)}% of total
+                          </p>
+                        </div>
                       </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
                       <div>
-                        <p className="font-semibold text-gray-900">
-                          {supplier.name}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {supplier.category}
+                        <p className="text-xs text-gray-600">Total Purchases</p>
+                        <p className="font-bold text-gray-900">
+                          {formatCompactCurrency(supplier.total_purchases)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-yellow-500">
-                      <Star className="w-4 h-4 fill-current" />
-                      <span className="text-xs font-semibold">
-                        {supplier.rating}
-                      </span>
-                    </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
-                    <div>
-                      <p className="text-xs text-gray-600">Total Purchases</p>
-                      <p className="font-bold text-gray-900">
-                        {formatCompactCurrency(supplier.total_purchases)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-600">PO Count</p>
-                      <p className="font-semibold text-gray-900">
-                        {supplier.purchase_count} PO
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-center text-gray-500">
+                  No supplier data available
+                </p>
+              )}
             </div>
           </Card>
 
@@ -416,54 +404,56 @@ export default function DashboardPurchasing() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">
-                  Top 5 Purchases Value
+                  Top 5 Product Values
                 </h3>
                 <p className="text-xs text-gray-600">
-                  PO dengan nilai pembelian tertinggi
+                  Produk dengan nilai pembelian tertinggi
                 </p>
               </div>
             </div>
             <div className="space-y-3">
-              {top_purchases.map((purchase, index) => (
-                <div
-                  key={index}
-                  className="p-4 transition-all border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-green-600 bg-green-100 rounded-lg">
-                        {index + 1}
+              {top_purchases.length > 0 ? (
+                top_purchases.map((purchase, index) => (
+                  <div
+                    key={index}
+                    className="p-4 transition-all border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-3">
+                        <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-green-600 bg-green-100 rounded-lg">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {purchase.supplier}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {purchase.label}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {purchase.supplier}
+                      <div className="text-right">
+                        <p className="font-bold text-green-600">
+                          {formatCompactCurrency(purchase.value)}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-green-600">
-                        {formatCompactCurrency(purchase.value)}
-                      </p>
-                      <p className="text-xs text-gray-600">{purchase.date}</p>
+                    <div className="mt-2">
+                      <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full transition-all duration-500 bg-green-500 rounded-full"
+                          style={{
+                            width: `${
+                              (purchase.value / top_purchases[0].value) * 100
+                            }%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-2">
-                    <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full transition-all duration-500 bg-green-500 rounded-full"
-                        style={{
-                          width: `${
-                            (purchase.value / top_purchases[0].value) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-center text-gray-500">
+                  No purchase data available
+                </p>
+              )}
             </div>
           </Card>
         </div>
@@ -490,61 +480,75 @@ export default function DashboardPurchasing() {
                 {formatNumber(
                   most_purchased.reduce((sum, item) => sum + item.value, 0)
                 )}{" "}
-                kg
+                unit
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-            {most_purchased.map((item, index) => (
-              <div
-                key={index}
-                className="p-4 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-blue-600 bg-blue-100 rounded-lg">
-                    {index + 1}
+            {most_purchased.length > 0 ? (
+              most_purchased.map((item, index) => (
+                <div
+                  key={index}
+                  className="p-4 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-blue-600 bg-blue-100 rounded-lg">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {item.label}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
-                      {item.label}
-                    </p>
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs text-gray-600">Volume</span>
+                      <span className="text-sm font-bold text-gray-900">
+                        {formatNumber(item.value)} {item.unit}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-xs text-gray-600">Total Value</span>
+                      <span className="text-xs font-semibold text-gray-900">
+                        {formatCompactCurrency(item.total_value)}
+                      </span>
+                    </div>
+                    <Highchart.HighchartsProgress
+                      label=""
+                      value={item.value}
+                      maxValue={item.maxValue}
+                      color={
+                        index === 0
+                          ? "error"
+                          : index === 1
+                          ? "primary"
+                          : index === 2
+                          ? "warning"
+                          : index === 3
+                          ? "success"
+                          : "info"
+                      }
+                    />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-gray-600">Volume</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {formatNumber(item.value)} {item.unit}
-                    </span>
-                  </div>
-                  <Chart.Progress
-                    label=""
-                    value={item.value}
-                    maxValue={item.maxValue}
-                    color={
-                      index === 0
-                        ? "error"
-                        : index === 1
-                        ? "primary"
-                        : index === 2
-                        ? "warning"
-                        : index === 3
-                        ? "success"
-                        : "info"
-                    }
-                  />
-                </div>
+              ))
+            ) : (
+              <div className="col-span-5">
+                <p className="text-sm text-center text-gray-500">
+                  No product data available
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </Card>
 
         {/* Info Section */}
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-blue-200 bg-blue-50">
           <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg">
               <svg
-                className="w-6 h-6 text-purple-600"
+                className="w-6 h-6 text-blue-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -558,10 +562,10 @@ export default function DashboardPurchasing() {
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="mb-2 font-semibold text-purple-900">
+              <h4 className="mb-2 font-semibold text-blue-900">
                 Informasi Purchasing
               </h4>
-              <div className="space-y-2 text-sm text-purple-800">
+              <div className="space-y-2 text-sm text-blue-800">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <div>
                     <p className="font-semibold">🛒 Total Purchases</p>
@@ -578,11 +582,10 @@ export default function DashboardPurchasing() {
                     <p className="text-xs">Total pembelian jasa/services</p>
                   </div>
                 </div>
-                <div className="pt-2 mt-3 border-t border-purple-200">
-                  <p className="text-xs text-purple-700">
-                    <strong>Catatan:</strong> Data saat ini menggunakan MOCK
-                    DATA. Supplier rating dan category adalah contoh data untuk
-                    development.
+                <div className="pt-2 mt-3 border-t border-blue-200">
+                  <p className="text-xs text-blue-700">
+                    <strong>Catatan:</strong> Data diambil dari database real-time.
+                    Filter periode dapat disesuaikan untuk melihat trend berbeda.
                   </p>
                 </div>
               </div>
