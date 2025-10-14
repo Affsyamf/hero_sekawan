@@ -12,6 +12,6 @@ class ProductAvgCostCache(Base):
     last_updated = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
-    product = relationship("Product", back_populates="avg_cost_cache")
+    product = relationship("Product", back_populates="avg_cost_cache", lazy='subquery')
 
     

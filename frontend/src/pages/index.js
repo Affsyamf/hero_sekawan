@@ -14,5 +14,5 @@ export { default as PurchasingReportsPage } from "./report/PurchasingReportsPage
 
 export { default as OverviewNew } from "./dashboard/OverviewNew";
 export { default as OverviewOld } from "./dashboard/OverviewOld";
-export { default as DashboardPurchasing } from "./dashboard/OverviewPurchasing";
+export { default as DashboardPurchasing } from "./dashboard/DashboardPurchasing";
 export { default as ColorKitchenDashboard } from "./dashboard/ColorKitchenDashboard";

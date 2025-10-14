@@ -27,10 +27,6 @@ from app.api.reporting.purchasing_report import router as purchasing_report_rout
 load_dotenv()
 
 app = FastAPI()
-origins = [
-    "http://localhost:5173",   # React (Vite)
-    "http://127.0.0.1:5173",   # kadang React pakai ini juga
-]
 
 app.add_middleware(
     CORSMiddleware,

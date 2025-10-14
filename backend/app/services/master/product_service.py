@@ -33,8 +33,23 @@ class ProductService:
                     Product.unit.ilike(like),
                 )
             ).order_by(Product.id)
+            
+        return APIResponse.paginated(product, request, lambda product: {
+                "id": product.id,
+                "code": product.code,
+                "name": product.name,
+                "unit": product.unit,
+                # "alias": product.alias,
+                # "products": [{
+                #     "id": product.id,
+                #     "code": product.code,
+                #     "name": product.name,
+                #     "name": product.name,
+                # } for product in account.products] if account.products else []
+            }
+        )
 
-        return APIResponse.paginated(product, request)
+        # return APIResponse.paginated(product, request)
 
     def get_product(self, product_id: int):
         product = self.db.query(Product).filter(Product.id == product_id).first()
