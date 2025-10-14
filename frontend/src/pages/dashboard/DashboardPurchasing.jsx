@@ -10,7 +10,7 @@ import {
   Download,
   TrendingUp,
   Building2,
-  Star,
+  Calendar,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
@@ -26,21 +26,59 @@ import {
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState("1 Bulan");
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
 
-  // Calculate date range based on period
-  const getDateRange = (period) => {
-    const endDate = new Date();
-    const startDate = new Date();
+  // Date Filter States
+  const [filterMode, setFilterMode] = useState("month_year"); // month_year, year_only, ytd, custom
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
 
-    if (period === "1 Bulan") {
-      startDate.setMonth(endDate.getMonth() - 1);
-    } else if (period === "3 Bulan") {
-      startDate.setMonth(endDate.getMonth() - 3);
-    } else if (period === "6 Bulan") {
-      startDate.setMonth(endDate.getMonth() - 6);
+  // Granularity per chart
+  const [trendGranularity, setTrendGranularity] = useState("monthly");
+  const [productsGranularity, setProductsGranularity] = useState("monthly");
+
+  // Get current date range based on filter mode
+  const getDateRange = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    switch (filterMode) {
+      case "month_year":
+        // Specific month & year
+        startDate = new Date(selectedYear, selectedMonth - 1, 1);
+        endDate = new Date(selectedYear, selectedMonth, 0); // Last day of month
+        break;
+
+      case "year_only":
+        // Entire year
+        startDate = new Date(selectedYear, 0, 1);
+        endDate = new Date(selectedYear, 11, 31);
+        break;
+
+      case "ytd":
+        // Year to date
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = now;
+        break;
+
+      case "custom":
+        // Custom range
+        if (customStartDate && customEndDate) {
+          startDate = new Date(customStartDate);
+          endDate = new Date(customEndDate);
+        } else {
+          // Fallback to current month
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = now;
+        }
+        break;
+
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = now;
     }
 
     return {
@@ -49,30 +87,65 @@ export default function DashboardPurchasing() {
     };
   };
 
+  // Get display text for current filter
+  const getFilterDisplayText = () => {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    switch (filterMode) {
+      case "month_year":
+        return `${monthNames[selectedMonth - 1]} ${selectedYear}`;
+      case "year_only":
+        return `Year ${selectedYear}`;
+      case "ytd":
+        return `YTD ${new Date().getFullYear()}`;
+      case "custom":
+        if (customStartDate && customEndDate) {
+          return `${customStartDate} to ${customEndDate}`;
+        }
+        return "Custom Range";
+      default:
+        return "";
+    }
+  };
+
   useEffect(() => {
     fetchPurchasingData();
-  }, [period]);
+  }, [filterMode, selectedMonth, selectedYear, customStartDate, customEndDate]);
 
   const fetchPurchasingData = async () => {
     try {
       setLoading(true);
-      const dateRange = getDateRange(period);
-      const filters = {
-        ...dateRange,
-        granularity: "monthly",
-      };
+      const dateRange = getDateRange();
 
-      // Fetch all data in parallel
-      const [summary, trend, breakdown, suppliers, products] =
-        await Promise.all([
-          reportsPurchasingSummary(filters),
-          reportsPurchasingTrend(filters),
-          reportsPurchasingProducts(filters),
-          reportsPurchasingSuppliers(filters),
-          reportsPurchasingBreakdownSummary(filters),
-        ]);
+      // Fetch summary, breakdown, and suppliers (no granularity needed)
+      const [summary, breakdown, suppliers] = await Promise.all([
+        reportsPurchasingSummary(dateRange),
+        reportsPurchasingBreakdownSummary(dateRange),
+        reportsPurchasingSuppliers(dateRange),
+      ]);
 
-      // Transform data to match component structure
+      // Fetch trend and products with their specific granularity
+      const [trend, products] = await Promise.all([
+        reportsPurchasingTrend({ ...dateRange, granularity: trendGranularity }),
+        reportsPurchasingProducts({
+          ...dateRange,
+          granularity: productsGranularity,
+        }),
+      ]);
+
       const transformedData = transformApiData(
         summary,
         trend,
@@ -90,12 +163,92 @@ export default function DashboardPurchasing() {
     }
   };
 
+  // Fetch trend data when granularity changes
+  const fetchTrendData = async () => {
+    try {
+      const dateRange = getDateRange();
+      const trend = await reportsPurchasingTrend({
+        ...dateRange,
+        granularity: trendGranularity,
+      });
+
+      setPurchasingData((prev) => ({
+        ...prev,
+        purchase_trend: transformTrendData(trend),
+      }));
+    } catch (error) {
+      console.error("Error fetching trend data:", error);
+    }
+  };
+
+  // Fetch products data when granularity changes
+  const fetchProductsData = async () => {
+    try {
+      const dateRange = getDateRange();
+      const products = await reportsPurchasingProducts({
+        ...dateRange,
+        granularity: productsGranularity,
+      });
+
+      setPurchasingData((prev) => ({
+        ...prev,
+        most_purchased: transformProductsData(products),
+      }));
+    } catch (error) {
+      console.error("Error fetching products data:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (purchasingData) {
+      fetchTrendData();
+    }
+  }, [trendGranularity]);
+
+  useEffect(() => {
+    if (purchasingData) {
+      fetchProductsData();
+    }
+  }, [productsGranularity]);
+
+  const transformTrendData = (trend) => {
+    return (trend || []).map((item) => {
+      let displayPeriod = item.period;
+
+      if (item.week_start && item.week_end) {
+        displayPeriod = formatWeeklyPeriod(item.week_start, item.week_end);
+      } else {
+        displayPeriod = formatPeriod(item.period);
+      }
+
+      return {
+        month: displayPeriod,
+        goods: item.goods || 0,
+        jasa: item.service || 0,
+        total: item.total || 0,
+      };
+    });
+  };
+
+  const transformProductsData = (products) => {
+    const mostPurchased = (products?.most_purchased || []).slice(0, 5);
+    const maxValue = Math.max(...mostPurchased.map((p) => p.total_qty), 1);
+
+    return mostPurchased.map((item) => ({
+      label: item.product,
+      value: item.total_qty || 0,
+      unit: "unit",
+      maxValue: maxValue,
+      total_value: item.total_value || 0,
+      avg_cost: item.avg_cost || 0,
+    }));
+  };
+
   const transformApiData = (summary, trend, breakdown, suppliers, products) => {
-    // Transform metrics
     const metrics = {
       total_purchases: {
         value: summary.total_purchases || 0,
-        trend: 0, // Calculate if you have historical data
+        trend: 0,
       },
       total_goods: {
         value: summary.total_goods || 0,
@@ -107,45 +260,23 @@ export default function DashboardPurchasing() {
       },
     };
 
-    // Transform purchase trend
-    const purchase_trend = (trend || []).map((item) => ({
-      month: formatPeriod(item.period),
-      goods: item.goods || 0,
-      jasa: item.service || 0,
-    }));
+    const purchase_trend = transformTrendData(trend);
 
-    // Transform goods vs jasa breakdown
     const goods_vs_jasa = (breakdown?.data || []).map((item) => ({
       label: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
       value: item.value || 0,
     }));
 
-    // Transform top suppliers
-    const top_suppliers = (suppliers?.top_suppliers || []).slice(0, 5).map((item) => ({
-      name: item.supplier,
-      total_purchases: item.total_spent || 0,
-      purchase_count: 0, // Not provided by API
-      rating: 0, // Not provided by API
-      category: "General", // Not provided by API
-      percentage: item.percentage || 0,
-    }));
+    const top_suppliers = (suppliers?.top_suppliers || [])
+      .slice(0, 5)
+      .map((item) => ({
+        name: item.supplier,
+        total_purchases: item.total_spent || 0,
+        percentage: item.percentage || 0,
+      }));
 
-    // Transform most purchased products
-    const most_purchased = (products?.most_purchased || []).slice(0, 5).map((item) => {
-      const maxValue = Math.max(
-        ...(products?.most_purchased || []).map((p) => p.total_qty)
-      );
-      return {
-        label: item.product,
-        value: item.total_qty || 0,
-        unit: "unit",
-        maxValue: maxValue || 1,
-        total_value: item.total_value || 0,
-        avg_cost: item.avg_cost || 0,
-      };
-    });
+    const most_purchased = transformProductsData(products);
 
-    // Create top purchases from most purchased products (by value)
     const top_purchases = (products?.most_purchased || [])
       .sort((a, b) => b.total_value - a.total_value)
       .slice(0, 5)
@@ -166,10 +297,10 @@ export default function DashboardPurchasing() {
     };
   };
 
-  const formatPeriod = (period) => {
-    // Convert "2025-08" to "Aug 2025"
-    if (!period) return "";
-    const [year, month] = period.split("-");
+  const formatWeeklyPeriod = (weekStart, weekEnd) => {
+    const start = new Date(weekStart);
+    const end = new Date(weekEnd);
+
     const monthNames = [
       "Jan",
       "Feb",
@@ -184,8 +315,72 @@ export default function DashboardPurchasing() {
       "Nov",
       "Dec",
     ];
-    const monthIndex = parseInt(month, 10) - 1;
-    return `${monthNames[monthIndex]} ${year}`;
+
+    const monthName = monthNames[start.getMonth()];
+    const startDay = start.getDate();
+    const endDay = end.getDate();
+    const year = start.getFullYear();
+
+    if (start.getMonth() === end.getMonth()) {
+      return `${monthName} ${startDay}-${endDay}, ${year}`;
+    } else {
+      const endMonthName = monthNames[end.getMonth()];
+      return `${monthName} ${startDay} - ${endMonthName} ${endDay}, ${year}`;
+    }
+  };
+
+  const formatPeriod = (period) => {
+    if (!period) return "";
+
+    if (period.length === 4) {
+      return period;
+    }
+
+    if (period.includes("-") && period.split("-").length === 2) {
+      const [year, month] = period.split("-");
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const monthIndex = parseInt(month, 10) - 1;
+      return `${monthNames[monthIndex]} ${year}`;
+    }
+
+    if (period.includes("W")) {
+      return `Week ${period.split("W")[1]}, ${period.split("-")[0]}`;
+    }
+
+    if (period.split("-").length === 3) {
+      const [year, month, day] = period.split("-");
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const monthIndex = parseInt(month, 10) - 1;
+      return `${monthNames[monthIndex]} ${parseInt(day)}, ${year}`;
+    }
+
+    return period;
   };
 
   const handleExport = async () => {
@@ -247,31 +442,167 @@ export default function DashboardPurchasing() {
     most_purchased,
   } = purchasingData;
 
+  const monthOptions = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const yearOptions = Array.from(
+    { length: 3 },
+    (_, i) => new Date().getFullYear() - i
+  );
+
   return (
     <MainLayout>
       <div className="max-w-full space-y-6">
+        {/* Date Filter Header */}
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary bg-opacity-20">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-primary text-opacity-90">
+                  Data Filter
+                </h3>
+                <p className="text-lg font-bold text-primary">
+                  {getFilterDisplayText()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Filter Mode Tabs */}
+              <div className="flex p-1 rounded-lg bg-primary bg-opacity-20">
+                <button
+                  onClick={() => setFilterMode("month_year")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "month_year"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  Month & Year
+                </button>
+                <button
+                  onClick={() => setFilterMode("year_only")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "year_only"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  Year Only
+                </button>
+                <button
+                  onClick={() => setFilterMode("ytd")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "ytd"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  YTD
+                </button>
+                <button
+                  onClick={() => setFilterMode("custom")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "custom"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
+
+              {/* Month & Year Selectors */}
+              {filterMode === "month_year" && (
+                <>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  >
+                    {monthOptions.map((month, index) => (
+                      <option key={month} value={index + 1}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+
+              {/* Year Only Selector */}
+              {filterMode === "year_only" && (
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {/* Custom Date Range */}
+              {filterMode === "custom" && (
+                <>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  />
+                  <span className="text-sm font-medium text-white">to</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-gray-900">
-                Purchasing Overview
-              </h1>
-            </div>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Purchasing Overview
+            </h1>
             <p className="mt-1 text-sm text-gray-600">
               Monitor pembelian, supplier, dan trend purchasing
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option>1 Bulan</option>
-              <option>3 Bulan</option>
-              <option>6 Bulan</option>
-            </select>
+          <div>
             <Button
               icon={Download}
               label={exporting ? "Exporting..." : "Export Data"}
@@ -306,25 +637,44 @@ export default function DashboardPurchasing() {
 
         {/* Main Charts Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Purchase Trend - 2/3 width */}
+          {/* Purchase Trend - with Granularity selector */}
           <div className="lg:col-span-2">
             <Card className="w-full h-full">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    Trend Purchasing
+                  </h3>
+                  <p className="text-xs text-gray-600">
+                    Perbandingan pembelian goods dan jasa
+                  </p>
+                </div>
+                <select
+                  value={trendGranularity}
+                  onChange={(e) => setTrendGranularity(e.target.value)}
+                  className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="daily">Perhari</option>
+                  <option value="weekly">Perminggu</option>
+                  <option value="monthly">Perbulan</option>
+                  <option value="yearly">Pertahun</option>
+                </select>
+              </div>
               <Highchart.HighchartsBar
                 initialData={purchase_trend}
-                title="Trend Purchasing (Goods vs Jasa)"
-                subtitle="Perbandingan pembelian goods dan jasa per periode"
+                title=""
+                subtitle=""
                 datasets={[
                   { key: "goods", label: "Goods", color: "primary" },
                   { key: "jasa", label: "Jasa", color: "warning" },
                 ]}
-                periods={["6 Bulan", "3 Bulan", "1 Bulan"]}
                 onFetchData={() => purchase_trend}
                 showSummary={true}
               />
             </Card>
           </div>
 
-          {/* Goods vs Jasa Donut - 1/3 width */}
+          {/* Goods vs Jasa Donut */}
           <div className="lg:col-span-1">
             <Card className="h-full">
               <Highchart.HighchartsDonut
@@ -458,7 +808,7 @@ export default function DashboardPurchasing() {
           </Card>
         </div>
 
-        {/* Most Purchased Products */}
+        {/* Most Purchased Products - with Granularity selector */}
         <Card>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -474,14 +824,26 @@ export default function DashboardPurchasing() {
                 </p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Total Volume</p>
-              <p className="text-sm font-semibold text-gray-900">
-                {formatNumber(
-                  most_purchased.reduce((sum, item) => sum + item.value, 0)
-                )}{" "}
-                unit
-              </p>
+            <div className="flex items-center gap-3">
+              <select
+                value={productsGranularity}
+                onChange={(e) => setProductsGranularity(e.target.value)}
+                className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="daily">Perhari</option>
+                <option value="weekly">Perminggu</option>
+                <option value="monthly">Perbulan</option>
+                <option value="yearly">Pertahun</option>
+              </select>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Total Volume</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatNumber(
+                    most_purchased.reduce((sum, item) => sum + item.value, 0)
+                  )}{" "}
+                  unit
+                </p>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -584,8 +946,10 @@ export default function DashboardPurchasing() {
                 </div>
                 <div className="pt-2 mt-3 border-t border-blue-200">
                   <p className="text-xs text-blue-700">
-                    <strong>Catatan:</strong> Data diambil dari database real-time.
-                    Filter periode dapat disesuaikan untuk melihat trend berbeda.
+                    <strong>Catatan:</strong> Data diambil dari database
+                    real-time. Anda dapat menyesuaikan periode data dan
+                    granularity di setiap chart untuk analisis yang lebih
+                    detail.
                   </p>
                 </div>
               </div>
