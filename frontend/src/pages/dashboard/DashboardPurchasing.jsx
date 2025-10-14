@@ -2,6 +2,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
+import { Highchart } from "../../components/ui/highchart";
 import {
   ShoppingCart,
   Package,
@@ -314,10 +315,10 @@ export default function DashboardPurchasing() {
 
         {/* Main Charts Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Purchase Trend - 2/3 width */}
+          {/* Purchase Trend - 2/3 width - HIGHCHARTS BAR */}
           <div className="lg:col-span-2">
             <Card className="w-full h-full">
-              <Chart.Bar
+              <Highchart.HighchartsBar
                 initialData={purchase_trend}
                 title="Trend Purchasing (Goods vs Jasa)"
                 subtitle="Perbandingan pembelian goods dan jasa per periode"
@@ -332,18 +333,20 @@ export default function DashboardPurchasing() {
             </Card>
           </div>
 
-          {/* Goods vs Jasa Donut - 1/3 width */}
+          {/* Goods vs Jasa Donut - 1/3 width - HIGHCHARTS DONUT */}
           <div className="lg:col-span-1">
-            <Chart.Donut
-              data={goods_vs_jasa}
-              centerText={{
-                value: formatCompactCurrency(metrics.total_purchases.value),
-                label: "Total",
-              }}
-              title="Breakdown Purchasing"
-              subtitle="Goods vs Jasa"
-              className="w-full h-full"
-            />
+            <Card className="h-full">
+              <Highchart.HighchartsDonut
+                data={goods_vs_jasa}
+                centerText={{
+                  value: formatCompactCurrency(metrics.total_purchases.value),
+                  label: "Total",
+                }}
+                title="Breakdown Purchasing"
+                subtitle="Goods vs Jasa"
+                className="w-full h-full"
+              />
+            </Card>
           </div>
         </div>
 
@@ -468,7 +471,7 @@ export default function DashboardPurchasing() {
           </Card>
         </div>
 
-        {/* Most Purchased Products */}
+        {/* Most Purchased Products - HIGHCHARTS PROGRESS */}
         <Card>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -517,7 +520,7 @@ export default function DashboardPurchasing() {
                       {formatNumber(item.value)} {item.unit}
                     </span>
                   </div>
-                  <Chart.Progress
+                  <Highchart.HighchartsProgress
                     label=""
                     value={item.value}
                     maxValue={item.maxValue}
