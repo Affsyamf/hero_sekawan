@@ -6,7 +6,7 @@ from app.services.reporting.purchasing import (PurchasingSummaryService, Purchas
 from app.schemas.report_filters import PurchasingReportFilter
 from typing import Optional
 
-router = APIRouter(prefix="/reports/purchasing", tags=["Reports"])
+router = APIRouter(prefix="/reports/purchasing", tags=["Reports/Purchasing"])
 
 @router.post("/summary")
 def get_purchasing_summary(filters: PurchasingReportFilter, db: Session = Depends(get_db)):
