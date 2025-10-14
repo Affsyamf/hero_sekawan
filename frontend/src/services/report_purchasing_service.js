@@ -1,7 +1,7 @@
 import api from "./api";
 
 export const reportsPurchasingSummary = async (filters = {}) => {
-  const response = await api.get("reports/purchasing/summary", {
+  const response = await api.post("reports/purchasing/summary", {
     params: {
       start_date: filters.start_date,
       end_date: filters.end_date,
@@ -12,7 +12,7 @@ export const reportsPurchasingSummary = async (filters = {}) => {
 };
 
 export const reportsPurchasingTrend = async (filters = {}) => {
-  const response = await api.get("reports/purchasing/trend", {
+  const response = await api.post("reports/purchasing/trend", {
     params: {
       start_date: filters.start_date,
       end_date: filters.end_date,
@@ -24,7 +24,7 @@ export const reportsPurchasingTrend = async (filters = {}) => {
 };
 
 export const reportsPurchasingProducts = async (filters = {}) => {
-  const response = await api.get("reports/purchasing/products", {
+  const response = await api.post("reports/purchasing/products", {
     params: {
       start_date: filters.start_date,
       end_date: filters.end_date,
@@ -36,7 +36,7 @@ export const reportsPurchasingProducts = async (filters = {}) => {
 };
 
 export const reportsPurchasingSuppliers = async (filters = {}) => {
-  const response = await api.get("reports/purchasing/suppliers", {
+  const response = await api.post("reports/purchasing/suppliers", {
     params: {
       start_date: filters.start_date,
       end_date: filters.end_date,
@@ -48,7 +48,7 @@ export const reportsPurchasingSuppliers = async (filters = {}) => {
 };
 
 export const reportsPurchasingBreakdownSummary = async (filters = {}) => {
-  const response = await api.get("reports/purchasing/breakdown/summary", {
+  const response = await api.post("reports/purchasing/breakdown/summary", {
     params: {
       start_date: filters.start_date,
       end_date: filters.end_date,
