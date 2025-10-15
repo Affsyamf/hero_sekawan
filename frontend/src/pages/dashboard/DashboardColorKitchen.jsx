@@ -302,16 +302,16 @@ export default function DashboardColorKitchen() {
 
           {/* Date Filter Header */}
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg bg-opacity-20">
-                  <Calendar className="w-5 h-5 text-white" />
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary bg-opacity-20">
+                  <Calendar className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-white text-opacity-90">
+                  <h3 className="text-xs font-medium text-primary text-opacity-90">
                     Data Filter
                   </h3>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-sm font-bold text-primary">
                     {getFilterDisplayText()}
                   </p>
                 </div>
@@ -319,50 +319,51 @@ export default function DashboardColorKitchen() {
 
               <div className="flex flex-wrap items-center gap-2">
                 {/* Filter Mode Tabs */}
-                <div className="flex p-1 bg-white rounded-lg bg-opacity-20">
+                <div className="flex p-0.5 rounded-lg bg-primary bg-opacity-20">
                   <button
                     onClick={() => setFilterMode("month_year")}
-                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                       filterMode === "month_year"
-                        ? "bg-white text-blue-600"
-                        : "text-white hover:bg-white hover:bg-opacity-10"
+                        ? "bg-primary text-blue-600"
+                        : "text-primary hover:bg-primary hover:bg-opacity-10"
                     }`}
                   >
                     Month & Year
                   </button>
                   <button
                     onClick={() => setFilterMode("year_only")}
-                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                       filterMode === "year_only"
-                        ? "bg-white text-blue-600"
-                        : "text-white hover:bg-white hover:bg-opacity-10"
+                        ? "bg-primary text-blue-600"
+                        : "text-primary hover:bg-primary hover:bg-opacity-10"
                     }`}
                   >
                     Year Only
                   </button>
                   <button
                     onClick={() => setFilterMode("ytd")}
-                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                       filterMode === "ytd"
-                        ? "bg-white text-blue-600"
-                        : "text-white hover:bg-white hover:bg-opacity-10"
+                        ? "bg-primary text-blue-600"
+                        : "text-primary hover:bg-primary hover:bg-opacity-10"
                     }`}
                   >
                     YTD
                   </button>
                   <button
                     onClick={() => setFilterMode("custom")}
-                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                       filterMode === "custom"
-                        ? "bg-white text-blue-600"
-                        : "text-white hover:bg-white hover:bg-opacity-10"
+                        ? "bg-primary text-blue-600"
+                        : "text-primary hover:bg-primary hover:bg-opacity-10"
                     }`}
                   >
                     Custom
                   </button>
+                  {/* ... other buttons with same compact style */}
                 </div>
 
-                {/* Month & Year Selectors */}
+                {/* Selectors - smaller */}
                 {filterMode === "month_year" && (
                   <>
                     <select
@@ -370,7 +371,7 @@ export default function DashboardColorKitchen() {
                       onChange={(e) =>
                         setSelectedMonth(parseInt(e.target.value))
                       }
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                      className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
                     >
                       {monthOptions.map((month, index) => (
                         <option key={month} value={index + 1}>
@@ -383,7 +384,7 @@ export default function DashboardColorKitchen() {
                       onChange={(e) =>
                         setSelectedYear(parseInt(e.target.value))
                       }
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                      className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
                     >
                       {yearOptions.map((year) => (
                         <option key={year} value={year}>
@@ -396,17 +397,21 @@ export default function DashboardColorKitchen() {
 
                 {/* Year Only Selector */}
                 {filterMode === "year_only" && (
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                  >
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
+                  <>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
+                    >
+                      {yearOptions.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </>
                 )}
 
                 {/* Custom Date Range */}
@@ -416,14 +421,14 @@ export default function DashboardColorKitchen() {
                       type="date"
                       value={customStartDate}
                       onChange={(e) => setCustomStartDate(e.target.value)}
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                      className="px-2.5 py-1 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-white focus:ring-opacity-50"
                     />
                     <span className="text-sm font-medium text-white">to</span>
                     <input
                       type="date"
                       value={customEndDate}
                       onChange={(e) => setCustomEndDate(e.target.value)}
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                      className="px-2.5 py-1 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
                     />
                   </>
                 )}
@@ -591,7 +596,7 @@ export default function DashboardColorKitchen() {
             </div>
           </div>
         </Card>
-        
+
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -855,22 +860,6 @@ export default function DashboardColorKitchen() {
             </div>
           </Card>
         </div>
-
-        {/* Production Trend - HIGHCHARTS BAR */}
-        <Card className="w-full">
-          <Highchart.HighchartsBar
-            initialData={ck_trend}
-            title="Production Activity Trend"
-            subtitle="Trend aktivitas batch dan entries per periode"
-            datasets={[
-              { key: "batch_count", label: "Batch Count", color: "primary" },
-              { key: "entry_count", label: "Entry Count", color: "success" },
-            ]}
-            periods={["6 Bulan", "3 Bulan", "1 Bulan"]}
-            onFetchData={() => ck_trend}
-            showSummary={true}
-          />
-        </Card>
 
         {/* Info Section */}
         <Card className="border-indigo-200 bg-indigo-50">

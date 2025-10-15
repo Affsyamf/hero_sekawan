@@ -9,6 +9,7 @@ const HighchartsDonut = ({
   title,
   subtitle,
   className = "",
+  showSummary = false,
 }) => {
   const chartData =
     data?.map((item) => ({
@@ -95,13 +96,18 @@ const HighchartsDonut = ({
   };
 
   return (
-    <div className={`p-4 ${className}`}> {/* p-6 → p-4 */}
+    <div className={`p-4 ${className}`}>
+      {" "}
+      {/* p-6 → p-4 */}
       {/* Header */}
-      <div className="mb-3"> {/* mb-4 → mb-3 */}
-        <h3 className="text-sm font-semibold text-gray-900 md:text-base">{title}</h3>
+      <div className="mb-3">
+        {" "}
+        {/* mb-4 → mb-3 */}
+        <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+          {title}
+        </h3>
         {subtitle && <p className="mt-0.5 text-xs text-gray-600">{subtitle}</p>}
       </div>
-
       {/* Chart Container */}
       <div className="relative">
         <HighchartsReact highcharts={Highcharts} options={options} />
@@ -110,7 +116,9 @@ const HighchartsDonut = ({
         {centerText && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center" style={{ marginBottom: "40px" }}>
-              <p className="text-xl font-bold text-gray-900 md:text-2xl"> {/* text-2xl → text-xl md:text-2xl */}
+              <p className="text-xl font-bold text-gray-900 md:text-2xl">
+                {" "}
+                {/* text-2xl → text-xl md:text-2xl */}
                 {centerText.value}
               </p>
               <p className="text-xs text-gray-600">{centerText.label}</p>
@@ -118,36 +126,46 @@ const HighchartsDonut = ({
           </div>
         )}
       </div>
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-2 mt-4"> {/* gap-3 mt-6 → gap-2 mt-4 */}
-        {data?.map((item, index) => (
-          <div
-            key={index}
-            className="p-2.5 border border-gray-200 rounded-lg bg-gray-50" 
-          >
-            <div className="flex items-center gap-1.5 mb-1"> {/* gap-2 mb-1 → gap-1.5 mb-0.5 */}
-              <div
-                className="w-2.5 h-2.5 rounded-full" 
-                style={{
-                  backgroundColor: index === 0 ? "#3b82f6" : "#f59e0b",
-                }}
-              />
-              <p className="text-xs font-medium text-gray-700">{item.label}</p>
+      {/* Summary */}
+      {showSummary && data.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          {" "}
+          {/* gap-3 mt-6 → gap-2 mt-4 */}
+          {data?.map((item, index) => (
+            <div
+              key={index}
+              className="p-2.5 border border-gray-200 rounded-lg bg-gray-50"
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                {" "}
+                {/* gap-2 mb-1 → gap-1.5 mb-0.5 */}
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{
+                    backgroundColor: index === 0 ? "#3b82f6" : "#f59e0b",
+                  }}
+                />
+                <p className="text-xs font-medium text-gray-700">
+                  {item.label}
+                </p>
+              </div>
+              <p className="text-base font-bold text-gray-900">
+                {" "}
+                {/* text-lg → text-base */}
+                {formatCompactCurrency(item.value)}
+              </p>
+              <p className="text-xs text-gray-600">
+                {(
+                  (item.value / data.reduce((sum, d) => sum + d.value, 0)) *
+                  100
+                ).toFixed(1)}
+                %
+              </p>
             </div>
-            <p className="text-base font-bold text-gray-900"> {/* text-lg → text-base */}
-              {formatCompactCurrency(item.value)}
-            </p>
-            <p className="text-xs text-gray-600">
-              {(
-                (item.value / data.reduce((sum, d) => sum + d.value, 0)) *
-                100
-              ).toFixed(1)}
-              %
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

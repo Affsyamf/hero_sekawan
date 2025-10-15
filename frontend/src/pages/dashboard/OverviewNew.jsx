@@ -33,8 +33,21 @@ const generateMockData = (period) => {
   };
 
   const monthCount = getMonthCount();
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
   // Generate months based on period
   const generateMonths = () => {
     const months = [];
@@ -51,19 +64,25 @@ const generateMockData = (period) => {
   // Stock flow data
   const stock_flow = months.map((month, i) => ({
     month,
-    stockMasuk: 12000 + Math.random() * 5000 + (i * 200), // Trending up
-    stockTerpakai: 10000 + Math.random() * 4000 + (i * 150), // Trending up
+    stockMasuk: 12000 + Math.random() * 5000 + i * 200, // Trending up
+    stockTerpakai: 10000 + Math.random() * 4000 + i * 150, // Trending up
   }));
 
   // Cost trend data
   const cost_trend = months.map((month, i) => ({
     month,
-    value: 6500000 + Math.random() * 2500000 + (i * 150000), // Trending up
+    value: 6500000 + Math.random() * 2500000 + i * 150000, // Trending up
   }));
 
   // Calculate metrics
-  const totalPurchasing = stock_flow.reduce((sum, d) => sum + (d.stockMasuk * 15000), 0);
-  const totalStockTerpakai = stock_flow.reduce((sum, d) => sum + (d.stockTerpakai * 12000), 0);
+  const totalPurchasing = stock_flow.reduce(
+    (sum, d) => sum + d.stockMasuk * 15000,
+    0
+  );
+  const totalStockTerpakai = stock_flow.reduce(
+    (sum, d) => sum + d.stockTerpakai * 12000,
+    0
+  );
   const totalCostProduksi = cost_trend.reduce((sum, d) => sum + d.value, 0);
   const totalJobs = 35; // Mock job count
   const avgCostPerJob = totalCostProduksi / totalJobs;
@@ -122,12 +141,12 @@ export default function OverviewNew() {
     try {
       setLoading(true);
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       // TODO: Replace with real API call
       // const response = await getDashboardData(period);
       // setDashboardData(response.data.data);
-      
+
       // Using mock data for now
       const mockData = generateMockData(period);
       setDashboardData(mockData);
@@ -143,13 +162,13 @@ export default function OverviewNew() {
     try {
       setExporting(true);
       // Simulate export delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // TODO: Replace with real API call
       // const response = await exportTransactions();
       // const filename = getFilenameFromHeaders(response.headers);
       // downloadCSVFile(response.data, filename);
-      
+
       console.log("Export successful!");
       alert("Export berhasil! (Mock data)");
     } catch (error) {
@@ -197,13 +216,8 @@ export default function OverviewNew() {
     );
   }
 
-  const {
-    metrics,
-    cost_trend,
-    stock_flow,
-    most_used_dye,
-    most_used_aux,
-  } = dashboardData;
+  const { metrics, cost_trend, stock_flow, most_used_dye, most_used_aux } =
+    dashboardData;
 
   // Calculate total cost for trend chart
   const totalCostProduksi = cost_trend.reduce((sum, d) => sum + d.value, 0);
@@ -227,15 +241,6 @@ export default function OverviewNew() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option>1 Bulan</option>
-              <option>3 Bulan</option>
-              <option>6 Bulan</option>
-            </select>
             <Button
               icon={Download}
               label={exporting ? "Exporting..." : "Export Data"}
@@ -286,8 +291,16 @@ export default function OverviewNew() {
               title="Trend Stock Masuk vs Terpakai"
               subtitle="Perbandingan purchasing dan usage di Color Kitchen"
               datasets={[
-                { key: "stockMasuk", label: "Stock Masuk (Purchasing)", color: "success" },
-                { key: "stockTerpakai", label: "Stock Terpakai (CK Usage)", color: "primary" },
+                {
+                  key: "stockMasuk",
+                  label: "Stock Masuk (Purchasing)",
+                  color: "success",
+                },
+                {
+                  key: "stockTerpakai",
+                  label: "Stock Terpakai (CK Usage)",
+                  color: "primary",
+                },
               ]}
               periods={["6 Bulan", "3 Bulan", "1 Bulan"]}
               onFetchData={() => stock_flow}
@@ -297,10 +310,17 @@ export default function OverviewNew() {
 
           {/* Cost Produksi Trend */}
           <Chart.Line
-            data={cost_trend.map(d => d.value)}
+            data={cost_trend.map((d) => d.value)}
             value={formatCompactCurrency(totalCostProduksi)}
-            trend={cost_trend.length > 1 ? 
-              ((cost_trend[cost_trend.length - 1].value - cost_trend[0].value) / cost_trend[0].value * 100).toFixed(1) : 0
+            trend={
+              cost_trend.length > 1
+                ? (
+                    ((cost_trend[cost_trend.length - 1].value -
+                      cost_trend[0].value) /
+                      cost_trend[0].value) *
+                    100
+                  ).toFixed(1)
+                : 0
             }
             title="Trend Cost Produksi (Dye + Aux)"
           />
@@ -327,7 +347,10 @@ export default function OverviewNew() {
               <div className="text-right">
                 <p className="text-xs text-gray-500">Total Usage</p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {formatNumber(most_used_dye.reduce((sum, item) => sum + item.value, 0))} kg
+                  {formatNumber(
+                    most_used_dye.reduce((sum, item) => sum + item.value, 0)
+                  )}{" "}
+                  kg
                 </p>
               </div>
             </div>
@@ -389,7 +412,10 @@ export default function OverviewNew() {
               <div className="text-right">
                 <p className="text-xs text-gray-500">Total Usage</p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {formatNumber(most_used_aux.reduce((sum, item) => sum + item.value, 0))} kg
+                  {formatNumber(
+                    most_used_aux.reduce((sum, item) => sum + item.value, 0)
+                  )}{" "}
+                  kg
                 </p>
               </div>
             </div>
@@ -437,35 +463,59 @@ export default function OverviewNew() {
         <Card className="border-blue-200 bg-blue-50">
           <div className="flex items-start gap-3">
             <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-6 h-6 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="mb-2 font-semibold text-blue-900">Penjelasan Metrics Dashboard</h4>
+              <h4 className="mb-2 font-semibold text-blue-900">
+                Penjelasan Metrics Dashboard
+              </h4>
               <div className="space-y-2 text-sm text-blue-800">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <div>
                     <p className="font-semibold">📦 Total Purchasing</p>
-                    <p className="text-xs">Total nilai pembelian bahan baku (Product) dari supplier ke gudang</p>
+                    <p className="text-xs">
+                      Total nilai pembelian bahan baku (Product) dari supplier
+                      ke gudang
+                    </p>
                   </div>
                   <div>
                     <p className="font-semibold">📤 Total Stock Terpakai</p>
-                    <p className="text-xs">Total nilai stock yang dipindahkan dari gudang ke kitchen (Stock Movement)</p>
+                    <p className="text-xs">
+                      Total nilai stock yang dipindahkan dari gudang ke kitchen
+                      (Stock Movement)
+                    </p>
                   </div>
                   <div>
                     <p className="font-semibold">💰 Total Cost Produksi</p>
-                    <p className="text-xs">Total biaya produksi aktual (Dye + Auxiliary) di proses Color Kitchen</p>
+                    <p className="text-xs">
+                      Total biaya produksi aktual (Dye + Auxiliary) di proses
+                      Color Kitchen
+                    </p>
                   </div>
                   <div>
                     <p className="font-semibold">📊 Avg Cost per Job</p>
-                    <p className="text-xs">Rata-rata biaya per Order Produksi Jadi (OPJ/CK Entry)</p>
+                    <p className="text-xs">
+                      Rata-rata biaya per Order Produksi Jadi (OPJ/CK Entry)
+                    </p>
                   </div>
                 </div>
                 <div className="pt-2 mt-3 border-t border-blue-200">
                   <p className="text-xs text-blue-700">
-                    <strong>Catatan:</strong> Data saat ini menggunakan MOCK DATA untuk development. 
-                    Integrasi dengan backend API akan dilakukan pada tahap berikutnya.
+                    <strong>Catatan:</strong> Data saat ini menggunakan MOCK
+                    DATA untuk development. Integrasi dengan backend API akan
+                    dilakukan pada tahap berikutnya.
                   </p>
                 </div>
               </div>

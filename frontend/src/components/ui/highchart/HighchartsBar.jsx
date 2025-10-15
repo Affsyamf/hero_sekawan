@@ -175,7 +175,7 @@ const HighchartsBar = ({
             <div key={index} className="p-3 rounded-lg bg-gray-50"> {/* p-4 → p-3 */}
               <div className="flex items-center gap-1.5 mb-1"> {/* gap-2 → gap-1.5 */}
                 <div
-                  className="w-2.5 h-2.5 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full" 
                   style={{ backgroundColor: item.color }}
                 />
                 <p className="text-xs font-medium text-gray-700"> {/* text-sm → text-xs */}
