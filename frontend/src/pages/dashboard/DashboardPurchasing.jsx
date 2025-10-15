@@ -175,7 +175,7 @@ export default function DashboardPurchasing() {
 
       setPurchasingData((prev) => ({
         ...prev,
-        purchase_trend: transformTrendData(trend),
+        purchase_trend: transformTrendData(trend.data),
       }));
     } catch (error) {
       console.error("Error fetching trend data:", error);
@@ -723,7 +723,7 @@ export default function DashboardPurchasing() {
                 title="Breakdown Purchasing"
                 subtitle="Goods vs Jasa"
                 className="w-full h-full"
-                showSummary= {true}
+                showSummary={true}
               />
             </Card>
           </div>
