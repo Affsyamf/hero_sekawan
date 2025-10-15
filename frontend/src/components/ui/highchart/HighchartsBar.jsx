@@ -27,7 +27,7 @@ const HighchartsBar = ({
 
   const series =
     datasets?.map((dataset) => ({
-      name: dataset.label,
+      name: dataset.label ?? dataset.key,
       data: data?.map((item) => item[dataset.key]) || [],
       color:
         dataset.color === "primary"
