@@ -22,7 +22,12 @@ const HighchartsBar = ({
     }
   }, [period, onFetchData]);
 
-  // Prepare data for Highcharts
+  useEffect(() => {
+    if (initialData) {
+      setData(initialData);
+    }
+  }, [initialData]);
+
   const categories = data?.map((item) => item.month) || [];
 
   const series =
@@ -40,7 +45,6 @@ const HighchartsBar = ({
         dataset.type === "column" && dataset.stacked ? "normal" : undefined,
     })) || [];
 
-  // Calculate summary
   const summary =
     datasets?.map((dataset) => {
       const total =
@@ -56,7 +60,7 @@ const HighchartsBar = ({
     chart: {
       type: "xy",
       backgroundColor: "transparent",
-      height: 350,
+      height: 280, // 350 → 280
     },
     title: {
       text: null,
@@ -66,7 +70,7 @@ const HighchartsBar = ({
       crosshair: true,
       labels: {
         style: {
-          fontSize: "12px",
+          fontSize: "11px", // 12px → 11px
           color: "#6b7280",
         },
       },
@@ -77,6 +81,7 @@ const HighchartsBar = ({
         text: "Nilai (Rp)",
         style: {
           color: "#6b7280",
+          fontSize: "11px", // 12px → 11px
         },
       },
       labels: {
@@ -84,7 +89,7 @@ const HighchartsBar = ({
           return formatCompactCurrency(this.value);
         },
         style: {
-          fontSize: "12px",
+          fontSize: "11px", // 12px → 11px
           color: "#6b7280",
         },
       },
@@ -95,20 +100,20 @@ const HighchartsBar = ({
       useHTML: true,
       backgroundColor: "#ffffff",
       borderColor: "#e5e7eb",
-      borderRadius: 8,
-      padding: 12,
+      borderRadius: 6, // 8 → 6
+      padding: 10, // 12 → 10
       formatter: function () {
-        let tooltip = `<div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">${this.x}</div>`;
+        let tooltip = `<div style="font-size: 12px; font-weight: 600; margin-bottom: 6px;">${this.x}</div>`;
         this.points.forEach((point) => {
           tooltip += `
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${
                 point.color
               };"></span>
-              <span style="color: #6b7280; font-size: 12px;">${
+              <span style="color: #6b7280; font-size: 11px;">${
                 point.series.name
               }:</span>
-              <span style="font-weight: 600; font-size: 12px;">${formatCompactCurrency(
+              <span style="font-weight: 600; font-size: 11px;">${formatCompactCurrency(
                 point.y
               )}</span>
             </div>
@@ -121,7 +126,7 @@ const HighchartsBar = ({
       column: {
         pointPadding: 0.1,
         borderWidth: 0,
-        borderRadius: 4,
+        borderRadius: 3, // 4 → 3
       },
       spline: {
         marker: { enabled: true },
@@ -133,7 +138,7 @@ const HighchartsBar = ({
       verticalAlign: "bottom",
       layout: "horizontal",
       itemStyle: {
-        fontSize: "12px",
+        fontSize: "11px", // 12px → 11px
         color: "#374151",
         fontWeight: "500",
       },
@@ -148,18 +153,18 @@ const HighchartsBar = ({
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4"> {/* p-6 → p-4 */}
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
+      <div className="flex items-start justify-between mb-4"> {/* mb-6 → mb-4 */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-gray-900 truncate md:text-base">{title}</h3>
+          {subtitle && <p className="mt-0.5 text-xs text-gray-600">{subtitle}</p>}
         </div>
         {periods && periods.length > 0 && (
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {periods.map((p) => (
               <option key={p} value={p}>
@@ -177,19 +182,19 @@ const HighchartsBar = ({
 
       {/* Summary */}
       {showSummary && summary.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 pt-6 mt-6 border-t border-gray-200">
+        <div className="grid grid-cols-2 gap-3 pt-4 mt-4 border-t border-gray-200"> {/* gap-4 pt-6 mt-6 → gap-3 pt-4 mt-4 */}
           {summary.map((item, index) => (
-            <div key={index} className="p-4 rounded-lg bg-gray-50">
-              <div className="flex items-center gap-2 mb-1">
+            <div key={index} className="p-3 rounded-lg bg-gray-50"> {/* p-4 → p-3 */}
+              <div className="flex items-center gap-1.5 mb-1"> {/* gap-2 → gap-1.5 */}
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full" 
                   style={{ backgroundColor: item.color }}
                 />
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-xs font-medium text-gray-700"> {/* text-sm → text-xs */}
                   {item.label}
                 </p>
               </div>
-              <p className="text-xl font-bold text-gray-900">
+              <p className="text-lg font-bold text-gray-900"> {/* text-xl → text-lg */}
                 {formatCompactCurrency(item.total)}
               </p>
             </div>

@@ -9,7 +9,6 @@ const HighchartsProgress = ({
   color = "primary",
   showLabel = false,
 }) => {
-  // Color mapping
   const colorMap = {
     primary: "#3b82f6",
     success: "#10b981",
@@ -25,7 +24,7 @@ const HighchartsProgress = ({
     chart: {
       type: "bar",
       backgroundColor: "transparent",
-      height: 40,
+      height: 32, // 40 → 32
       margin: [0, 0, 0, 0],
       spacing: [0, 0, 0, 0],
     },
@@ -46,7 +45,7 @@ const HighchartsProgress = ({
         groupPadding: 0,
         pointPadding: 0,
         borderWidth: 0,
-        borderRadius: 4,
+        borderRadius: 3, // 4 → 3
         dataLabels: {
           enabled: false,
         },
@@ -72,7 +71,7 @@ const HighchartsProgress = ({
       {
         data: [value],
         color: barColor,
-        borderRadius: 4,
+        borderRadius: 3, // 4 → 3
       },
     ],
   };
@@ -91,7 +90,7 @@ const HighchartsProgress = ({
         <HighchartsReact
           highcharts={Highcharts}
           options={options}
-          containerProps={{ style: { height: "8px", width: "100%" } }}
+          containerProps={{ style: { height: "6px", width: "100%" } }} // 8px → 6px
         />
       </div>
     </div>

@@ -13,7 +13,7 @@ export default function Navbar({ onMenuClick }) {
       </button>
 
       <div className="flex items-center gap-4 ml-auto">
-        <NotificationDropdown />
+        {/* <NotificationDropdown /> */}
         <ProfileDropdown />
       </div>
     </header>

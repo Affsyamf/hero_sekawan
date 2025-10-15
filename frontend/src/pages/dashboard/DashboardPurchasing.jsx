@@ -22,6 +22,7 @@ import {
   reportsPurchasingSuppliers,
   reportsPurchasingBreakdownSummary,
 } from "../../services/report_purchasing_service";
+import { MetricGrid } from "../../components/ui/chart/MetricCard";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -241,6 +242,21 @@ export default function DashboardPurchasing() {
       maxValue: maxValue,
       total_value: item.total_value || 0,
       avg_cost: item.avg_cost || 0,
+    }));
+  };
+
+  const transformSuppliersToBarData = (suppliers) => {
+    return suppliers.map((supplier) => ({
+      month: supplier.name,
+      value: supplier.total_purchases,
+      percentage: supplier.percentage,
+    }));
+  };
+
+  const transformPurchasesToBarData = (purchases) => {
+    return purchases.map((purchase) => ({
+      month: purchase.supplier,
+      value: purchase.value,
     }));
   };
 
@@ -464,19 +480,18 @@ export default function DashboardPurchasing() {
 
   return (
     <MainLayout>
-      <div className="max-w-full space-y-6">
-        {/* Date Filter Header */}
+      <div className="max-w-full space-y-4 p-0.5 md:p-1">
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary bg-opacity-20">
-                <Calendar className="w-5 h-5 text-primary" />
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary bg-opacity-20">
+                <Calendar className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-primary text-opacity-90">
+                <h3 className="text-xs font-medium text-primary text-opacity-90">
                   Data Filter
                 </h3>
-                <p className="text-lg font-bold text-primary">
+                <p className="text-sm font-bold text-primary">
                   {getFilterDisplayText()}
                 </p>
               </div>
@@ -484,10 +499,10 @@ export default function DashboardPurchasing() {
 
             <div className="flex flex-wrap items-center gap-2">
               {/* Filter Mode Tabs */}
-              <div className="flex p-1 rounded-lg bg-primary bg-opacity-20">
+              <div className="flex p-0.5 rounded-lg bg-primary bg-opacity-20">
                 <button
                   onClick={() => setFilterMode("month_year")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                     filterMode === "month_year"
                       ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
@@ -497,7 +512,7 @@ export default function DashboardPurchasing() {
                 </button>
                 <button
                   onClick={() => setFilterMode("year_only")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                     filterMode === "year_only"
                       ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
@@ -507,7 +522,7 @@ export default function DashboardPurchasing() {
                 </button>
                 <button
                   onClick={() => setFilterMode("ytd")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                     filterMode === "ytd"
                       ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
@@ -517,7 +532,7 @@ export default function DashboardPurchasing() {
                 </button>
                 <button
                   onClick={() => setFilterMode("custom")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                     filterMode === "custom"
                       ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
@@ -525,15 +540,16 @@ export default function DashboardPurchasing() {
                 >
                   Custom
                 </button>
+                {/* ... other buttons with same compact style */}
               </div>
 
-              {/* Month & Year Selectors */}
+              {/* Selectors - smaller */}
               {filterMode === "month_year" && (
                 <>
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
                   >
                     {monthOptions.map((month, index) => (
                       <option key={month} value={index + 1}>
@@ -544,7 +560,7 @@ export default function DashboardPurchasing() {
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
                   >
                     {yearOptions.map((year) => (
                       <option key={year} value={year}>
@@ -557,17 +573,19 @@ export default function DashboardPurchasing() {
 
               {/* Year Only Selector */}
               {filterMode === "year_only" && (
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </>
               )}
 
               {/* Custom Date Range */}
@@ -577,14 +595,14 @@ export default function DashboardPurchasing() {
                     type="date"
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    className="px-2.5 py-1 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-white focus:ring-opacity-50"
                   />
                   <span className="text-sm font-medium text-white">to</span>
                   <input
                     type="date"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    className="px-2.5 py-1 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
                   />
                 </>
               )}
@@ -593,12 +611,12 @@ export default function DashboardPurchasing() {
         </Card>
 
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">
               Purchasing Overview
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
               Monitor pembelian, supplier, dan trend purchasing
             </p>
           </div>
@@ -614,35 +632,37 @@ export default function DashboardPurchasing() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <MetricGrid>
           <Chart.Metric
             title="Total Purchases"
             value={formatCompactCurrency(metrics.total_purchases.value)}
-            trend={formatTrend(metrics.total_purchases.trend)}
+            trend={metrics.total_purchases.trend}
             icon={ShoppingCart}
+            color="primary"
           />
           <Chart.Metric
             title="Total Goods"
             value={formatCompactCurrency(metrics.total_goods.value)}
-            trend={formatTrend(metrics.total_goods.trend)}
+            trend={metrics.total_goods.trend}
             icon={Package}
+            color="success"
           />
           <Chart.Metric
             title="Total Jasa"
             value={formatCompactCurrency(metrics.total_jasa.value)}
-            trend={formatTrend(metrics.total_jasa.trend)}
+            trend={metrics.total_jasa.trend}
             icon={Wrench}
+            color="warning"
           />
-        </div>
+        </MetricGrid>
 
         {/* Main Charts Row */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Purchase Trend - with Granularity selector */}
+        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Card className="w-full h-full">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
                     Trend Purchasing
                   </h3>
                   <p className="text-xs text-gray-600">
@@ -652,7 +672,7 @@ export default function DashboardPurchasing() {
                 <select
                   value={trendGranularity}
                   onChange={(e) => setTrendGranularity(e.target.value)}
-                  className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
                 >
                   <option value="daily">Perhari</option>
                   <option value="weekly">Perminggu</option>
@@ -692,7 +712,6 @@ export default function DashboardPurchasing() {
             </Card>
           </div>
 
-          {/* Goods vs Jasa Donut */}
           <div className="lg:col-span-1">
             <Card className="h-full">
               <Highchart.HighchartsDonut
@@ -704,74 +723,76 @@ export default function DashboardPurchasing() {
                 title="Breakdown Purchasing"
                 subtitle="Goods vs Jasa"
                 className="w-full h-full"
+                showSummary= {true}
               />
             </Card>
           </div>
         </div>
 
         {/* Top Suppliers & Top Purchases */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
           {/* Top 5 Suppliers */}
           <Card>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg">
-                <Building2 className="w-5 h-5 text-purple-600" />
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+                <Building2 className="w-4 h-4 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Top 5 Suppliers</h3>
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                  Top 5 Suppliers
+                </h3>
                 <p className="text-xs text-gray-600">
                   Supplier dengan total pembelian tertinggi
                 </p>
               </div>
             </div>
-            <div className="space-y-3">
-              {top_suppliers.length > 0 ? (
-                top_suppliers.map((supplier, index) => (
-                  <div
-                    key={index}
-                    className="p-4 transition-all border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-start gap-3">
-                        <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-purple-600 bg-purple-100 rounded-lg">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {supplier.name}
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {supplier.percentage.toFixed(2)}% of total
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-100">
-                      <div>
-                        <p className="text-xs text-gray-600">Total Purchases</p>
-                        <p className="font-bold text-gray-900">
-                          {formatCompactCurrency(supplier.total_purchases)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-center text-gray-500">
-                  No supplier data available
-                </p>
-              )}
-            </div>
+
+            <Highchart.HighchartsBar
+              initialData={transformSuppliersToBarData(top_suppliers)}
+              title=""
+              subtitle=""
+              datasets={[
+                { key: "value", label: "Total Purchases", color: "primary" },
+              ]}
+              periods={[]}
+              showSummary={false}
+            />
+
+            {/* Summary Stats */}
+            {top_suppliers.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
+                <div className="p-2 rounded-lg bg-purple-50">
+                  <p className="text-xs text-purple-600">Total dari Top 5</p>
+                  <p className="text-sm font-bold text-purple-900">
+                    {formatCompactCurrency(
+                      top_suppliers.reduce(
+                        (sum, s) => sum + s.total_purchases,
+                        0
+                      )
+                    )}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-purple-50">
+                  <p className="text-xs text-purple-600">Share dari Total</p>
+                  <p className="text-sm font-bold text-purple-900">
+                    {top_suppliers
+                      .reduce((sum, s) => sum + s.percentage, 0)
+                      .toFixed(1)}
+                    %
+                  </p>
+                </div>
+              </div>
+            )}
           </Card>
 
-          {/* Top 5 Purchases Value */}
+          {/* Top 5 Product Values */}
           <Card>
-            <div className="flex items-center gap-2 mb-6">
-              <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
+                <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
                   Top 5 Product Values
                 </h3>
                 <p className="text-xs text-gray-600">
@@ -779,62 +800,51 @@ export default function DashboardPurchasing() {
                 </p>
               </div>
             </div>
-            <div className="space-y-3">
-              {top_purchases.length > 0 ? (
-                top_purchases.map((purchase, index) => (
-                  <div
-                    key={index}
-                    className="p-4 transition-all border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-start gap-3">
-                        <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-green-600 bg-green-100 rounded-lg">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {purchase.supplier}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-green-600">
-                          {formatCompactCurrency(purchase.value)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2">
-                      <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full transition-all duration-500 bg-green-500 rounded-full"
-                          style={{
-                            width: `${
-                              (purchase.value / top_purchases[0].value) * 100
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-center text-gray-500">
-                  No purchase data available
-                </p>
-              )}
-            </div>
+
+            <Highchart.HighchartsBar
+              initialData={transformPurchasesToBarData(top_purchases)}
+              title=""
+              subtitle=""
+              datasets={[
+                { key: "value", label: "Total Value", color: "primary" },
+              ]}
+              periods={[]}
+              showSummary={false}
+            />
+
+            {/* Summary Stats */}
+            {top_purchases.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
+                <div className="p-2 rounded-lg bg-green-50">
+                  <p className="text-xs text-green-600">Total dari Top 5</p>
+                  <p className="text-sm font-bold text-green-900">
+                    {formatCompactCurrency(
+                      top_purchases.reduce((sum, p) => sum + p.value, 0)
+                    )}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-green-50">
+                  <p className="text-xs text-green-600">Highest Value</p>
+                  <p className="text-sm font-bold text-green-900">
+                    {formatCompactCurrency(
+                      Math.max(...top_purchases.map((p) => p.value))
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
         {/* Most Purchased Products - with Granularity selector */}
         <Card>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
-                <Package className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
+                <Package className="w-4 h-4 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
                   Most Purchased Products
                 </h3>
                 <p className="text-xs text-gray-600">
@@ -842,11 +852,11 @@ export default function DashboardPurchasing() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <select
                 value={productsGranularity}
                 onChange={(e) => setProductsGranularity(e.target.value)}
-                className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
               >
                 <option value="daily">Perhari</option>
                 <option value="weekly">Perminggu</option>
@@ -855,7 +865,7 @@ export default function DashboardPurchasing() {
               </select>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Total Volume</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-xs font-semibold text-gray-900">
                   {formatNumber(
                     most_purchased.reduce((sum, item) => sum + item.value, 0)
                   )}{" "}
@@ -864,27 +874,27 @@ export default function DashboardPurchasing() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
             {most_purchased.length > 0 ? (
               most_purchased.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
+                  className="p-3 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 text-sm font-bold text-blue-600 bg-blue-100 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-blue-600 bg-blue-100 rounded-lg">
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
+                      <p className="text-xs font-semibold text-gray-900 truncate">
                         {item.label}
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-baseline justify-between">
                       <span className="text-xs text-gray-600">Volume</span>
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-xs font-bold text-gray-900">
                         {formatNumber(item.value)} {item.unit}
                       </span>
                     </div>
@@ -915,7 +925,7 @@ export default function DashboardPurchasing() {
               ))
             ) : (
               <div className="col-span-5">
-                <p className="text-sm text-center text-gray-500">
+                <p className="text-xs text-center text-gray-500">
                   No product data available
                 </p>
               </div>
@@ -925,10 +935,10 @@ export default function DashboardPurchasing() {
 
         {/* Info Section */}
         <Card className="border-blue-200 bg-blue-50">
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg">
+          <div className="flex items-start gap-2">
+            <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg">
               <svg
-                className="w-6 h-6 text-blue-600"
+                className="w-4 h-4 text-blue-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -942,11 +952,11 @@ export default function DashboardPurchasing() {
               </svg>
             </div>
             <div className="flex-1">
-              <h4 className="mb-2 font-semibold text-blue-900">
+              <h4 className="mb-2 text-sm font-semibold text-blue-900">
                 Informasi Purchasing
               </h4>
-              <div className="space-y-2 text-sm text-blue-800">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="space-y-1.5 text-xs text-blue-800">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
                   <div>
                     <p className="font-semibold">🛒 Total Purchases</p>
                     <p className="text-xs">
@@ -962,7 +972,7 @@ export default function DashboardPurchasing() {
                     <p className="text-xs">Total pembelian jasa/services</p>
                   </div>
                 </div>
-                <div className="pt-2 mt-3 border-t border-blue-200">
+                <div className="pt-1.5 mt-2 border-t border-blue-200">
                   <p className="text-xs text-blue-700">
                     <strong>Catatan:</strong> Data diambil dari database
                     real-time. Anda dapat menyesuaikan periode data dan
