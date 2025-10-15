@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./assets/styles/tailwind.css";
-import { Dashboard, AccountsPage, DesignsPage, DesignTypesPage, SuppliersPage, PurchasingsPage, ProductsPage, StockMovementsPage, ColorKitchensPage, StockOpnamePage, PurchasingReportsPage, OverviewNew, DashboardPurchasing, ColorKitchenDashboard } from "./pages";
+import { Dashboard, AccountsPage, DesignsPage, DesignTypesPage, SuppliersPage, PurchasingsPage, ProductsPage, StockMovementsPage, ColorKitchensPage, StockOpnamePage, PurchasingReportsPage, OverviewNew, DashboardPurchasing, DashboardColorKitchen } from "./pages";
 
 export default function AppRouter() {
   return (
@@ -8,7 +8,7 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<OverviewNew />} />
         <Route path="/dashboard/purchasings" element={<DashboardPurchasing />} />
-        <Route path="/dashboard/color-kitchens" element={<ColorKitchenDashboard />} />
+        <Route path="/dashboard/color-kitchens" element={<DashboardColorKitchen />} />
         
 
         <Route path="/products" element={<ProductsPage />} />

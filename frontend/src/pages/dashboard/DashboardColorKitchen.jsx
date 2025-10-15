@@ -190,7 +190,7 @@ const generateMockData = (period) => {
   };
 };
 
-export default function ColorKitchenDashboard() {
+export default function DashboardColorKitchen() {
   const [ckData, setCkData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("1 Bulan");
