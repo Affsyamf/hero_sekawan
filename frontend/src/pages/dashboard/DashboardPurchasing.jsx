@@ -147,11 +147,11 @@ export default function DashboardPurchasing() {
       ]);
 
       const transformedData = transformApiData(
-        summary,
-        trend,
-        breakdown,
-        suppliers,
-        products
+        summary.data,
+        trend.data,
+        breakdown.data,
+        suppliers.data,
+        products.data
       );
 
       setPurchasingData(transformedData);
@@ -185,14 +185,14 @@ export default function DashboardPurchasing() {
   const fetchProductsData = async () => {
     try {
       const dateRange = getDateRange();
-      const products = await reportsPurchasingProducts({
+      const response = await reportsPurchasingProducts({
         ...dateRange,
         granularity: productsGranularity,
       });
 
       setPurchasingData((prev) => ({
         ...prev,
-        most_purchased: transformProductsData(products),
+        most_purchased: transformProductsData(response.data),
       }));
     } catch (error) {
       console.error("Error fetching products data:", error);
@@ -262,7 +262,7 @@ export default function DashboardPurchasing() {
 
     const purchase_trend = transformTrendData(trend);
 
-    const goods_vs_jasa = (breakdown?.data || []).map((item) => ({
+    const goods_vs_jasa = (breakdown || []).map((item) => ({
       label: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
       value: item.value || 0,
     }));
@@ -665,8 +665,26 @@ export default function DashboardPurchasing() {
                 title=""
                 subtitle=""
                 datasets={[
-                  { key: "goods", label: "Goods", color: "primary" },
-                  { key: "jasa", label: "Jasa", color: "warning" },
+                  {
+                    key: "goods",
+                    label: "Goods",
+                    color: "primary",
+                    type: "column",
+                    stacked: true,
+                  },
+                  {
+                    key: "jasa",
+                    label: "Jasa",
+                    color: "warning",
+                    type: "column",
+                    stacked: true,
+                  },
+                  {
+                    key: "total",
+                    label: "Total",
+                    color: "neutral",
+                    type: "spline",
+                  },
                 ]}
                 onFetchData={() => purchase_trend}
                 showSummary={true}
