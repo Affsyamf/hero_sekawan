@@ -81,20 +81,27 @@ export default function DashboardPurchasing() {
         endDate = now;
     }
 
-    const range = {
+    return {
       start_date: startDate.toISOString().split("T")[0],
       end_date: endDate.toISOString().split("T")[0],
     };
-
-    console.log("Generated date range:", range, "from filter mode:", filterMode);
-    return range;
   };
 
   // Get display text for current filter
   const getFilterDisplayText = () => {
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     switch (filterMode) {
@@ -114,33 +121,14 @@ export default function DashboardPurchasing() {
     }
   };
 
-  // Main data fetch - triggered by date filter changes
   useEffect(() => {
     fetchPurchasingData();
   }, [filterMode, selectedMonth, selectedYear, customStartDate, customEndDate]);
-
-  // Trend granularity change - refetch trend only
-  useEffect(() => {
-    if (purchasingData) {
-      fetchTrendData();
-    }
-  }, [trendGranularity]);
-
-  // Products granularity change - refetch products only
-  useEffect(() => {
-    if (purchasingData) {
-      fetchProductsData();
-    }
-  }, [productsGranularity]);
 
   const fetchPurchasingData = async () => {
     try {
       setLoading(true);
       const dateRange = getDateRange();
-      
-      console.log("Fetching data with date range:", dateRange);
-      console.log("Trend granularity:", trendGranularity);
-      console.log("Products granularity:", productsGranularity);
 
       // Fetch summary, breakdown, and suppliers (no granularity needed)
       const [summary, breakdown, suppliers] = await Promise.all([
@@ -152,11 +140,11 @@ export default function DashboardPurchasing() {
       // Fetch trend and products with their specific granularity
       const [trend, products] = await Promise.all([
         reportsPurchasingTrend({ ...dateRange, granularity: trendGranularity }),
-        reportsPurchasingProducts({ ...dateRange, granularity: productsGranularity }),
+        reportsPurchasingProducts({
+          ...dateRange,
+          granularity: productsGranularity,
+        }),
       ]);
-
-      console.log("Received trend data:", trend);
-      console.log("Received products data:", products);
 
       const transformedData = transformApiData(
         summary,
@@ -179,15 +167,10 @@ export default function DashboardPurchasing() {
   const fetchTrendData = async () => {
     try {
       const dateRange = getDateRange();
-      console.log("Fetching trend data with granularity:", trendGranularity);
-      console.log("Date range:", dateRange);
-      
       const trend = await reportsPurchasingTrend({
         ...dateRange,
         granularity: trendGranularity,
       });
-
-      console.log("Received new trend data:", trend);
 
       setPurchasingData((prev) => ({
         ...prev,
@@ -202,25 +185,31 @@ export default function DashboardPurchasing() {
   const fetchProductsData = async () => {
     try {
       const dateRange = getDateRange();
-      console.log("Fetching products data with granularity:", productsGranularity);
-      console.log("Date range:", dateRange);
-      
       const products = await reportsPurchasingProducts({
         ...dateRange,
         granularity: productsGranularity,
       });
 
-      console.log("Received new products data:", products);
-
       setPurchasingData((prev) => ({
         ...prev,
         most_purchased: transformProductsData(products),
-        top_purchases: transformTopPurchases(products),
       }));
     } catch (error) {
       console.error("Error fetching products data:", error);
     }
   };
+
+  useEffect(() => {
+    if (purchasingData) {
+      fetchTrendData();
+    }
+  }, [trendGranularity]);
+
+  useEffect(() => {
+    if (purchasingData) {
+      fetchProductsData();
+    }
+  }, [productsGranularity]);
 
   const transformTrendData = (trend) => {
     return (trend || []).map((item) => {
@@ -255,18 +244,6 @@ export default function DashboardPurchasing() {
     }));
   };
 
-  const transformTopPurchases = (products) => {
-    return (products?.most_purchased || [])
-      .sort((a, b) => b.total_value - a.total_value)
-      .slice(0, 5)
-      .map((item, index) => ({
-        label: `Item-${index + 1}`,
-        value: item.total_value || 0,
-        date: "-",
-        supplier: item.product,
-      }));
-  };
-
   const transformApiData = (summary, trend, breakdown, suppliers, products) => {
     const metrics = {
       total_purchases: {
@@ -299,7 +276,16 @@ export default function DashboardPurchasing() {
       }));
 
     const most_purchased = transformProductsData(products);
-    const top_purchases = transformTopPurchases(products);
+
+    const top_purchases = (products?.most_purchased || [])
+      .sort((a, b) => b.total_value - a.total_value)
+      .slice(0, 5)
+      .map((item, index) => ({
+        label: `Item-${index + 1}`,
+        value: item.total_value || 0,
+        date: "-",
+        supplier: item.product,
+      }));
 
     return {
       metrics,
@@ -316,8 +302,18 @@ export default function DashboardPurchasing() {
     const end = new Date(weekEnd);
 
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const monthName = monthNames[start.getMonth()];
@@ -343,8 +339,18 @@ export default function DashboardPurchasing() {
     if (period.includes("-") && period.split("-").length === 2) {
       const [year, month] = period.split("-");
       const monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ];
       const monthIndex = parseInt(month, 10) - 1;
       return `${monthNames[monthIndex]} ${year}`;
@@ -357,8 +363,18 @@ export default function DashboardPurchasing() {
     if (period.split("-").length === 3) {
       const [year, month, day] = period.split("-");
       const monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ];
       const monthIndex = parseInt(month, 10) - 1;
       return `${monthNames[monthIndex]} ${parseInt(day)}, ${year}`;
@@ -427,86 +443,83 @@ export default function DashboardPurchasing() {
   } = purchasingData;
 
   const monthOptions = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
-  const yearOptions = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
+  const yearOptions = Array.from(
+    { length: 3 },
+    (_, i) => new Date().getFullYear() - i
+  );
 
   return (
     <MainLayout>
       <div className="max-w-full space-y-6">
         {/* Date Filter Header */}
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
-          <div className="space-y-4">
-            {/* Top Row: Label and Filter Display */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary bg-opacity-20">
-                  <Calendar className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-primary text-opacity-90">
-                    Data Filter
-                  </h3>
-                  <p className="text-lg font-bold text-primary">
-                    {getFilterDisplayText()}
-                  </p>
-                </div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary bg-opacity-20">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-primary text-opacity-90">
+                  Data Filter
+                </h3>
+                <p className="text-lg font-bold text-primary">
+                  {getFilterDisplayText()}
+                </p>
               </div>
             </div>
 
-            {/* Bottom Row: Filter Mode Tabs and Inputs */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Filter Mode Tabs */}
               <div className="flex p-1 rounded-lg bg-primary bg-opacity-20">
                 <button
-                  onClick={() => {
-                    console.log("Switching to Month & Year mode");
-                    setFilterMode("month_year");
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                  onClick={() => setFilterMode("month_year")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                     filterMode === "month_year"
-                      ? "bg-primary text-blue-600 shadow-sm"
+                      ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
                   }`}
                 >
                   Month & Year
                 </button>
                 <button
-                  onClick={() => {
-                    console.log("Switching to Year Only mode");
-                    setFilterMode("year_only");
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                  onClick={() => setFilterMode("year_only")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                     filterMode === "year_only"
-                      ? "bg-primary text-blue-600 shadow-sm"
+                      ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
                   }`}
                 >
                   Year Only
                 </button>
                 <button
-                  onClick={() => {
-                    console.log("Switching to YTD mode");
-                    setFilterMode("ytd");
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                  onClick={() => setFilterMode("ytd")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                     filterMode === "ytd"
-                      ? "bg-primary text-blue-600 shadow-sm"
+                      ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
                   }`}
                 >
                   YTD
                 </button>
                 <button
-                  onClick={() => {
-                    console.log("Switching to Custom mode");
-                    setFilterMode("custom");
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                  onClick={() => setFilterMode("custom")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                     filterMode === "custom"
-                      ? "bg-primary text-blue-600 shadow-sm"
+                      ? "bg-primary text-blue-600"
                       : "text-primary hover:bg-primary hover:bg-opacity-10"
                   }`}
                 >
@@ -514,53 +527,23 @@ export default function DashboardPurchasing() {
                 </button>
               </div>
 
-              {/* Dynamic Input Fields */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Month & Year Selectors */}
-                {filterMode === "month_year" && (
-                  <>
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => {
-                        const newMonth = parseInt(e.target.value);
-                        console.log("Month changed to:", newMonth);
-                        setSelectedMonth(newMonth);
-                      }}
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                    >
-                      {monthOptions.map((month, index) => (
-                        <option key={month} value={index + 1}>
-                          {month}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => {
-                        const newYear = parseInt(e.target.value);
-                        console.log("Year changed to:", newYear);
-                        setSelectedYear(newYear);
-                      }}
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                    >
-                      {yearOptions.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </>
-                )}
-
-                {/* Year Only Selector */}
-                {filterMode === "year_only" && (
+              {/* Month & Year Selectors */}
+              {filterMode === "month_year" && (
+                <>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  >
+                    {monthOptions.map((month, index) => (
+                      <option key={month} value={index + 1}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     value={selectedYear}
-                    onChange={(e) => {
-                      const newYear = parseInt(e.target.value);
-                      console.log("Year (year only mode) changed to:", newYear);
-                      setSelectedYear(newYear);
-                    }}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                     className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
                   >
                     {yearOptions.map((year) => (
@@ -569,42 +552,42 @@ export default function DashboardPurchasing() {
                       </option>
                     ))}
                   </select>
-                )}
+                </>
+              )}
 
-                {/* YTD - No additional inputs */}
-                {filterMode === "ytd" && (
-                  <div className="px-4 py-2 text-sm font-medium text-white bg-white rounded-lg bg-opacity-20">
-                    Year to Date ({new Date().getFullYear()})
-                  </div>
-                )}
+              {/* Year Only Selector */}
+              {filterMode === "year_only" && (
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              )}
 
-                {/* Custom Date Range */}
-                {filterMode === "custom" && (
-                  <>
-                    <input
-                      type="date"
-                      value={customStartDate}
-                      onChange={(e) => {
-                        console.log("Custom start date changed to:", e.target.value);
-                        setCustomStartDate(e.target.value);
-                      }}
-                      placeholder="Start Date"
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                    />
-                    <span className="text-sm font-medium text-white">to</span>
-                    <input
-                      type="date"
-                      value={customEndDate}
-                      onChange={(e) => {
-                        console.log("Custom end date changed to:", e.target.value);
-                        setCustomEndDate(e.target.value);
-                      }}
-                      placeholder="End Date"
-                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                    />
-                  </>
-                )}
-              </div>
+              {/* Custom Date Range */}
+              {filterMode === "custom" && (
+                <>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  />
+                  <span className="text-sm font-medium text-white">to</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  />
+                </>
+              )}
             </div>
           </div>
         </Card>

@@ -2,6 +2,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
+// Import Highcharts Components
+import { Highchart } from "../../components/ui/highchart";
 import {
   Droplets,
   Palette,
@@ -11,6 +13,7 @@ import {
   Package2,
   DollarSign,
   TrendingUp,
+  Calendar,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
@@ -197,9 +200,64 @@ export default function DashboardColorKitchen() {
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
 
+  // Date Filter States
+  const [filterMode, setFilterMode] = useState("month_year");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+
+  // Month and Year Options
+  const monthOptions = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const yearOptions = Array.from(
+    { length: 10 },
+    (_, i) => new Date().getFullYear() - i
+  );
+
   useEffect(() => {
     fetchCkData();
-  }, [period]);
+  }, [
+    period,
+    filterMode,
+    selectedMonth,
+    selectedYear,
+    customStartDate,
+    customEndDate,
+  ]);
+
+  const getFilterDisplayText = () => {
+    switch (filterMode) {
+      case "month_year":
+        return `${monthOptions[selectedMonth - 1]} ${selectedYear}`;
+      case "year_only":
+        return `Year ${selectedYear}`;
+      case "ytd":
+        return `YTD ${selectedYear}`;
+      case "custom":
+        if (customStartDate && customEndDate) {
+          return `${new Date(customStartDate).toLocaleDateString(
+            "id-ID"
+          )} - ${new Date(customEndDate).toLocaleDateString("id-ID")}`;
+        }
+        return "Select Date Range";
+      default:
+        return "Select Filter";
+    }
+  };
 
   const fetchCkData = async () => {
     try {
@@ -241,6 +299,137 @@ export default function DashboardColorKitchen() {
             <div className="w-16 h-16 mx-auto border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
             <p className="mt-4 text-gray-600">Loading Color Kitchen data...</p>
           </div>
+
+          {/* Date Filter Header */}
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg bg-opacity-20">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-white text-opacity-90">
+                    Data Filter
+                  </h3>
+                  <p className="text-lg font-bold text-white">
+                    {getFilterDisplayText()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Filter Mode Tabs */}
+                <div className="flex p-1 bg-white rounded-lg bg-opacity-20">
+                  <button
+                    onClick={() => setFilterMode("month_year")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                      filterMode === "month_year"
+                        ? "bg-white text-blue-600"
+                        : "text-white hover:bg-white hover:bg-opacity-10"
+                    }`}
+                  >
+                    Month & Year
+                  </button>
+                  <button
+                    onClick={() => setFilterMode("year_only")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                      filterMode === "year_only"
+                        ? "bg-white text-blue-600"
+                        : "text-white hover:bg-white hover:bg-opacity-10"
+                    }`}
+                  >
+                    Year Only
+                  </button>
+                  <button
+                    onClick={() => setFilterMode("ytd")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                      filterMode === "ytd"
+                        ? "bg-white text-blue-600"
+                        : "text-white hover:bg-white hover:bg-opacity-10"
+                    }`}
+                  >
+                    YTD
+                  </button>
+                  <button
+                    onClick={() => setFilterMode("custom")}
+                    className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                      filterMode === "custom"
+                        ? "bg-white text-blue-600"
+                        : "text-white hover:bg-white hover:bg-opacity-10"
+                    }`}
+                  >
+                    Custom
+                  </button>
+                </div>
+
+                {/* Month & Year Selectors */}
+                {filterMode === "month_year" && (
+                  <>
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) =>
+                        setSelectedMonth(parseInt(e.target.value))
+                      }
+                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    >
+                      {monthOptions.map((month, index) => (
+                        <option key={month} value={index + 1}>
+                          {month}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    >
+                      {yearOptions.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
+
+                {/* Year Only Selector */}
+                {filterMode === "year_only" && (
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Custom Date Range */}
+                {filterMode === "custom" && (
+                  <>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    />
+                    <span className="text-sm font-medium text-white">to</span>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       </MainLayout>
     );
@@ -276,6 +465,133 @@ export default function DashboardColorKitchen() {
   return (
     <MainLayout>
       <div className="max-w-full space-y-6">
+        {/* Date Filter Header */}
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary bg-opacity-20">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-primary text-opacity-90">
+                  Data Filter
+                </h3>
+                <p className="text-lg font-bold text-primary">
+                  {getFilterDisplayText()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Filter Mode Tabs */}
+              <div className="flex p-1 rounded-lg bg-primary bg-opacity-20">
+                <button
+                  onClick={() => setFilterMode("month_year")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "month_year"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  Month & Year
+                </button>
+                <button
+                  onClick={() => setFilterMode("year_only")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "year_only"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  Year Only
+                </button>
+                <button
+                  onClick={() => setFilterMode("ytd")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "ytd"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  YTD
+                </button>
+                <button
+                  onClick={() => setFilterMode("custom")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    filterMode === "custom"
+                      ? "bg-primary text-blue-600"
+                      : "text-primary hover:bg-primary hover:bg-opacity-10"
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
+
+              {/* Month & Year Selectors */}
+              {filterMode === "month_year" && (
+                <>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  >
+                    {monthOptions.map((month, index) => (
+                      <option key={month} value={index + 1}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  >
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+
+              {/* Year Only Selector */}
+              {filterMode === "year_only" && (
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {/* Custom Date Range */}
+              {filterMode === "custom" && (
+                <>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  />
+                  <span className="text-sm font-medium text-white">to</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="px-3 py-2 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+        
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -292,15 +608,6 @@ export default function DashboardColorKitchen() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option>1 Bulan</option>
-              <option>3 Bulan</option>
-              <option>6 Bulan</option>
-            </select>
             <Button
               icon={Download}
               label={exporting ? "Exporting..." : "Export Data"}
@@ -361,38 +668,42 @@ export default function DashboardColorKitchen() {
           />
         </div>
 
-        {/* Cost Breakdown - Donut Charts */}
+        {/* Cost Breakdown - Donut Charts - HIGHCHARTS DONUT */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Cost of Dyes */}
-          <Chart.Donut
-            data={dye_cost_breakdown}
-            centerText={{
-              value: formatCompactCurrency(
-                dye_cost_breakdown.reduce((sum, item) => sum + item.value, 0)
-              ),
-              label: "Total Dye Cost",
-            }}
-            title="Cost of Dyes (Dyestuff)"
-            subtitle="Breakdown biaya pewarna"
-            className="w-full h-full"
-          />
+          <Card className="h-full">
+            <Highchart.HighchartsDonut
+              data={dye_cost_breakdown}
+              centerText={{
+                value: formatCompactCurrency(
+                  dye_cost_breakdown.reduce((sum, item) => sum + item.value, 0)
+                ),
+                label: "Total Dye Cost",
+              }}
+              title="Cost of Dyes (Dyestuff)"
+              subtitle="Breakdown biaya pewarna"
+              className="w-full h-full"
+            />
+          </Card>
 
           {/* Cost of Aux */}
-          <Chart.Donut
-            data={aux_cost_breakdown}
-            centerText={{
-              value: formatCompactCurrency(
-                aux_cost_breakdown.reduce((sum, item) => sum + item.value, 0)
-              ),
-              label: "Total Aux Cost",
-            }}
-            title="Cost of Auxiliary (AUX)"
-            subtitle="Breakdown biaya auxiliary"
-            className="w-full h-full"
-          />
+          <Card className="h-full">
+            <Highchart.HighchartsDonut
+              data={aux_cost_breakdown}
+              centerText={{
+                value: formatCompactCurrency(
+                  aux_cost_breakdown.reduce((sum, item) => sum + item.value, 0)
+                ),
+                label: "Total Aux Cost",
+              }}
+              title="Cost of Auxiliary (AUX)"
+              subtitle="Breakdown biaya auxiliary"
+              className="w-full h-full"
+            />
+          </Card>
         </div>
 
-        {/* Top Dyes & Top Aux */}
+        {/* Top Dyes & Top Aux - HIGHCHARTS PROGRESS */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Top 5 Dyes */}
           <Card>
@@ -448,7 +759,7 @@ export default function DashboardColorKitchen() {
                       </span>
                     </div>
                   </div>
-                  <Chart.Progress
+                  <Highchart.HighchartsProgress
                     label=""
                     value={item.quantity}
                     maxValue={item.maxValue}
@@ -523,7 +834,7 @@ export default function DashboardColorKitchen() {
                       </span>
                     </div>
                   </div>
-                  <Chart.Progress
+                  <Highchart.HighchartsProgress
                     label=""
                     value={item.quantity}
                     maxValue={item.maxValue}
@@ -545,9 +856,9 @@ export default function DashboardColorKitchen() {
           </Card>
         </div>
 
-        {/* Production Trend */}
+        {/* Production Trend - HIGHCHARTS BAR */}
         <Card className="w-full">
-          <Chart.Bar
+          <Highchart.HighchartsBar
             initialData={ck_trend}
             title="Production Activity Trend"
             subtitle="Trend aktivitas batch dan entries per periode"
