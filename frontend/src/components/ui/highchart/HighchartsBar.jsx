@@ -34,7 +34,15 @@ const HighchartsBar = ({
     datasets?.map((dataset) => ({
       name: dataset.label,
       data: data?.map((item) => item[dataset.key]) || [],
-      color: dataset.color === "primary" ? "#3b82f6" : "#f59e0b",
+      color:
+        dataset.color === "primary"
+          ? "#3b82f6"
+          : dataset.color === "warning"
+          ? "#f59e0b"
+          : "#6b7280",
+      type: dataset.type || "column",
+      stacking:
+        dataset.type === "column" && dataset.stacked ? "normal" : undefined,
     })) || [];
 
   const summary =
@@ -50,7 +58,7 @@ const HighchartsBar = ({
 
   const options = {
     chart: {
-      type: "column",
+      type: "xy",
       backgroundColor: "transparent",
       height: 280, // 350 → 280
     },
@@ -119,6 +127,10 @@ const HighchartsBar = ({
         pointPadding: 0.1,
         borderWidth: 0,
         borderRadius: 3, // 4 → 3
+      },
+      spline: {
+        marker: { enabled: true },
+        lineWidth: 2.5,
       },
     },
     legend: {

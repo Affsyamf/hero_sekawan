@@ -5,6 +5,7 @@ from app.models import Product, Account, Purchasing, PurchasingDetail, ProductAv
 from app.models.enum.account_enum import AccountType
 from app.services.reporting.base_reporting_service import BaseReportService
 
+from app.utils.response import APIResponse
 
 class PurchasingSummaryService(BaseReportService):
     """
@@ -85,11 +86,20 @@ class PurchasingSummaryService(BaseReportService):
         highest_purchase_value = (
             db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            .group_by(Purchasing.id)
+            
+        ) or 0
+
+        if start_date:
+            highest_purchase_value = highest_purchase_value.filter(Purchasing.date >= start_date)
+        if end_date:
+            highest_purchase_value = highest_purchase_value.filter(Purchasing.date <= end_date)
+
+        highest_purchase_value = (
+            highest_purchase_value.group_by(Purchasing.id)
             .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(1)
             .scalar()
-        ) or 0
+        )
 
         # --------------------------------------------------
         # Top 5 Highest Avg Cost Products
@@ -105,11 +115,14 @@ class PurchasingSummaryService(BaseReportService):
             {"product": name, "avg_cost": float(avg or 0)} for name, avg in top_avg_costs
         ]
 
-        return {
-            "total_purchases": total_value,
-            "total_goods": total_goods,
-            "total_services": total_services,
-            "avg_unit_cost": avg_unit_cost,
-            "highest_purchase_value": float(highest_purchase_value or 0),
-            "highest_avg_cost": top_avg_cost_products,
-        }
+        return APIResponse.ok(
+            meta=filters,
+            data={
+                "total_purchases": total_value,
+                "total_goods": total_goods,
+                "total_services": total_services,
+                "avg_unit_cost": avg_unit_cost,
+                "highest_purchase_value": float(highest_purchase_value or 0),
+                "highest_avg_cost": top_avg_cost_products,
+            }
+        )

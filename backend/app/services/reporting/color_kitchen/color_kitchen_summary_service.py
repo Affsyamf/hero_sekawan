@@ -7,6 +7,8 @@ from app.models import (
 )
 from app.services.reporting.base_reporting_service import BaseReportService
 
+from app.utils.response import APIResponse
+
 class ColorKitchenSummaryService(BaseReportService):
     """
     Service for generating top-level Color Kitchen Production KPIs.
@@ -19,7 +21,10 @@ class ColorKitchenSummaryService(BaseReportService):
 
     def run(self, filters):
         filters = self.normalize_filters(filters)
-        return self._get_summary(filters)
+        return APIResponse.ok(
+            meta=filters,
+            data=self._get_summary(filters)
+        ) 
 
     # ------------------------------------------------------
     # internal summary logic

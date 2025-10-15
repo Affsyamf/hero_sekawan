@@ -2,6 +2,9 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from datetime import timedelta
+
+from app.utils.response import APIResponse
+
 from app.models import (
     Product,
     Purchasing,
@@ -25,13 +28,16 @@ class PurchasingProductInsightsService(BaseReportService):
 
     def run(self, filters):
         filters = self.normalize_filters(filters)
-        return {
-            "most_purchased": self._get_most_purchased(filters),
-            # "rising_costs": self._get_rising_cost_products(filters),
-            # "avg_unit_costs": self._get_avg_unit_cost_per_product(filters),
-            "purchase_to_consumption": self._get_purchase_to_consumption_ratio(filters),
-            "highest_avg_cost": self._get_highest_avg_cost_products(),
-        }
+        return APIResponse.ok(
+            meta=filters,
+            data={
+                "most_purchased": self._get_most_purchased(filters),
+                # "rising_costs": self._get_rising_cost_products(filters),
+                # "avg_unit_costs": self._get_avg_unit_cost_per_product(filters),
+                "purchase_to_consumption": self._get_purchase_to_consumption_ratio(filters),
+                "highest_avg_cost": self._get_highest_avg_cost_products(),
+            }
+        )
 
     # ------------------------------------------------------
     # Most Purchased Products (by quantity)

@@ -4,6 +4,7 @@ from sqlalchemy import func
 from app.models import Purchasing, PurchasingDetail, Product, Supplier
 from app.services.reporting.base_reporting_service import BaseReportService
 
+from app.utils.response import APIResponse
 
 class PurchasingSupplierInsightsService(BaseReportService):
     """
@@ -17,12 +18,15 @@ class PurchasingSupplierInsightsService(BaseReportService):
 
     def run(self, filters):
         filters = self.normalize_filters(filters)
-        return {
-            "top_suppliers": self._get_top_suppliers(filters),
-            "highest_spend_combo": self._get_highest_spend_combo(filters),
-            "unique_supplier_count": self._get_unique_supplier_count(filters),
-            "concentration_ratio": self._get_supplier_concentration(filters),
-        }
+        return APIResponse.ok(
+            meta=filters,
+            data={
+                "top_suppliers": self._get_top_suppliers(filters),
+                "highest_spend_combo": self._get_highest_spend_combo(filters),
+                "unique_supplier_count": self._get_unique_supplier_count(filters),
+                "concentration_ratio": self._get_supplier_concentration(filters),
+            }
+        )
 
     # ------------------------------------------------------
     # Top 5 Suppliers (by total purchase value)
