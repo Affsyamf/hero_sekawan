@@ -96,7 +96,7 @@ const HighchartsDonut = ({
   };
 
   return (
-    <div className={`p-4 ${className}`}>
+    <div className={`p-1 ${className}`}>
       {" "}
       {/* p-6 → p-4 */}
       {/* Header */}
