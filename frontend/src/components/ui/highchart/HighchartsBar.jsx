@@ -58,7 +58,7 @@ const HighchartsBar = ({
 
   const options = {
     chart: {
-      type: "xy",
+      type: "column",
       backgroundColor: "transparent",
       height: 280, // 350 → 280
     },
@@ -66,6 +66,7 @@ const HighchartsBar = ({
       text: null,
     },
     xAxis: {
+      type: "category",
       categories: categories,
       crosshair: true,
       labels: {
@@ -100,24 +101,29 @@ const HighchartsBar = ({
       useHTML: true,
       backgroundColor: "#ffffff",
       borderColor: "#e5e7eb",
-      borderRadius: 6, // 8 → 6
-      padding: 10, // 12 → 10
+      borderRadius: 6,
+      padding: 10,
       formatter: function () {
-        let tooltip = `<div style="font-size: 12px; font-weight: 600; margin-bottom: 6px;">${this.x}</div>`;
+        const header =
+          (this.points &&
+            this.points[0] &&
+            this.points[0].point &&
+            this.points[0].point.category) ||
+          this.x;
+        let tooltip = `<div style="font-size:13px;font-weight:600;margin-bottom:8px;">${header}</div>`;
         this.points.forEach((point) => {
           tooltip += `
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${
-                point.color
-              };"></span>
-              <span style="color: #6b7280; font-size: 11px;">${
-                point.series.name
-              }:</span>
-              <span style="font-weight: 600; font-size: 11px;">${formatCompactCurrency(
-                point.y
-              )}</span>
-            </div>
-          `;
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${
+            point.color
+          };"></span>
+          <span style="color:#6b7280;font-size:12px;">${
+            point.series.name
+          }:</span>
+          <span style="font-weight:600;font-size:12px;">${formatCompactCurrency(
+            point.y
+          )}</span>
+        </div>`;
         });
         return tooltip;
       },
@@ -153,12 +159,20 @@ const HighchartsBar = ({
   };
 
   return (
-    <div className="p-4"> {/* p-6 → p-4 */}
+    <div className="p-4">
+      {" "}
+      {/* p-6 → p-4 */}
       {/* Header */}
-      <div className="flex items-start justify-between mb-4"> {/* mb-6 → mb-4 */}
+      <div className="flex items-start justify-between mb-4">
+        {" "}
+        {/* mb-6 → mb-4 */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900 truncate md:text-base">{title}</h3>
-          {subtitle && <p className="mt-0.5 text-xs text-gray-600">{subtitle}</p>}
+          <h3 className="text-sm font-semibold text-gray-900 truncate md:text-base">
+            {title}
+          </h3>
+          {subtitle && (
+            <p className="mt-0.5 text-xs text-gray-600">{subtitle}</p>
+          )}
         </div>
         {periods && periods.length > 0 && (
           <select
@@ -174,27 +188,35 @@ const HighchartsBar = ({
           </select>
         )}
       </div>
-
       {/* Chart */}
       <div className="w-full">
-        <HighchartsReact highcharts={Highcharts} options={options} />
+        <HighchartsReact highcharts={Highcharts} options={options} oneToOne />
       </div>
-
       {/* Summary */}
       {showSummary && summary.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 pt-4 mt-4 border-t border-gray-200"> {/* gap-4 pt-6 mt-6 → gap-3 pt-4 mt-4 */}
+        <div className="grid grid-cols-2 gap-3 pt-4 mt-4 border-t border-gray-200">
+          {" "}
+          {/* gap-4 pt-6 mt-6 → gap-3 pt-4 mt-4 */}
           {summary.map((item, index) => (
-            <div key={index} className="p-3 rounded-lg bg-gray-50"> {/* p-4 → p-3 */}
-              <div className="flex items-center gap-1.5 mb-1"> {/* gap-2 → gap-1.5 */}
+            <div key={index} className="p-3 rounded-lg bg-gray-50">
+              {" "}
+              {/* p-4 → p-3 */}
+              <div className="flex items-center gap-1.5 mb-1">
+                {" "}
+                {/* gap-2 → gap-1.5 */}
                 <div
-                  className="w-2.5 h-2.5 rounded-full" 
+                  className="w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
-                <p className="text-xs font-medium text-gray-700"> {/* text-sm → text-xs */}
+                <p className="text-xs font-medium text-gray-700">
+                  {" "}
+                  {/* text-sm → text-xs */}
                   {item.label}
                 </p>
               </div>
-              <p className="text-lg font-bold text-gray-900"> {/* text-xl → text-lg */}
+              <p className="text-lg font-bold text-gray-900">
+                {" "}
+                {/* text-xl → text-lg */}
                 {formatCompactCurrency(item.total)}
               </p>
             </div>
