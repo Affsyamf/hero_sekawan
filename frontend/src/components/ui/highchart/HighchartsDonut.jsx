@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useRef } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { formatCompactCurrency } from "../../../utils/helpers";
+import "highcharts/modules/drilldown";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { chartColors } from "../../../utils/chartColors";
 
 const HighchartsDonut = ({
   data,
@@ -10,18 +13,141 @@ const HighchartsDonut = ({
   subtitle,
   className = "",
   showSummary = false,
+  onDrilldownRequest,
+  enableDataLabels = false,
 }) => {
-  const chartData =
-    data?.map((item) => ({
+  // const chartData =
+  //   data?.map((item) => ({
+  //     name: item.label,
+  //     y: item.value,
+  //     drilldown: item.drilldown ?? false,
+  //     ...item,
+  //   })) || [];
+
+  const othersCache = useRef([]);
+
+  const getMaxN = (data) => {
+    const MAX_SLICES = 2; // show top N + Buffer slices before grouping
+    const BUFFER = 2;
+
+    // Sort and separate top + others
+    const sortedData = [...(data || [])].sort((a, b) => b.value - a.value);
+    const topSlices = sortedData.slice(0, MAX_SLICES + BUFFER);
+    const others = sortedData.slice(MAX_SLICES + BUFFER);
+
+    let finalData = topSlices.map((item) => ({
       name: item.label,
       y: item.value,
-    })) || [];
+      drilldown: item.drilldown ?? false,
+      context: item.context,
+    }));
+
+    // Add "Others" group if needed
+    if (others.length > 0) {
+      othersCache.current = others;
+
+      finalData.push({
+        id: "Others",
+        name: "Others",
+        y: others.reduce((sum, d) => sum + d.value, 0),
+        drilldown: true,
+        context: "others",
+      });
+    }
+
+    return finalData;
+  };
+
+  const finalData = getMaxN(data);
 
   const options = {
+    drilldown: {
+      drillUpButton: {
+        relativeTo: "spacingBox",
+        position: { x: 0, y: 0 },
+      },
+    },
     chart: {
       type: "pie",
       backgroundColor: "transparent",
-      height: 320, // 400 → 320
+      height: 320,
+      events: {
+        drilldown: async function (e) {
+          if (!onDrilldownRequest) return;
+          const chart = this;
+          chart.showLoading("Loading...");
+
+          try {
+            let depth = chart.drilldownLevels?.length || 0;
+
+            let frozen = false;
+
+            for (const lvl of chart.drilldownLevels || []) {
+              const context = lvl.pointOptions?.context?.toLowerCase?.();
+              console.log(lvl);
+              if (context === "others") {
+                // Once we hit "others", stop increasing depth
+                frozen = true;
+              } else if (!frozen) {
+                // Normal level increment
+                depth = lvl.levelNumber + 1;
+              } else {
+                // If frozen, only unfreeze when we get a non-"others"
+                if (context !== "others") {
+                  frozen = false;
+                  depth += 1;
+                }
+              }
+            }
+
+            if (e.point.name === "Others") {
+              const othersData = othersCache.current || [];
+              if (othersData.length > 0) {
+                const drillData = getMaxN(othersData);
+
+                chart.addSeriesAsDrilldown(e.point, {
+                  id: "others",
+                  name: "Others",
+                  data: drillData.map((d) => ({
+                    name: d.label || d.name,
+                    y: d.value || d.y,
+                    context: d.context,
+                    drilldown: d.drilldown ?? false,
+                  })),
+                });
+              }
+
+              return;
+            }
+
+            const res = await onDrilldownRequest({
+              name: e.point.name,
+              context: e.point.options.context,
+              depth,
+            });
+
+            const drillData = getMaxN(res);
+
+            chart.addSeriesAsDrilldown(e.point, {
+              id: e.point.name,
+              name: e.point.name,
+              data: drillData.map((d) => ({
+                name: d.name,
+                y: d.y,
+                context: d.context,
+                drilldown: d.drilldown ?? false,
+              })),
+            });
+          } catch (err) {
+            console.error("Drilldown fetch error:", err);
+          } finally {
+            chart.hideLoading();
+          }
+        },
+        drillup() {
+          console.log("Drilled up");
+        },
+      },
     },
     title: {
       text: null,
@@ -52,12 +178,13 @@ const HighchartsDonut = ({
         `;
       },
     },
+    colors: chartColors,
     plotOptions: {
       pie: {
         innerSize: "65%",
         depth: 45,
         dataLabels: {
-          enabled: true,
+          enabled: enableDataLabels,
           format: "{point.name}: {point.percentage:.1f}%",
           style: {
             fontSize: "11px", // 12px → 11px
@@ -68,7 +195,7 @@ const HighchartsDonut = ({
           distance: 12, // 15 → 12
         },
         showInLegend: true,
-        colors: ["#3b82f6", "#f59e0b"],
+        colorByPoint: true,
       },
     },
     legend: {
@@ -90,7 +217,7 @@ const HighchartsDonut = ({
     series: [
       {
         name: "Value",
-        data: chartData,
+        data: finalData,
       },
     ],
   };

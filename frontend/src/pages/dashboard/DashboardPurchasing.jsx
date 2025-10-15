@@ -21,8 +21,10 @@ import {
   reportsPurchasingProducts,
   reportsPurchasingSuppliers,
   reportsPurchasingBreakdownSummary,
+  reportsPurchasingBreakdown,
 } from "../../services/report_purchasing_service";
 import { MetricGrid } from "../../components/ui/chart/MetricCard";
+import DonutDrilldownChart from "../../components/ui/chart/DonutDrilldownChart";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -225,7 +227,7 @@ export default function DashboardPurchasing() {
       return {
         month: displayPeriod,
         goods: item.goods || 0,
-        jasa: item.service || 0,
+        service: item.service || 0,
         total: item.total || 0,
       };
     });
@@ -281,6 +283,8 @@ export default function DashboardPurchasing() {
     const goods_vs_jasa = (breakdown || []).map((item) => ({
       label: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
       value: item.value || 0,
+      drilldown: true,
+      context: item.label,
     }));
 
     const top_suppliers = (suppliers?.top_suppliers || [])
@@ -410,6 +414,42 @@ export default function DashboardPurchasing() {
       alert("Failed to export data. Please try again.");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const onDrilldown = async (context, depth) => {
+    const dateRange = getDateRange();
+
+    // level 1 → Goods vs Jasa
+    if (depth === 0) {
+      const res = await reportsPurchasingBreakdown(
+        "account_type",
+        context,
+        0,
+        dateRange
+      );
+      return res.data.map((r) => ({
+        label: r.label,
+        value: r.value,
+        percentage: r.percentage,
+        context: r.account_id,
+        drilldown: true,
+      }));
+    }
+
+    // level 2 → Supplier → Product breakdown
+    if (depth === 1) {
+      const res = await reportsPurchasingBreakdown(
+        "account",
+        context,
+        context,
+        dateRange
+      );
+
+      return res.data.map((p) => ({
+        label: p.label,
+        value: p.value,
+      }));
     }
   };
 
@@ -658,7 +698,7 @@ export default function DashboardPurchasing() {
 
         {/* Main Charts Row */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <Card className="w-full h-full">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -693,7 +733,7 @@ export default function DashboardPurchasing() {
                     stacked: true,
                   },
                   {
-                    key: "jasa",
+                    key: "service",
                     label: "Jasa",
                     color: "warning",
                     type: "column",
@@ -712,7 +752,7 @@ export default function DashboardPurchasing() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <Card className="h-full">
               <Highchart.HighchartsDonut
                 data={goods_vs_jasa}
@@ -724,7 +764,16 @@ export default function DashboardPurchasing() {
                 subtitle="Goods vs Jasa"
                 className="w-full h-full"
                 showSummary={true}
+                onDrilldownRequest={async ({ _, context, depth }) => {
+                  return onDrilldown(context, depth);
+                }}
               />
+              {/* <DonutDrilldownChart
+                data={goods_vs_jasa}
+                onDrilldownRequest={async ({ _, context, depth }) => {
+                  return onDrilldown(context, depth);
+                }}
+              /> */}
             </Card>
           </div>
         </div>

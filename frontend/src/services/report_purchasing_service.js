@@ -58,3 +58,20 @@ export const reportsPurchasingBreakdownSummary = async (filters = {}) => {
   );
   return response.data;
 };
+
+/**
+ * Purchasing Breakdown — goods vs services distribution
+ */
+export const reportsPurchasingBreakdown = async (
+  level,
+  parent_type,
+  parent_account_id = 0,
+  filters = {}
+) => {
+  const payload = normalizeFilters(filters);
+  const response = await api.post(
+    `reports/purchasing/breakdown?level=${level}&parent_type=${parent_type}&parent_account_id=${parent_account_id}`,
+    payload
+  );
+  return response.data;
+};
