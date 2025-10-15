@@ -1,6 +1,9 @@
 # app/services/reporting/purchasing/purchasing_breakdown_service.py
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+
+from app.utils.response import APIResponse
+
 from app.models import Purchasing, PurchasingDetail, Product, Account
 from app.models.enum.account_enum import AccountType
 from app.services.reporting.base_reporting_service import BaseReportService
@@ -63,41 +66,11 @@ class PurchasingBreakdownService(BaseReportService):
         for d in data:
             d["percentage"] = round((d["value"] / total) * 100, 2) if total else 0.0
 
-        return {"level": "account_type", "data": data}
-
+        return APIResponse.ok(
+            meta={"level": "account_type", **filters},
+            data=data
+        )
     
-    
-    # def _get_summary(self, filters):
-    #     db: Session = self.db
-    #     start_date = filters.get("start_date")
-    #     end_date = filters.get("end_date")
-
-    #     q = (
-    #         db.query(
-    #             Account.account_type.label("type"),
-    #             func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
-    #         )
-    #         .join(Product, Product.id == PurchasingDetail.product_id)
-    #         .join(Account, Account.id == Product.account_id)
-    #         .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-    #         .group_by(Account.account_type)
-    #         .order_by(Account.account_type)
-    #     )
-
-    #     if start_date:
-    #         q = q.filter(Purchasing.date >= start_date)
-    #     if end_date:
-    #         q = q.filter(Purchasing.date <= end_date)
-
-    #     rows = q.all()
-    #     data = [{"label": r.type or "unknown", "value": float(r.total_value or 0)} for r in rows]
-
-    #     total = sum(d["value"] for d in data)
-    #     for d in data:
-    #         d["percentage"] = round((d["value"] / total) * 100, 2) if total else 0.0
-
-    #     return {"level": "account_type", "data": data}
-
     # --------------------------------------------------
     #  LEVEL 2–3 — Drilldown by account_type → account → product
     # --------------------------------------------------
@@ -174,9 +147,11 @@ class PurchasingBreakdownService(BaseReportService):
         for d in data:
             d["percentage"] = round((d["value"] / total) * 100, 2) if total else 0.0
 
-        return {
-            "level": level,
-            "parent_type": parent_type,
-            "parent_account_id": parent_account_id,
-            "data": data,
-        }
+        return APIResponse.ok(
+            meta={
+                "level": level,
+                "parent_type": parent_type,
+                "parent_account_id": parent_account_id,
+            },
+            data=data
+        ) 

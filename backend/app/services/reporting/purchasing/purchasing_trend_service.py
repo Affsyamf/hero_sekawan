@@ -5,6 +5,7 @@ from datetime import timedelta
 from app.models import Purchasing, PurchasingDetail, Product, Account
 from app.services.reporting.base_reporting_service import BaseReportService
 
+from app.utils.response import APIResponse
 
 class PurchasingTrendService(BaseReportService):
     """
@@ -15,7 +16,10 @@ class PurchasingTrendService(BaseReportService):
 
     def run(self, filters):
         filters = self.normalize_filters(filters)
-        return self._get_trend(filters)
+        return APIResponse.ok(
+            meta=filters,
+            data=self._get_trend(filters)
+        )
 
     # ------------------------------------------------------
     # internal trend logic
@@ -76,7 +80,7 @@ class PurchasingTrendService(BaseReportService):
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
         if account_type:
-            q = q.filter(Account.account_type == account_type.value)
+            q = q.filter(Account.account_type == account_type)
 
         rows = q.all()
 

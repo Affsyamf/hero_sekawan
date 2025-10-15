@@ -9,6 +9,7 @@ from app.models import (
 )
 from app.services.reporting.base_reporting_service import BaseReportService
 
+from app.utils.response import APIResponse
 
 class ColorKitchenChemicalUsageService(BaseReportService):
     """
@@ -20,11 +21,17 @@ class ColorKitchenChemicalUsageService(BaseReportService):
 
     def run_summary(self, filters):
         filters = self.normalize_filters(filters)
-        return self._get_summary(filters)
+        return APIResponse.ok(
+            meta=filters,
+            data=self._get_summary(filters)
+        ) 
 
     def run_detailed(self, filters, parent_type: str = None):
         filters = self.normalize_filters(filters)
-        return self._get_detailed(filters, parent_type)
+        return APIResponse.ok(
+            meta=filters,
+            data=self._get_detailed(filters, parent_type)
+        ) 
 
     # ------------------------------------------------------------------
     #  LEVEL 1 — SUMMARY (Dyes vs Aux)

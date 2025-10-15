@@ -37,8 +37,8 @@ class BaseReportService:
 
         return {
             **filters,
-            "start_date": start,
-            "end_date": end,
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
             "account_type": acc_type,
         }
 
