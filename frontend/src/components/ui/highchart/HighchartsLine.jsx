@@ -23,7 +23,6 @@ const HighchartsLine = ({
     }
   }, [period, onFetchData]);
 
-  // Color mapping
   const colorMap = {
     primary: "#3b82f6",
     secondary: "#8b5cf6",
@@ -33,7 +32,6 @@ const HighchartsLine = ({
     info: "#06b6d4",
   };
 
-  // Prepare data for Highcharts
   const categories = data?.map((item) => item.month) || [];
 
   const series = datasets?.map((dataset) => ({
@@ -41,12 +39,11 @@ const HighchartsLine = ({
     data: data?.map((item) => item[dataset.key]) || [],
     color: colorMap[dataset.color] || colorMap.primary,
     marker: {
-      radius: 4,
+      radius: 3, // 4 → 3
       symbol: "circle",
     },
   })) || [];
 
-  // Calculate summary
   const summary = datasets?.map((dataset) => {
     const total = data?.reduce((sum, item) => sum + (item[dataset.key] || 0), 0) || 0;
     const average = data?.length ? total / data.length : 0;
@@ -65,7 +62,7 @@ const HighchartsLine = ({
     chart: {
       type: "line",
       backgroundColor: "transparent",
-      height: 350,
+      height: 280, // 350 → 280
     },
     title: {
       text: null,
@@ -79,7 +76,7 @@ const HighchartsLine = ({
       },
       labels: {
         style: {
-          fontSize: "12px",
+          fontSize: "11px", // 12px → 11px
           color: "#6b7280",
         },
       },
@@ -91,7 +88,7 @@ const HighchartsLine = ({
         text: yAxisLabel,
         style: {
           color: "#6b7280",
-          fontSize: "12px",
+          fontSize: "11px", // 12px → 11px
         },
       },
       labels: {
@@ -99,7 +96,7 @@ const HighchartsLine = ({
           return formatCompactCurrency(this.value);
         },
         style: {
-          fontSize: "12px",
+          fontSize: "11px", // 12px → 11px
           color: "#6b7280",
         },
       },
@@ -111,8 +108,8 @@ const HighchartsLine = ({
       useHTML: true,
       backgroundColor: "#ffffff",
       borderColor: "#e5e7eb",
-      borderRadius: 8,
-      padding: 12,
+      borderRadius: 6, // 8 → 6
+      padding: 10, // 12 → 10
       shadow: {
         color: "rgba(0, 0, 0, 0.1)",
         width: 5,
@@ -120,13 +117,13 @@ const HighchartsLine = ({
         offsetY: 2,
       },
       formatter: function () {
-        let tooltip = `<div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #111827;">${this.x}</div>`;
+        let tooltip = `<div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #111827;">${this.x}</div>`;
         this.points.forEach((point) => {
           tooltip += `
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${point.color};"></span>
-              <span style="color: #6b7280; font-size: 12px;">${point.series.name}:</span>
-              <span style="font-weight: 600; font-size: 12px; color: #111827;">${formatCompactCurrency(point.y)}</span>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${point.color};"></span>
+              <span style="color: #6b7280; font-size: 11px;">${point.series.name}:</span>
+              <span style="font-weight: 600; font-size: 11px; color: #111827;">${formatCompactCurrency(point.y)}</span>
             </div>
           `;
         });
@@ -135,18 +132,18 @@ const HighchartsLine = ({
     },
     plotOptions: {
       line: {
-        lineWidth: 3,
+        lineWidth: 2.5, // 3 → 2.5
         marker: {
           enabled: true,
-          radius: 4,
+          radius: 3, // 4 → 3
           lineWidth: 2,
           lineColor: "#ffffff",
         },
         states: {
           hover: {
-            lineWidth: 4,
+            lineWidth: 3, // 4 → 3
             marker: {
-              radius: 6,
+              radius: 5, // 6 → 5
             },
           },
         },
@@ -163,14 +160,14 @@ const HighchartsLine = ({
       verticalAlign: "bottom",
       layout: "horizontal",
       itemStyle: {
-        fontSize: "12px",
+        fontSize: "11px", // 12px → 11px
         color: "#374151",
         fontWeight: "500",
       },
       itemHoverStyle: {
         color: "#111827",
       },
-      itemMarginBottom: 8,
+      itemMarginBottom: 6, // 8 → 6
     },
     credits: {
       enabled: false,
@@ -179,20 +176,20 @@ const HighchartsLine = ({
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4"> {/* p-6 → p-4 */}
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <div className="flex items-start justify-between mb-4"> {/* mb-6 → mb-4 */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-gray-900 truncate md:text-base">{title}</h3>
           {subtitle && (
-            <p className="mt-1 text-sm text-gray-600">{subtitle}</p>
+            <p className="mt-0.5 text-xs text-gray-600">{subtitle}</p>
           )}
         </div>
         {periods && periods.length > 0 && (
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {periods.map((p) => (
               <option key={p} value={p}>
@@ -210,35 +207,35 @@ const HighchartsLine = ({
 
       {/* Summary */}
       {showSummary && summary.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 pt-6 mt-6 border-t border-gray-200 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 pt-4 mt-4 border-t border-gray-200 md:grid-cols-2 lg:grid-cols-3"> {/* gap-4 pt-6 mt-6 → gap-3 pt-4 mt-4 */}
           {summary.map((item, index) => (
-            <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <div className="flex items-center gap-2 mb-3">
+            <div key={index} className="p-3 border border-gray-200 rounded-lg bg-gray-50"> {/* p-4 → p-3 */}
+              <div className="flex items-center gap-1.5 mb-2"> {/* gap-2 mb-3 → gap-1.5 mb-2 */}
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full" 
                   style={{ backgroundColor: item.color }}
                 />
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-xs font-medium text-gray-700"> {/* text-sm → text-xs */}
                   {item.label}
                 </p>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5"> {/* space-y-2 → space-y-1.5 */}
                 <div>
                   <p className="text-xs text-gray-600">Total</p>
-                  <p className="text-lg font-bold text-gray-900">
+                  <p className="text-base font-bold text-gray-900"> {/* text-lg → text-base */}
                     {formatCompactCurrency(item.total)}
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-gray-200"> {/* pt-2 → pt-1.5 */}
                   <div>
                     <p className="text-xs text-gray-600">Rata-rata</p>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-xs font-semibold text-gray-900"> {/* text-sm → text-xs */}
                       {formatCompactCurrency(item.average)}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600">Terakhir</p>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-xs font-semibold text-gray-900"> {/* text-sm → text-xs */}
                       {formatCompactCurrency(item.latestValue)}
                     </p>
                   </div>
