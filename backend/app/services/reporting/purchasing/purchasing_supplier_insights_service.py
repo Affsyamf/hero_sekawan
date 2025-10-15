@@ -1,3 +1,4 @@
+# app/services/reporting/purchasing/purchasing_supplier_insights_service.py
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models import Purchasing, PurchasingDetail, Product, Supplier

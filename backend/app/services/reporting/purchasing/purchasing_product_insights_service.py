@@ -1,3 +1,4 @@
+# app/services/reporting/purchasing/purchasing_product_insights_service.py
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from datetime import timedelta
