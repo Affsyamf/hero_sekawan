@@ -291,9 +291,7 @@ class ColorKitchenImportService(BaseImportService):
         finalize_batch()
         ret = self.save_to_db({"batches": batches})
 
-        return {
-            "missing_products": ret,
-        }
+        return APIResponse.created()
     
 
     async def preview(self, file: UploadFile):
@@ -395,12 +393,24 @@ class ColorKitchenImportService(BaseImportService):
                     if not self.db.query(Product).filter_by(name=d["product_name"]).first():
                         missing_products.add(d["product_name"])
 
+        def safe_json(obj):
+            """Recursively convert datetime objects to isoformat strings."""
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            elif isinstance(obj, list):
+                return [safe_json(i) for i in obj]
+            elif isinstance(obj, dict):
+                return {k: safe_json(v) for k, v in obj.items()}
+            return obj
+
         return APIResponse.ok(
-            data={
+            data=safe_json({
                 "batches": batches,
                 "missing_products": sorted(list(missing_products)),
                 "missing_designs": sorted(list(missing_designs)),
                 "skipped_rows": skipped_rows,
-            }
+                "skipped_rows_count": len(skipped_rows),
+                "batch_count": len(batches)
+            })
         )
         

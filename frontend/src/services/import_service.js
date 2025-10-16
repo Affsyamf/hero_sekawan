@@ -5,6 +5,7 @@ export const importApi = {
     const fd = new FormData();
     fd.append("file", file);
     return api.post("/import/lap-pembelian", fd, {
+      timeout: 60000,
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
@@ -13,6 +14,61 @@ export const importApi = {
     const fd = new FormData();
     fd.append("file", file);
     return api.post("/import/lap-pembelian/preview", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
+  previewLapCk: (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post("/import/lap-ck/preview", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
+  importLapCk: (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post("/import/lap-ck", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
+  async previewStockOpname(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await api.post("import/stock-opname-chemical/preview", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  },
+  async importStockOpname(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await api.post("import/stock-opname-chemical", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  },
+
+  previewLapChemical(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post("import/lap-chemical/preview", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+  importLapChemical(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.post("import/lap-chemical", fd, {
+      timeout: 60000,
       headers: { "Content-Type": "multipart/form-data" },
     });
   },

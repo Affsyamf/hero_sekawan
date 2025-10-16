@@ -167,7 +167,7 @@ class StockOpnameChemicalImportService(BaseImportService):
                     "valid_products": added,
                     "skipped_products": len(skipped_products),
                 },
-                "preview_rows": preview_rows[:50],
-                "skipped_sample": skipped_products[:50],
+                "preview_rows": preview_rows,
+                "skipped_sample": skipped_products,
             }
         )

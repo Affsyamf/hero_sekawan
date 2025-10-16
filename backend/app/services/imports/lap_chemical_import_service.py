@@ -1,7 +1,7 @@
 from fastapi import UploadFile
 from app.utils.deps import DB 
 from app.services.imports.base_import_service import BaseImportService
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 import pandas as pd
 import math, re
@@ -107,7 +107,14 @@ class LapChemicalImportService(BaseImportService):
         )
         df = df.iloc[:, :-2]
 
-        summary = {"total_rows": len(df), "valid_rows": 0, "skipped": 0, "errors": [], "movements": []}
+        summary = {
+            "total_rows": len(df),
+            "valid_rows": 0,
+            "skipped": 0,
+            "errors": [],
+            "movements": [],
+        }
+
         movements_map = defaultdict(lambda: {"date": None, "code": None, "details": []})
 
         for idx, row in df.iterrows():
@@ -149,10 +156,19 @@ class LapChemicalImportService(BaseImportService):
                 "product_name": nama_brg,
                 "quantity": qty,
                 "unit_cost_used": unit_cost,
-                "total_cost": round(qty * unit_cost, 2) if unit_cost is not None else None,
+                "total_cost": round(qty * unit_cost, 2),
             })
             summary["valid_rows"] += 1
 
-        summary["movements"] = list(movements_map.values())
-        summary["total_movements"] = len(summary["movements"])
+        # ✅ Convert both datetime *and* date to string safely
+        movements = []
+        for m in movements_map.values():
+            if isinstance(m["date"], (datetime, date)):
+                m["date"] = m["date"].isoformat()
+            movements.append(m)
+
+        summary["movements"] = movements
+        summary["total_movements"] = len(movements)
+
         return APIResponse.ok(data=summary)
+    
