@@ -752,7 +752,7 @@ export default function DashboardPurchasing() {
           </div>
 
           <div className="lg:col-span-1">
-            <Card className="h-full">
+            <Card className="h-full ">
               <Highchart.HighchartsDonut
                 data={goods_vs_jasa}
                 centerText={{

@@ -2,9 +2,11 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_
+from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.color_kitchen_input_models import ColorKitchenEntryCreate, ColorKitchenEntryUpdate
+from app.models.master import Design
 from app.services.common.audit_logger import AuditLoggerService
 from app.core.database import Session, get_db
 from app.models import ColorKitchenEntry, ColorKitchenEntryDetail
@@ -18,20 +20,49 @@ class ColorKitchenEntryService:
         self.db = db
 
     def list_color_kitchen_entry(self, request: ListRequest):
-        entry = self.db.query(ColorKitchenEntry)
+        entry = self.db.query(
+            ColorKitchenEntry,
+            func.count(ColorKitchenEntryDetail.id).label("item_count"),
+            func.sum(ColorKitchenEntryDetail.quantity).label("total_quantity"),
+            func.sum(ColorKitchenEntryDetail.total_cost).label("total_cost")
+        ).outerjoin(ColorKitchenEntry.details)\
+        .outerjoin(ColorKitchenEntry.design)\
+        .outerjoin(ColorKitchenEntry.batch)\
+        .group_by(ColorKitchenEntry.id)
 
         if request.q:
             like = f"%{request.q}%"
             entry = entry.filter(
                 or_(
                     ColorKitchenEntry.code.ilike(like),
+                    ColorKitchenEntry.design.has(Design.name.ilike(like))
                 )
-            ).order_by(ColorKitchenEntry.id.desc())
+            )
+            entry = entry.order_by(ColorKitchenEntry.id.desc())
 
-        return APIResponse.paginated(entry, request)
+        return APIResponse.paginated(entry, request, lambda row: {
+            "id": row.ColorKitchenEntry.id,
+            "date": row.ColorKitchenEntry.date.isoformat() if row.ColorKitchenEntry.date else None,
+            "code": row.ColorKitchenEntry.code,
+            "rolls": row.ColorKitchenEntry.rolls or 0,
+            "paste_quantity": float(row.ColorKitchenEntry.paste_quantity) if row.ColorKitchenEntry.paste_quantity else 0,
+            "design_id": row.ColorKitchenEntry.design_id,
+            "design_name": row.ColorKitchenEntry.design.name if row.ColorKitchenEntry.design else None,
+            "batch_id": row.ColorKitchenEntry.batch_id,
+            "batch_code": row.ColorKitchenEntry.batch.code if row.ColorKitchenEntry.batch else None,
+            "details": [],
+            "item_count": row.item_count or 0,
+            "total_quantity": float(row.total_quantity) if row.total_quantity else 0,
+            "total_cost": float(row.total_cost) if row.total_cost else 0,
+        })
+        # return APIResponse.paginated(entry, request)
 
     def get_color_kitchen_entry(self, entry_id: int):
-        entry = self.db.query(ColorKitchenEntry).filter(ColorKitchenEntry.id == entry_id).first()
+        entry = self.db.query(ColorKitchenEntry).options(
+            joinedload(ColorKitchenEntry.design),
+            joinedload(ColorKitchenEntry.batch),
+            joinedload(ColorKitchenEntry.details).joinedload(ColorKitchenEntryDetail.product)
+        ).filter(ColorKitchenEntry.id == entry_id).first()
 
         if not entry:
             raise HTTPException(status_code=404, detail=f"Color Kitchen Entry ID '{entry_id}' not found.")
@@ -43,6 +74,8 @@ class ColorKitchenEntryService:
                 "product_id": detail.product_id,
                 "product_name": detail.product.name if detail.product else None,
                 "quantity": float(detail.quantity) if detail.quantity else 0,
+                "unit_cost_used": float(detail.unit_cost_used) if detail.unit_cost_used else 0,
+                "total_cost": float(detail.total_cost) if detail.total_cost else 0, 
             })
 
         response = {

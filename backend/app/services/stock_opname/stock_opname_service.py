@@ -2,7 +2,8 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_
+from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.stock_opname_input_models import StockOpnameCreate, StockOpnameUpdate
 from app.services.common.audit_logger import AuditLoggerService
@@ -18,7 +19,13 @@ class StockOpnameService:
         self.db = db
 
     def list_stock_opname(self, request: ListRequest):
-        stock_opname = self.db.query(StockOpname)
+        stock_opname = self.db.query(
+            StockOpname,
+            func.count(StockOpnameDetail.id).label('item_count'),
+            func.sum(StockOpnameDetail.system_quantity).label('total_system_qty'),
+            func.sum(StockOpnameDetail.physical_quantity).label('total_physical_qty')
+        ).outerjoin(StockOpname.details)\
+        .group_by(StockOpname.id)
 
         if request.q:
             like = f"%{request.q}%"
@@ -26,12 +33,24 @@ class StockOpnameService:
                 or_(
                     StockOpname.code.ilike(like),
                 )
-            ).order_by(StockOpname.id.desc())
+            )
+            
+        stock_opname = stock_opname.order_by(StockOpname.id.desc())
 
-        return APIResponse.paginated(stock_opname, request)
+        return APIResponse.paginated(stock_opname, request, lambda row: {
+            "id": row.StockOpname.id,
+            "date": row.StockOpname.date.isoformat() if row.StockOpname.date else None,
+            "code": row.StockOpname.code,
+            "details": [],
+            "item_count": row.item_count or 0,
+            "total_system_qty": float(row.total_system_qty) if row.total_system_qty else 0,
+            "total_physical_qty": float(row.total_physical_qty) if row.total_physical_qty else 0,
+        })
 
     def get_stock_opname(self, stock_opname_id: int):
-        stock_opname = self.db.query(StockOpname).filter(StockOpname.id == stock_opname_id).first()
+        stock_opname = self.db.query(StockOpname).options(
+            joinedload(StockOpname.details).joinedload(StockOpnameDetail.product)
+        ).filter(StockOpname.id == stock_opname_id).first()
 
         if not stock_opname:
             return APIResponse.not_found(message=f"Stock Opname ID '{stock_opname_id}' not found.")
