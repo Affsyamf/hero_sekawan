@@ -20,6 +20,7 @@ from app.models import (
 from app.utils.normalise import normalise_design_name, normalise_product_name
 from app.utils.safe_parse import safe_str, safe_date, safe_number
 from app.utils.cost_helper import get_avg_cost_for_product
+from app.utils.response import APIResponse
 
 SKIP_NAMES = {"0.4", "0.5", "0.6", "0.65"}
 
@@ -294,4 +295,112 @@ class ColorKitchenImportService(BaseImportService):
             "missing_products": ret,
         }
     
+
+    async def preview(self, file: UploadFile):
+        contents: bytes = file.file.read()
+        df, meta = self.read_excel(contents)
+        parent_cols = ["OPJ", "DESIGN", "JENIS KAIN", "ROLL", "TGL"]
+
+        batches = []
+        current_batch = None
+        batch_agg = {}
+        skipped_rows = []
+        grouped_meta = defaultdict(list)
+        for m in meta:
+            grouped_meta[m["product_name"]].append(m)
+
+        def finalize_batch():
+            nonlocal current_batch, batch_agg
+            if current_batch:
+                current_batch["details"] = [
+                    {"product_name": p, "quantity": qty}
+                    for p, qty in batch_agg.items() if qty and qty != 0
+                ]
+                batches.append(current_batch)
+            current_batch = None
+            batch_agg = {}
+
+        for r_idx, row in df.iterrows():
+            opj         = safe_str(row.get("OPJ"))
+            design_name = safe_str(row.get("DESIGN"))
+            jenis_kain  = safe_str(row.get("JENIS KAIN"))
+            rolls       = safe_number(row.get("ROLL"))
+            tgl         = safe_date(row.get("TGL"))
+
+            if not any([opj, design_name]):
+                finalize_batch()
+                skipped_rows.append({"row": r_idx + 1, "reason": "empty separator"})
+                continue
+
+            if current_batch is None:
+                current_batch = {
+                    "code": f"BATCH-{opj}-{tgl}",
+                    "date": tgl.isoformat() if tgl else None,
+                    "entries": [],
+                    "details": [],
+                }
+
+            entry = {
+                "code": opj,
+                "date": tgl.isoformat() if tgl else None,
+                "design": design_name,
+                "jenis_kain": jenis_kain,
+                "rolls": rolls,
+                "paste_quantity": 0.0,
+                "details": [],
+            }
+            current_batch["entries"].append(entry)
+
+            aux_accum = {}
+            for pname, metas in grouped_meta.items():
+                if pname in SKIP_NAMES or not pname:
+                    continue
+                total_val = 0.0
+                for m in metas:
+                    if m["flat"] in parent_cols:
+                        continue
+                    val = safe_number(row[m["idx"]])
+                    if val:
+                        total_val += val
+
+                if total_val == 0:
+                    continue
+
+                sample_meta = metas[0]
+                if sample_meta["role"] == "aux":
+                    if sample_meta["is_paste_col"]:
+                        entry["paste_quantity"] += total_val
+                    else:
+                        aux_accum[pname] = aux_accum.get(pname, 0.0) + total_val
+                else:
+                    batch_agg[pname] = batch_agg.get(pname, 0.0) + total_val
+
+            for pname, qty in aux_accum.items():
+                entry["details"].append({"product_name": pname, "quantity": qty})
+
+        finalize_batch()
+
+        # --- Validation check, same as save_to_db ---
+        missing_products = set()
+        missing_designs = set()
+
+        for b in batches:
+            for d in b.get("details", []):
+                if not self.db.query(Product).filter_by(name=d["product_name"]).first():
+                    missing_products.add(d["product_name"])
+            for e in b.get("entries", []):
+                if not self.db.query(Design).filter(Design.code == normalise_design_name(e["design"])).first():
+                    missing_designs.add(e["design"])
+                for d in e.get("details", []):
+                    if not self.db.query(Product).filter_by(name=d["product_name"]).first():
+                        missing_products.add(d["product_name"])
+
+        return APIResponse.ok(
+            data={
+                "batches": batches,
+                "missing_products": sorted(list(missing_products)),
+                "missing_designs": sorted(list(missing_designs)),
+                "skipped_rows": skipped_rows,
+            }
+        )
         

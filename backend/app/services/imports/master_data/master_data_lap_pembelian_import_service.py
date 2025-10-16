@@ -14,6 +14,7 @@ from app.models import (
 )
 
 from app.utils.normalise import normalise_product_name, normalise_account_name, normalise_supplier_name
+from app.utils.response import APIResponse
 
 class MasterDataLapPembelianImportService(BaseImportService):
     def __init__(self, db: DB):
@@ -111,3 +112,105 @@ class MasterDataLapPembelianImportService(BaseImportService):
         self.db.flush()  # ensure IDs are available
 
         return summary
+    
+    def preview(self, file: UploadFile):
+        contents: bytes = file.file.read()
+        xls = pd.ExcelFile(BytesIO(contents))
+        frames = []
+        for sheet in xls.sheet_names:
+            df = pd.read_excel(BytesIO(contents), sheet_name=sheet, header=6)
+            df = df.iloc[:, :-2]
+            frames.append(df)
+
+        all_data = pd.concat(frames, ignore_index=True)
+
+        seen_accounts = set()
+        seen_products = set()
+        seen_suppliers = set()
+
+        to_insert = {"accounts": [], "products": [], "suppliers": []}
+        skipped = {"accounts": [], "products": [], "suppliers": []}
+        missing_account_refs = []
+
+        for _, row in all_data.iterrows():
+            # --- Accounts ---
+            acc_no = row.get("NO.ACC")
+            acc_name = row.get("ACCOUNT")
+            if pd.notna(acc_no) and pd.notna(acc_name):
+                acc_no = int(acc_no)
+                if acc_no not in seen_accounts:
+                    seen_accounts.add(acc_no)
+                    existing = self.db.query(Account).filter_by(account_no=acc_no).first()
+                    if existing:
+                        skipped["accounts"].append({"account_no": acc_no, "name": acc_name})
+                    else:
+                        to_insert["accounts"].append({
+                            "account_no": acc_no,
+                            "name": normalise_account_name(acc_name),
+                            "account_type": AccountType.Goods.value
+                        })
+
+            # --- Products ---
+            raw_name = row.get("NAMA BARANG")
+            if pd.notna(raw_name):
+                name = normalise_product_name(raw_name)
+                if name and name not in seen_products:
+                    seen_products.add(name)
+                    unit = str(row.get("SATUAN") or "").strip().upper() or None
+                    acc_no = row.get("NO.ACC")
+
+                    existing = self.db.query(Product).filter_by(name=name).first()
+                    if existing:
+                        skipped["products"].append({"name": name, "reason": "Already exists"})
+                        continue
+
+                    account = None
+                    if pd.notna(acc_no):
+                        account = self.db.query(Account).filter_by(account_no=int(acc_no)).first()
+                    if account:
+                        to_insert["products"].append({
+                            "name": name,
+                            "unit": unit,
+                            "account_no": int(acc_no),
+                            "account_name": account.name
+                        })
+                    else:
+                        missing_account_refs.append({
+                            "name": name,
+                            "account_no": acc_no,
+                            "reason": "Account not found"
+                        })
+
+            # --- Suppliers ---
+            code = str(row.get("KODE SUPPLIER") or "").strip().upper()
+            name = normalise_supplier_name(row.get("SUPPLIER") or "")
+            if code and name and code not in seen_suppliers:
+                seen_suppliers.add(code)
+                existing = self.db.query(Supplier).filter_by(code=code).first()
+                if existing:
+                    skipped["suppliers"].append({"code": code, "name": name, "reason": "Already exists"})
+                else:
+                    to_insert["suppliers"].append({"code": code, "name": name})
+
+        return APIResponse.ok(
+            data={
+                "summary": {
+                    "accounts_to_insert": len(to_insert["accounts"]),
+                    "products_to_insert": len(to_insert["products"]),
+                    "suppliers_to_insert": len(to_insert["suppliers"]),
+                    "missing_account_refs": len(missing_account_refs),
+                    "skipped_accounts": len(skipped["accounts"]),
+                    "skipped_products": len(skipped["products"]),
+                    "skipped_suppliers": len(skipped["suppliers"]),
+                },
+                "samples": {
+                    "accounts": to_insert["accounts"][:20],
+                    "products": to_insert["products"][:20],
+                    "suppliers": to_insert["suppliers"][:20],
+                    "missing_accounts": missing_account_refs[:20],
+                    "skipped_accounts": skipped["accounts"][:10],
+                    "skipped_products": skipped["products"][:10],
+                    "skipped_suppliers": skipped["suppliers"][:10],
+                }
+            }
+        )

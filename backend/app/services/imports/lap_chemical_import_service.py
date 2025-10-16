@@ -14,8 +14,10 @@ from app.models import (
     StockMovement, 
     StockMovementDetail
 )
+
 from app.utils.safe_parse import safe_str, safe_date, safe_number
 from app.utils.cost_helper import get_avg_cost_for_product
+from app.utils.response import APIResponse
 
 class LapChemicalImportService(BaseImportService):
     def __init__(self, db: DB):
@@ -95,3 +97,62 @@ class LapChemicalImportService(BaseImportService):
             inserted["details"] += 1
 
         return inserted
+    
+    def preview(self, file: UploadFile):
+        contents: bytes = file.file.read()
+        df = pd.read_excel(
+            BytesIO(contents),
+            sheet_name="CHEMICAL",
+            header=4
+        )
+        df = df.iloc[:, :-2]
+
+        summary = {"total_rows": len(df), "valid_rows": 0, "skipped": 0, "errors": [], "movements": []}
+        movements_map = defaultdict(lambda: {"date": None, "code": None, "details": []})
+
+        for idx, row in df.iterrows():
+            excel_row = idx + 5
+            code = safe_str(row.get("NOBUKTI"))
+            tanggal = safe_date(row.get("TANGGAL"))
+            qty = safe_number(row.get("QTY"))
+            nama_brg = safe_str(row.get("NAMABRG"))
+
+            if not code or not tanggal or qty is None or not nama_brg:
+                summary["skipped"] += 1
+                continue
+
+            product = self.db.query(Product).filter_by(name=nama_brg.upper()).first()
+            if not product:
+                summary["errors"].append(
+                    {"row": excel_row, "reason": f"product not found: {nama_brg}", "code": code, "qty": qty}
+                )
+                continue
+
+            unit_cost = get_avg_cost_for_product(self.db, product.id)
+            if unit_cost is None:
+                summary["errors"].append({
+                    "row": excel_row,
+                    "reason": f"no cached avg cost for product: {nama_brg}",
+                    "product_id": product.id,
+                    "code": code,
+                    "qty": qty
+                })
+                summary["skipped"] += 1
+                continue
+
+            key = (code, tanggal)
+            if movements_map[key]["code"] is None:
+                movements_map[key]["code"] = code
+                movements_map[key]["date"] = tanggal
+
+            movements_map[key]["details"].append({
+                "product_name": nama_brg,
+                "quantity": qty,
+                "unit_cost_used": unit_cost,
+                "total_cost": round(qty * unit_cost, 2) if unit_cost is not None else None,
+            })
+            summary["valid_rows"] += 1
+
+        summary["movements"] = list(movements_map.values())
+        summary["total_movements"] = len(summary["movements"])
+        return APIResponse.ok(data=summary)

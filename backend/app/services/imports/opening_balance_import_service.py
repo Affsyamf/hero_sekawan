@@ -19,6 +19,7 @@ from app.models import (
 from app.utils.normalise import normalise_product_name
 from app.utils.safe_parse import safe_str, safe_date, safe_number
 from app.utils.cost_helper import update_avg_cost_for_products, refresh_product_avg_cost
+from app.utils.response import APIResponse
 
 class OpeningBalanceImportService(BaseImportService):
     def __init__(self, db: DB):
@@ -114,3 +115,63 @@ class OpeningBalanceImportService(BaseImportService):
             "skipped_products": skipped_products,
             "added": added
         }
+    
+    def preview(self, file: UploadFile):
+        contents: bytes = file.file.read()
+        xls = pd.ExcelFile(BytesIO(contents))
+        start_date = datetime(2025, 7, 31)
+
+        df = pd.read_excel(xls, sheet_name="GUDANG BESAR", header=4)
+        df = df[df["NO"].notna()]
+
+        preview_rows = []
+        skipped_products = []
+        added = 0
+
+        for _, row in df.iterrows():
+            prod_name = safe_str(normalise_product_name(row.get("NAMA BARANG")))
+            if not prod_name:
+                continue
+
+            end_qty = safe_number(row.get("FISIK"))
+            if end_qty is None or end_qty == 0:
+                skipped_products.append({"name": prod_name, "reason": "Saldo akhir 0"})
+                continue
+
+            price = safe_number(row.get("JUMLAH FISIK"))
+            init_qty = safe_number(row.get("SALDO AWAL"))
+
+            if price is None or end_qty == 0:
+                skipped_products.append({"name": prod_name, "reason": "Invalid price or quantity"})
+                continue
+
+            unit_price = price / end_qty
+            dpp = unit_price * init_qty
+            ppn = dpp * 0.11
+
+            product = self.db.query(Product).filter_by(name=prod_name).first()
+            if not product:
+                skipped_products.append({"name": prod_name, "reason": "Product not found"})
+                continue
+
+            added += 1
+            preview_rows.append({
+                "product": prod_name,
+                "quantity": init_qty,
+                "unit_price": round(unit_price, 2),
+                "dpp": round(dpp, 2),
+                "ppn": round(ppn, 2),
+                "total": round(dpp + ppn, 2),
+            })
+
+        return APIResponse.ok(
+            data={
+                "summary": {
+                    "total_rows": len(df),
+                    "valid_products": added,
+                    "skipped_products": len(skipped_products),
+                },
+                "preview_rows": preview_rows[:50],  # show only first 50 for performance
+                "skipped_sample": skipped_products[:50],
+            }
+        )
