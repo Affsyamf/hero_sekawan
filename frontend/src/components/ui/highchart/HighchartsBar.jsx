@@ -28,7 +28,7 @@ const HighchartsBar = ({
     }
   }, [initialData]);
 
-  const categories = data?.map((item) => item.month) || [];
+  const categories = data?.map((item) => item.key) || [];
 
   const series =
     datasets?.map((dataset) => ({

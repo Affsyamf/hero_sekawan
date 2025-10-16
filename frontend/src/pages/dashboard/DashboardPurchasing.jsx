@@ -24,7 +24,6 @@ import {
   reportsPurchasingBreakdown,
 } from "../../services/report_purchasing_service";
 import { MetricGrid } from "../../components/ui/chart/MetricCard";
-import DonutDrilldownChart from "../../components/ui/chart/DonutDrilldownChart";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -225,7 +224,7 @@ export default function DashboardPurchasing() {
       }
 
       return {
-        month: displayPeriod,
+        key: displayPeriod,
         goods: item.goods || 0,
         service: item.service || 0,
         total: item.total || 0,
@@ -249,7 +248,7 @@ export default function DashboardPurchasing() {
 
   const transformSuppliersToBarData = (suppliers) => {
     return suppliers.map((supplier) => ({
-      month: supplier.name,
+      key: supplier.name,
       value: supplier.total_purchases,
       percentage: supplier.percentage,
     }));
@@ -257,7 +256,7 @@ export default function DashboardPurchasing() {
 
   const transformPurchasesToBarData = (purchases) => {
     return purchases.map((purchase) => ({
-      month: purchase.supplier,
+      key: purchase.supplier,
       value: purchase.value,
     }));
   };
@@ -281,7 +280,7 @@ export default function DashboardPurchasing() {
     const purchase_trend = transformTrendData(trend);
 
     const goods_vs_jasa = (breakdown || []).map((item) => ({
-      label: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
+      key: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
       value: item.value || 0,
       drilldown: true,
       context: item.label,
@@ -429,7 +428,7 @@ export default function DashboardPurchasing() {
         dateRange
       );
       return res.data.map((r) => ({
-        label: r.label,
+        key: r.label,
         value: r.value,
         percentage: r.percentage,
         context: r.account_id,
@@ -447,7 +446,7 @@ export default function DashboardPurchasing() {
       );
 
       return res.data.map((p) => ({
-        label: p.label,
+        key: p.label,
         value: p.value,
       }));
     }
@@ -698,7 +697,7 @@ export default function DashboardPurchasing() {
 
         {/* Main Charts Row */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <Card className="w-full h-full">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -752,7 +751,7 @@ export default function DashboardPurchasing() {
             </Card>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <Card className="h-full">
               <Highchart.HighchartsDonut
                 data={goods_vs_jasa}
@@ -768,12 +767,6 @@ export default function DashboardPurchasing() {
                   return onDrilldown(context, depth);
                 }}
               />
-              {/* <DonutDrilldownChart
-                data={goods_vs_jasa}
-                onDrilldownRequest={async ({ _, context, depth }) => {
-                  return onDrilldown(context, depth);
-                }}
-              /> */}
             </Card>
           </div>
         </div>

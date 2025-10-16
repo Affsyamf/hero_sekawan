@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, HTTPException, Depends, File
 from typing import Type, Any
 import inspect
 
@@ -21,7 +21,7 @@ def make_import_routes(path: str, service_cls: Type[Any]):
     # --- Actual import route ---
     @excel_import_router.post(path)
     async def import_file(
-        file: UploadFile,
+        file: UploadFile = File(...),
         service: Any = Depends(service_cls),
     ):
         name = (file.filename or "").lower()
@@ -41,7 +41,7 @@ def make_import_routes(path: str, service_cls: Type[Any]):
     # --- Preview route (if service implements preview) ---
     @excel_import_router.post(f"{path}/preview")
     async def preview_file(
-        file: UploadFile,
+        file: UploadFile = File(...),
         service: Any = Depends(service_cls),
     ):
         name = (file.filename or "").lower()

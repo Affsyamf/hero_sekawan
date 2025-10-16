@@ -15,6 +15,7 @@ const HighchartsDonut = ({
   showSummary = false,
   onDrilldownRequest,
   enableDataLabels = false,
+  enableBreadcrumbs = true,
 }) => {
   // const chartData =
   //   data?.map((item) => ({
@@ -36,7 +37,7 @@ const HighchartsDonut = ({
     const others = sortedData.slice(MAX_SLICES + BUFFER);
 
     let finalData = topSlices.map((item) => ({
-      name: item.label,
+      name: item.key,
       y: item.value,
       drilldown: item.drilldown ?? false,
       context: item.context,
@@ -65,6 +66,9 @@ const HighchartsDonut = ({
       drillUpButton: {
         relativeTo: "spacingBox",
         position: { x: 0, y: 0 },
+      },
+      navigation: {
+        breadcrumbs: { enabled: false },
       },
     },
     chart: {
