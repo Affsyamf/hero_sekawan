@@ -521,164 +521,112 @@ export default function DashboardColorKitchen() {
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
           {/* Top 5 Dyes - Data dari parent_type=dye */}
           <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-                  <Droplets className="w-4 h-4 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                    Top 5 Dyes (Dyestuff)
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    Pewarna paling banyak digunakan
-                  </p>
-                </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
+                <Droplets className="w-4 h-4 text-blue-600" />
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Total Cost</p>
-                <p className="text-xs font-semibold text-gray-900">
-                  {formatCompactCurrency(
-                    top_dyes.reduce((sum, item) => sum + item.cost, 0)
-                  )}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                  Top 5 Dyes (Dyestuff)
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Pewarna paling banyak digunakan
                 </p>
               </div>
             </div>
-            <div className="space-y-3">
-              {top_dyes.length > 0 ? (
-                top_dyes.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-3 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
-                  >
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-blue-600 bg-blue-100 rounded-lg">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 truncate">
-                          {item.label}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-xs text-gray-600">
-                            {formatNumber(item.quantity)} kg
-                          </span>
-                          <span className="text-xs font-semibold text-blue-600">
-                            {formatCompactCurrency(item.cost)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-blue-600">
-                          {item.percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                    <Highchart.HighchartsProgress
-                      label=""
-                      value={item.quantity}
-                      maxValue={item.maxValue}
-                      color={
-                        index === 0
-                          ? "error"
-                          : index === 1
-                          ? "primary"
-                          : index === 2
-                          ? "warning"
-                          : index === 3
-                          ? "success"
-                          : "info"
-                      }
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-center text-gray-500">
-                  <p className="text-sm">No dye data available</p>
+
+            <Highchart.HighchartsBar
+              initialData={top_dyes.map((item) => ({
+                key: item.label,
+                value: item.cost,
+                percentage: item.percentage,
+              }))}
+              title=""
+              subtitle=""
+              datasets={[
+                { key: "value", label: "Total Cost", color: "primary" },
+              ]}
+              periods={[]}
+              showSummary={false}
+            />
+
+            {/* Summary Stats */}
+            {top_dyes.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
+                <div className="p-2 rounded-lg bg-blue-50">
+                  <p className="text-xs text-blue-600">Total dari Top 5</p>
+                  <p className="text-sm font-bold text-blue-900">
+                    {formatCompactCurrency(
+                      top_dyes.reduce((sum, item) => sum + item.cost, 0)
+                    )}
+                  </p>
                 </div>
-              )}
-            </div>
+                <div className="p-2 rounded-lg bg-blue-50">
+                  <p className="text-xs text-blue-600">Total Quantity</p>
+                  <p className="text-sm font-bold text-blue-900">
+                    {formatNumber(
+                      top_dyes.reduce((sum, item) => sum + item.quantity, 0)
+                    )}{" "}
+                    kg
+                  </p>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Top 5 Aux - Data dari parent_type=aux */}
           <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
-                  <Palette className="w-4 h-4 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                    Top 5 Auxiliary (AUX)
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    Auxiliary paling banyak digunakan
-                  </p>
-                </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+                <Palette className="w-4 h-4 text-purple-600" />
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Total Cost</p>
-                <p className="text-xs font-semibold text-gray-900">
-                  {formatCompactCurrency(
-                    top_aux.reduce((sum, item) => sum + item.cost, 0)
-                  )}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                  Top 5 Auxiliary (AUX)
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Auxiliary paling banyak digunakan
                 </p>
               </div>
             </div>
-            <div className="space-y-3">
-              {top_aux.length > 0 ? (
-                top_aux.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-3 transition-all border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md"
-                  >
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-purple-600 bg-purple-100 rounded-lg">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 truncate">
-                          {item.label}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-xs text-gray-600">
-                            {formatNumber(item.quantity)} kg
-                          </span>
-                          <span className="text-xs font-semibold text-purple-600">
-                            {formatCompactCurrency(item.cost)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-purple-600">
-                          {item.percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                    <Highchart.HighchartsProgress
-                      label=""
-                      value={item.quantity}
-                      maxValue={item.maxValue}
-                      color={
-                        index === 0
-                          ? "error"
-                          : index === 1
-                          ? "primary"
-                          : index === 2
-                          ? "warning"
-                          : index === 3
-                          ? "success"
-                          : "info"
-                      }
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-center text-gray-500">
-                  <p className="text-sm">No auxiliary data available</p>
+
+            <Highchart.HighchartsBar
+              initialData={top_aux.map((item) => ({
+                key: item.label,
+                value: item.cost,
+                percentage: item.percentage,
+              }))}
+              title=""
+              subtitle=""
+              datasets={[
+                { key: "value", label: "Total Cost", color: "primary" },
+              ]}
+              periods={[]}
+              showSummary={false}
+            />
+
+            {/* Summary Stats */}
+            {top_aux.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
+                <div className="p-2 rounded-lg bg-purple-50">
+                  <p className="text-xs text-purple-600">Total dari Top 5</p>
+                  <p className="text-sm font-bold text-purple-900">
+                    {formatCompactCurrency(
+                      top_aux.reduce((sum, item) => sum + item.cost, 0)
+                    )}
+                  </p>
                 </div>
-              )}
-            </div>
+                <div className="p-2 rounded-lg bg-purple-50">
+                  <p className="text-xs text-purple-600">Total Quantity</p>
+                  <p className="text-sm font-bold text-purple-900">
+                    {formatNumber(
+                      top_aux.reduce((sum, item) => sum + item.quantity, 0)
+                    )}{" "}
+                    kg
+                  </p>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 
