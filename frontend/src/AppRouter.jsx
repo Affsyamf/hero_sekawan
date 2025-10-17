@@ -17,11 +17,13 @@ import {
   DashboardPurchasing,
   DashboardColorKitchen,
 } from "./pages";
+import GlobalFilterDrawer from "./components/common/GlobalFilterDrawer.jsx";
 
 export default function AppRouter() {
   return (
     <Router>
       <GlobalFilterProvider>
+        <GlobalFilterDrawer/>
         <Routes>
           <Route path="/" element={<OverviewNew />} />
           <Route

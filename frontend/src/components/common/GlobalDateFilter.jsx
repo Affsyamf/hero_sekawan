@@ -1,6 +1,6 @@
 // components/common/GlobalDateFilter.jsx
 import { Calendar } from "lucide-react";
-import { Card } from "../ui/Card";
+import Card from "../../components/ui/card/Card";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 
 const monthOptions = [
@@ -58,14 +58,14 @@ export default function GlobalDateFilter() {
     <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 bg-white rounded-lg bg-opacity-20">
-            <Calendar className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary bg-opacity-20">
+            <Calendar className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-xs font-medium text-white text-opacity-90">
+            <h3 className="text-xs font-medium text-primary text-opacity-90">
               Global Date Filter
             </h3>
-            <p className="text-sm font-bold text-white">
+            <p className="text-sm font-bold text-primary">
               {getFilterDisplayText()}
             </p>
           </div>
@@ -73,13 +73,13 @@ export default function GlobalDateFilter() {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Filter Mode Tabs */}
-          <div className="flex p-0.5 rounded-lg bg-white bg-opacity-20">
+          <div className="flex p-0.5 rounded-lg bg-primary bg-opacity-20">
             <button
               onClick={() => updateFilters({ filterMode: "month_year" })}
               className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                 filterMode === "month_year"
-                  ? "bg-white text-blue-600"
-                  : "text-white hover:bg-white hover:bg-opacity-10"
+                  ? "bg-primary text-blue-600"
+                  : "text-primary hover:bg-primary hover:bg-opacity-10"
               }`}
             >
               Month & Year
@@ -88,8 +88,8 @@ export default function GlobalDateFilter() {
               onClick={() => updateFilters({ filterMode: "year_only" })}
               className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                 filterMode === "year_only"
-                  ? "bg-white text-blue-600"
-                  : "text-white hover:bg-white hover:bg-opacity-10"
+                  ? "bg-primary text-blue-600"
+                  : "text-primary hover:bg-primary hover:bg-opacity-10"
               }`}
             >
               Year Only
@@ -98,8 +98,8 @@ export default function GlobalDateFilter() {
               onClick={() => updateFilters({ filterMode: "ytd" })}
               className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                 filterMode === "ytd"
-                  ? "bg-white text-blue-600"
-                  : "text-white hover:bg-white hover:bg-opacity-10"
+                  ? "bg-primary text-blue-600"
+                  : "text-primary hover:bg-primary hover:bg-opacity-10"
               }`}
             >
               YTD
@@ -108,8 +108,8 @@ export default function GlobalDateFilter() {
               onClick={() => updateFilters({ filterMode: "custom" })}
               className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
                 filterMode === "custom"
-                  ? "bg-white text-blue-600"
-                  : "text-white hover:bg-white hover:bg-opacity-10"
+                  ? "bg-primary text-blue-600"
+                  : "text-primary hover:bg-primary hover:bg-opacity-10"
               }`}
             >
               Custom
@@ -124,7 +124,7 @@ export default function GlobalDateFilter() {
                 onChange={(e) =>
                   updateFilters({ month: parseInt(e.target.value) })
                 }
-                className="px-2.5 py-1 text-xs bg-white text-gray-700 border-0 rounded-lg"
+                className="px-2.5 py-1 text-xs bg-primary text-gray-700 border-0 rounded-lg"
               >
                 {monthOptions.map((month, index) => (
                   <option key={month} value={index + 1}>
@@ -137,7 +137,7 @@ export default function GlobalDateFilter() {
                 onChange={(e) =>
                   updateFilters({ year: parseInt(e.target.value) })
                 }
-                className="px-2.5 py-1 text-xs bg-white text-gray-700 border-0 rounded-lg"
+                className="px-2.5 py-1 text-xs bg-primary text-gray-700 border-0 rounded-lg"
               >
                 {yearOptions.map((year) => (
                   <option key={year} value={year}>
@@ -155,7 +155,7 @@ export default function GlobalDateFilter() {
               onChange={(e) =>
                 updateFilters({ year: parseInt(e.target.value) })
               }
-              className="px-2.5 py-1 text-xs bg-white text-gray-700 border-0 rounded-lg"
+              className="px-2.5 py-1 text-xs bg-primary text-gray-700 border-0 rounded-lg"
             >
               {yearOptions.map((year) => (
                 <option key={year} value={year}>
@@ -172,14 +172,14 @@ export default function GlobalDateFilter() {
                 type="date"
                 value={customStartDate}
                 onChange={(e) => updateFilters({ startDate: e.target.value })}
-                className="px-2.5 py-1 text-xs bg-white text-gray-700 border-0 rounded-lg"
+                className="px-2.5 py-1 text-xs bg-primary text-gray-700 border-0 rounded-lg"
               />
-              <span className="text-xs font-medium text-white">to</span>
+              <span className="text-xs font-medium text-primary">to</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => updateFilters({ endDate: e.target.value })}
-                className="px-2.5 py-1 text-xs bg-white text-gray-700 border-0 rounded-lg"
+                className="px-2.5 py-1 text-xs bg-primary text-gray-700 border-0 rounded-lg"
               />
             </>
           )}
