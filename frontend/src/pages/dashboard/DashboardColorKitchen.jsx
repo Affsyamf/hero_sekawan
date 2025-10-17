@@ -211,8 +211,6 @@ export default function DashboardColorKitchen() {
   return (
     <MainLayout>
       <div className="max-w-full space-y-4 p-0.5 md:p-1">
-        {/* ❌ HAPUS Local Date Filter Card */}
-
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

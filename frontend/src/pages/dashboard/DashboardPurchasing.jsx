@@ -15,7 +15,11 @@ import {
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
-import { formatNumber, formatCompactCurrency, formatDate } from "../../utils/helpers";
+import {
+  formatNumber,
+  formatCompactCurrency,
+  formatDate,
+} from "../../utils/helpers";
 import {
   reportsPurchasingSummary,
   reportsPurchasingTrend,
@@ -426,8 +430,6 @@ export default function DashboardPurchasing() {
   return (
     <MainLayout>
       <div className="max-w-full space-y-4 p-0.5 md:p-1">
-        {/* ❌ HAPUS Local Date Filter Card - Gunakan Global Filter saja */}
-
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -440,7 +442,8 @@ export default function DashboardPurchasing() {
             {/* ✅ Show active filter info */}
             {dateRange.startDate && dateRange.endDate && (
               <p className="mt-1 text-xs text-blue-600">
-                📅 Filtered: {formatDate(dateRange.startDate)} to {formatDate(dateRange.endDate)}
+                📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+                {formatDate(dateRange.endDate)}
               </p>
             )}
           </div>
