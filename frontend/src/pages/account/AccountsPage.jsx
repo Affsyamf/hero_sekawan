@@ -1,22 +1,15 @@
-import MainLayout from "../../layouts/MainLayout/MainLayout";
-import Table from "../../components/ui/table/Table";
-import AccountForm from "../../components/features/account/AccountForm";
+import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
+import AccountForm from "../../components/features/account/AccountForm";
+import Table from "../../components/ui/table/Table";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
 import { createAccount, deleteAccount, searchAccount, updateAccount } from "../../services/account_service";
 
-const SAMPLE_ACCOUNTS = [];
 
 export default function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const { value: accounts = SAMPLE_ACCOUNTS, set: setAccounts } = useTemp(
-    "accounts:working-list",
-    SAMPLE_ACCOUNTS
-  );
 
   // const fetchAccounts = async (params) => {
   //   const { page, pageSize, search, sortBy, sortDir } = params;

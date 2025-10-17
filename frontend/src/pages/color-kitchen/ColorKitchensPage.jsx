@@ -4,7 +4,6 @@ import ColorKitchenForm from "../../components/features/color-kitchen/ColorKitch
 import ImportColorKitchenModal from "../../components/features/color-kitchen/ImportColorKitchenModal";
 import { useState } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
 import { formatDate } from "../../utils/helpers";
 import {
   createColorKitchen,

@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Package, FileText, Ruler, BookOpen, Save } from "lucide-react";
-import Modal from "../../ui/modal/Modal";
+import { BookOpen, FileText, Package, Ruler, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { searchAccount } from "../../../services/account_service";
+import Button from "../../ui/button/Button";
+import DropdownServer from "../../ui/dropdown-server/DropdownServer";
 import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
-import Button from "../../ui/button/Button";
-import { useTemp } from "../../../hooks/useTemp";
-import DropdownServer from "../../ui/dropdown-server/DropdownServer";
-import { searchProduct } from "../../../services/product_service";
-import { searchAccount } from "../../../services/account_service";
+import Modal from "../../ui/modal/Modal";
 
 export default function ProductForm({
   product = null,
@@ -24,16 +22,14 @@ export default function ProductForm({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const { value: accountsInTemp = [] } = useTemp("accounts:working-list", []);
-
   // Memoized account options
-  const accountOptions = useMemo(() => {
-    return accountsInTemp.map((x) => ({
-      id: x.id,
-      name: x.name,
-      code: x.code || `ACC-${x.id}`,
-    }));
-  }, [accountsInTemp]);
+  // const accountOptions = useMemo(() => {
+  //   return accountsInTemp.map((x) => ({
+  //     id: x.id,
+  //     name: x.name,
+  //     code: x.code || `ACC-${x.id}`,
+  //   }));
+  // }, [accountsInTemp]);
 
   // Initialize form saat modal dibuka
   useEffect(() => {

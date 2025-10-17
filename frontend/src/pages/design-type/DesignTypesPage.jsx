@@ -1,9 +1,8 @@
-import MainLayout from "../../layouts/MainLayout/MainLayout";
-import Table from "../../components/ui/table/Table";
-import DesignTypeForm from "../../components/features/design-type/DesignTypeForm";
+import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
+import DesignTypeForm from "../../components/features/design-type/DesignTypeForm";
+import Table from "../../components/ui/table/Table";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createDesignType,
   deleteDesignType,
@@ -11,15 +10,10 @@ import {
   updateDesignType,
 } from "../../services/design_type_service";
 
-const SAMPLE_DESIGN_TYPES = [];
-
 export default function DesignTypesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDesignType, setSelectedDesignType] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const { value: designTypes = SAMPLE_DESIGN_TYPES, set: setDesignTypes } =
-    useTemp("design-types:working-list", SAMPLE_DESIGN_TYPES);
 
   const columns = [
     {
