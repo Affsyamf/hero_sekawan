@@ -141,9 +141,15 @@ export default function StockMovementsPage() {
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Stock Movement Management
           </h1>
-          <p className="mb-6 text-secondary-text">
+          <p className="mb-2 text-secondary-text">
             Track stock movements with detailed product quantities.
           </p>
+          {dateRange.startDate && dateRange.endDate && (
+            <p className="mt-1 mb-4 text-xs text-blue-600">
+              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+              {formatDate(dateRange.endDate)}
+            </p>
+          )}
 
           <div className="mb-4">
             <button

@@ -14,7 +14,7 @@ import {
   updatePurchasing,
 } from "../../services/purchasing_service";
 import { searchSupplier } from "../../services/supplier_service";
-import { useFilteredFetch } from "../../hooks/useFilteredFetch"; 
+import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 
 export default function PurchasingsPage() {
@@ -169,9 +169,15 @@ export default function PurchasingsPage() {
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Purchasing Management
           </h1>
-          <p className="mb-6 text-secondary-text">
+          <p className="mb-2 text-secondary-text">
             Manage product purchases with global date filter
           </p>
+          {dateRange.startDate && dateRange.endDate && (
+            <p className="mt-1 mb-4 text-xs text-blue-600">
+              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+              {formatDate(dateRange.endDate)}
+            </p>
+          )}
 
           <div className="flex gap-3 mb-4">
             <button

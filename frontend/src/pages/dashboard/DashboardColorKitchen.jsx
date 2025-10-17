@@ -1,4 +1,6 @@
+// pages/dashboard/DashboardColorKitchen.jsx
 import { useTheme } from "../../contexts/ThemeContext";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ Import
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
@@ -12,11 +14,10 @@ import {
   Package2,
   DollarSign,
   TrendingUp,
-  Calendar,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
-import { formatNumber, formatCompactCurrency } from "../../utils/helpers";
+import { formatNumber, formatCompactCurrency, formatDate } from "../../utils/helpers";
 import {
   reportsColorKitchenSummary,
   reportsColorKitchenChemicalUsageSummary,
@@ -29,95 +30,32 @@ export default function DashboardColorKitchen() {
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
 
-  // Date Filter States
-  const [filterMode, setFilterMode] = useState("month_year");
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [customStartDate, setCustomStartDate] = useState("");
-  const [customEndDate, setCustomEndDate] = useState("");
+  // ✅ Use global filter instead of local state
+  const { dateRange } = useGlobalFilter();
 
-  // Get current date range based on filter mode
-  const getDateRange = () => {
-    const now = new Date();
-    let startDate, endDate;
-
-    switch (filterMode) {
-      case "month_year":
-        startDate = new Date(selectedYear, selectedMonth - 1, 1);
-        endDate = new Date(selectedYear, selectedMonth, 0);
-        break;
-
-      case "year_only":
-        startDate = new Date(selectedYear, 0, 1);
-        endDate = new Date(selectedYear, 11, 31);
-        break;
-
-      case "ytd":
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = now;
-        break;
-
-      case "custom":
-        if (customStartDate && customEndDate) {
-          startDate = new Date(customStartDate);
-          endDate = new Date(customEndDate);
-        } else {
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-          endDate = now;
-        }
-        break;
-
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = now;
-    }
-
-    return {
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-    };
-  };
-
-  // Get display text for current filter
-  const getFilterDisplayText = () => {
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
-    ];
-
-    switch (filterMode) {
-      case "month_year":
-        return `${monthNames[selectedMonth - 1]} ${selectedYear}`;
-      case "year_only":
-        return `Year ${selectedYear}`;
-      case "ytd":
-        return `YTD ${new Date().getFullYear()}`;
-      case "custom":
-        if (customStartDate && customEndDate) {
-          return `${customStartDate} to ${customEndDate}`;
-        }
-        return "Custom Range";
-      default:
-        return "";
-    }
-  };
-
+  // ✅ Auto refresh when global filter changes
   useEffect(() => {
-    fetchCkData();
-  }, [filterMode, selectedMonth, selectedYear, customStartDate, customEndDate]);
+    if (dateRange.startDate && dateRange.endDate) {
+      fetchCkData();
+    }
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const fetchCkData = async () => {
     try {
       setLoading(true);
-      const dateRange = getDateRange();
+
+      // ✅ Use global dateRange directly
+      const params = {
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate,
+      };
 
       // Fetch all data in parallel
-      // PENTING: dyesData menggunakan parent_type=dye, auxData menggunakan parent_type=aux
       const [summary, chemicalSummary, dyesData, auxData] = await Promise.all([
-        reportsColorKitchenSummary(dateRange),
-        reportsColorKitchenChemicalUsageSummary(dateRange),
-        reportsColorKitchenChemicalUsage({ ...dateRange, parent_type: "dye" }),
-        reportsColorKitchenChemicalUsage({ ...dateRange, parent_type: "aux" }),
+        reportsColorKitchenSummary(params),
+        reportsColorKitchenChemicalUsageSummary(params),
+        reportsColorKitchenChemicalUsage({ ...params, parent_type: "dye" }),
+        reportsColorKitchenChemicalUsage({ ...params, parent_type: "aux" }),
       ]);
 
       const transformedData = transformApiData(
@@ -167,8 +105,12 @@ export default function DashboardColorKitchen() {
 
     // Transform chemical breakdown for donut charts
     const chemicalData = chemicalSummary.data || [];
-    const dyesBreakdown = chemicalData.find((item) => item.label === "Dyes") || { value: 0 };
-    const auxBreakdown = chemicalData.find((item) => item.label === "Auxiliaries") || { value: 0 };
+    const dyesBreakdown = chemicalData.find(
+      (item) => item.label === "Dyes"
+    ) || { value: 0 };
+    const auxBreakdown = chemicalData.find(
+      (item) => item.label === "Auxiliaries"
+    ) || { value: 0 };
 
     // Transform top dyes (dari parent_type=dye)
     const dyesList = dyesData.data || [];
@@ -193,19 +135,21 @@ export default function DashboardColorKitchen() {
     }));
 
     // Create cost breakdown for donut charts
-    const dye_cost_breakdown = top_dyes.length > 0 
-      ? top_dyes.map((item) => ({
-          label: item.label,
-          value: item.cost,
-        }))
-      : [{ label: "No Data", value: 0 }];
+    const dye_cost_breakdown =
+      top_dyes.length > 0
+        ? top_dyes.map((item) => ({
+            label: item.label,
+            value: item.cost,
+          }))
+        : [{ label: "No Data", value: 0 }];
 
-    const aux_cost_breakdown = top_aux.length > 0
-      ? top_aux.map((item) => ({
-          label: item.label,
-          value: item.cost,
-        }))
-      : [{ label: "No Data", value: 0 }];
+    const aux_cost_breakdown =
+      top_aux.length > 0
+        ? top_aux.map((item) => ({
+            label: item.label,
+            value: item.cost,
+          }))
+        : [{ label: "No Data", value: 0 }];
 
     return {
       metrics,
@@ -229,22 +173,6 @@ export default function DashboardColorKitchen() {
       setExporting(false);
     }
   };
-
-  const formatTrend = (trend) => {
-    const sign = trend > 0 ? "+" : "";
-    return `${sign}${trend}%`;
-  };
-
-  // Month and Year Options
-  const monthOptions = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ];
-
-  const yearOptions = Array.from(
-    { length: 3 },
-    (_, i) => new Date().getFullYear() - i
-  );
 
   if (loading) {
     return (
@@ -277,137 +205,13 @@ export default function DashboardColorKitchen() {
     );
   }
 
-  const { metrics, top_dyes, top_aux, dye_cost_breakdown, aux_cost_breakdown } = ckData;
+  const { metrics, top_dyes, top_aux, dye_cost_breakdown, aux_cost_breakdown } =
+    ckData;
 
   return (
     <MainLayout>
       <div className="max-w-full space-y-4 p-0.5 md:p-1">
-        {/* Date Filter Header */}
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary bg-opacity-20">
-                <Calendar className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-xs font-medium text-primary text-opacity-90">
-                  Data Filter
-                </h3>
-                <p className="text-sm font-bold text-primary">
-                  {getFilterDisplayText()}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Filter Mode Tabs */}
-              <div className="flex p-0.5 rounded-lg bg-primary bg-opacity-20">
-                <button
-                  onClick={() => setFilterMode("month_year")}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    filterMode === "month_year"
-                      ? "bg-primary text-blue-600"
-                      : "text-primary hover:bg-primary hover:bg-opacity-10"
-                  }`}
-                >
-                  Month & Year
-                </button>
-                <button
-                  onClick={() => setFilterMode("year_only")}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    filterMode === "year_only"
-                      ? "bg-primary text-blue-600"
-                      : "text-primary hover:bg-primary hover:bg-opacity-10"
-                  }`}
-                >
-                  Year Only
-                </button>
-                <button
-                  onClick={() => setFilterMode("ytd")}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    filterMode === "ytd"
-                      ? "bg-primary text-blue-600"
-                      : "text-primary hover:bg-primary hover:bg-opacity-10"
-                  }`}
-                >
-                  YTD
-                </button>
-                <button
-                  onClick={() => setFilterMode("custom")}
-                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
-                    filterMode === "custom"
-                      ? "bg-primary text-blue-600"
-                      : "text-primary hover:bg-primary hover:bg-opacity-10"
-                  }`}
-                >
-                  Custom
-                </button>
-              </div>
-
-              {/* Month & Year Selectors */}
-              {filterMode === "month_year" && (
-                <>
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
-                  >
-                    {monthOptions.map((month, index) => (
-                      <option key={month} value={index + 1}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
-                  >
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-
-              {/* Year Only Selector */}
-              {filterMode === "year_only" && (
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="px-2.5 py-1 text-xs bg-primary border-0 rounded-lg"
-                >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              {/* Custom Date Range */}
-              {filterMode === "custom" && (
-                <>
-                  <input
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="px-2.5 py-1 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-white focus:ring-opacity-50"
-                  />
-                  <span className="text-sm font-medium text-white">to</span>
-                  <input
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="px-2.5 py-1 text-sm bg-white border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50"
-                  />
-                </>
-              )}
-            </div>
-          </div>
-        </Card>
+        {/* ❌ HAPUS Local Date Filter Card */}
 
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -418,6 +222,12 @@ export default function DashboardColorKitchen() {
             <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
               Monitor produksi, usage dye & auxiliary, dan cost analysis
             </p>
+            {/* ✅ Show active filter info */}
+            {dateRange.startDate && dateRange.endDate && (
+              <p className="mt-1 text-xs text-blue-600">
+                📅 Filtered: {formatDate(dateRange.startDate)} to {formatDate(dateRange.endDate)}
+              </p>
+            )}
           </div>
           <div>
             <Button
@@ -519,7 +329,7 @@ export default function DashboardColorKitchen() {
 
         {/* Top Dyes & Top Aux */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
-          {/* Top 5 Dyes - Data dari parent_type=dye */}
+          {/* Top 5 Dyes */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
@@ -550,7 +360,6 @@ export default function DashboardColorKitchen() {
               showSummary={false}
             />
 
-            {/* Summary Stats */}
             {top_dyes.length > 0 && (
               <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
                 <div className="p-2 rounded-lg bg-blue-50">
@@ -574,7 +383,7 @@ export default function DashboardColorKitchen() {
             )}
           </Card>
 
-          {/* Top 5 Aux - Data dari parent_type=aux */}
+          {/* Top 5 Aux */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
@@ -605,7 +414,6 @@ export default function DashboardColorKitchen() {
               showSummary={false}
             />
 
-            {/* Summary Stats */}
             {top_aux.length > 0 && (
               <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
                 <div className="p-2 rounded-lg bg-purple-50">
@@ -690,8 +498,10 @@ export default function DashboardColorKitchen() {
                 <div className="pt-1.5 mt-2 border-t border-blue-200">
                   <p className="text-xs text-blue-700">
                     <strong>Catatan:</strong> Data diambil dari database
-                    real-time. Top 5 Dyes menggunakan endpoint dengan parent_type=dye, 
-                    sedangkan Top 5 Auxiliary menggunakan parent_type=aux.
+                    real-time. Gunakan filter global (tombol di kanan layar)
+                    untuk mengubah periode data. Top 5 Dyes menggunakan
+                    parent_type=dye, Top 5 Auxiliary menggunakan
+                    parent_type=aux.
                   </p>
                 </div>
               </div>

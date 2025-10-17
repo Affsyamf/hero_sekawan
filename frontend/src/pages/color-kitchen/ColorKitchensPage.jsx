@@ -161,9 +161,15 @@ export default function ColorKitchensPage() {
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Color Kitchen Management
           </h1>
-          <p className="mb-6 text-secondary-text">
+          <p className="mb-2 text-secondary-text">
             Manage color kitchen entries with design and product details.
           </p>
+          {dateRange.startDate && dateRange.endDate && (
+            <p className="mt-1 mb-4 text-xs text-blue-600">
+              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+              {formatDate(dateRange.endDate)}
+            </p>
+          )}
 
           <div className="mb-4">
             <button
