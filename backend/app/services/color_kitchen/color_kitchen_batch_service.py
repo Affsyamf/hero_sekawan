@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 from app.schemas.input_models.color_kitchen_input_models import ColorKitchenBatchCreate, ColorKitchenBatchUpdate
 from app.services.common.audit_logger import AuditLoggerService
@@ -27,6 +27,17 @@ class ColorKitchenBatchService:
                     ColorKitchenBatch.code.ilike(like),
                 )
             ).order_by(ColorKitchenBatch.id.desc())
+            
+        if request.start_date and request.end_date:
+            start = datetime.strptime(request.start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(request.end_date, '%Y-%m-%d').date()
+            
+            batch = batch.filter(
+                and_(
+                    ColorKitchenBatch.date >= start,
+                    ColorKitchenBatch.date <= end
+                )
+            )
 
         return APIResponse.paginated(batch, request)
 

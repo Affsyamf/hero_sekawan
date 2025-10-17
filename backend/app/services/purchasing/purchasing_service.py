@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, and_
 from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.purchasing_input_models import PurchasingCreate, PurchasingUpdate
@@ -32,6 +32,21 @@ class PurchasingService:
                     Purchasing.purchase_order.ilike(like),
                 )
             )
+            
+        if request.start_date and request.end_date:
+            # try:
+            start = datetime.strptime(request.start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(request.end_date, '%Y-%m-%d').date()
+            
+            purchasing = purchasing.filter(
+                and_(
+                    Purchasing.date >= start,
+                    Purchasing.date <= end
+                )
+            )
+                                
+            # except ValueError as e:
+            #     print(f"⚠️ Invalid date format: {e}")  # Ignore jika format salah
         
         purchasing = purchasing.order_by(Purchasing.id.desc())
 

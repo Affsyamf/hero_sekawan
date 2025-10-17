@@ -1,5 +1,5 @@
 import { Edit2, Eye, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ImportStockOpnameModal from "../../components/features/stock-opname/ImportStockOpnameModal";
 import StockOpnameForm from "../../components/features/stock-opname/StockOpnameForm";
 import Table from "../../components/ui/table/Table";
@@ -10,12 +10,22 @@ import {
   updateStockOpname,
 } from "../../services/stock_opname_service";
 import { formatDate } from "../../utils/helpers";
+import { useFilteredFetch } from "../../hooks/useFilteredFetch";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 
 export default function StockOpnamePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
+
+  //filter global
+  const { dateRange } = useGlobalFilter();
+  const filteredSearchStockOpname = useFilteredFetch(searchStockOpname, "date");
+
+  useEffect(() => {
+    setRefresh((prev) => prev + 1);
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const columns = [
     {
@@ -188,14 +198,14 @@ export default function StockOpnamePage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={searchStockOpname}
+            fetchData={filteredSearchStockOpname}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);
               setIsModalOpen(true);
             }}
             pageSizeOptions={[10, 20, 50, 100]}
-            dateFilterKey="date"
+            showDateRangeFilter={false}
           />
 
           <StockOpnameForm

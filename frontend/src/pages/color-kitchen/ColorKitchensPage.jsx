@@ -2,7 +2,7 @@ import MainLayout from "../../layouts/MainLayout/MainLayout";
 import Table from "../../components/ui/table/Table";
 import ColorKitchenForm from "../../components/features/color-kitchen/ColorKitchenForm";
 import ImportColorKitchenModal from "../../components/features/color-kitchen/ImportColorKitchenModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
 import { formatDate } from "../../utils/helpers";
 import {
@@ -10,12 +10,39 @@ import {
   searchColorKitchen,
   updateColorKitchen,
 } from "../../services/color_kitchen_service";
+import { searchDesign } from "../../services/design_service";
+import { useFilteredFetch } from "../../hooks/useFilteredFetch";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 
 export default function ColorKitchensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
+  const [designs, setDesigns] = useState([]);
+
+  //filter global
+  const { dateRange } = useGlobalFilter();
+  const filteredSearchColorKitchen = useFilteredFetch(
+    searchColorKitchen,
+    "date"
+  );
+
+  useEffect(() => {
+    setRefresh((prev) => prev + 1);
+  }, [dateRange.startDate, dateRange.endDate]);
+
+  useEffect(() => {
+    const fetchDesigns = async () => {
+      try {
+        const response = await searchDesign({});
+        setDesigns(response.data?.data || []);
+      } catch (error) {
+        console.error("Failed to fetch designs:", error);
+      }
+    };
+    fetchDesigns();
+  }, []);
 
   const columns = [
     {
@@ -36,11 +63,14 @@ export default function ColorKitchensPage() {
       key: "design_id",
       label: "Design",
       sortable: true,
-      render: (v) => (
-        <span className="text-primary-text">
-          {designs.find((d) => d.id === v)?.code || "-"}
-        </span>
-      ),
+      render: (value) => {
+        const design = (designs || []).find((a) => a.id === value);
+        return (
+          <span className="text-primary-text">
+            {design ? `${design.code}` : "-"}
+          </span>
+        );
+      },
     },
     {
       key: "quantity",
@@ -148,14 +178,14 @@ export default function ColorKitchensPage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={searchColorKitchen}
+            fetchData={filteredSearchColorKitchen}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);
               setIsModalOpen(true);
             }}
             pageSizeOptions={[10, 20, 50, 100]}
-            dateFilterKey="date"
+            showDateRangeFilter={false}
           />
 
           <ColorKitchenForm

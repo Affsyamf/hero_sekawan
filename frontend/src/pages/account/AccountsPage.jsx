@@ -178,6 +178,7 @@ export default function AccountsPage() {
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}
+            showDateRangeFilter={false}
           />
 
           <AccountForm

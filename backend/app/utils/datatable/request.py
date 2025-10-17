@@ -7,6 +7,9 @@ class ListRequest(BaseModel):
     page_size: Optional[int] = 10
     q: Optional[str] = None
     require_filter: Optional[bool] = False  # opsional, default False
+    
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
 
     @field_validator("page")
     @classmethod

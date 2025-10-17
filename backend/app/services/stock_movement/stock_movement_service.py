@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, and_
 from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.stock_movement_input_models import StockMovementCreate, StockMovementUpdate
@@ -31,6 +31,18 @@ class StockMovementService:
             stock_movement = stock_movement.filter(
                 or_(
                     StockMovement.code.ilike(like),
+                )
+            )
+            
+        if request.start_date and request.end_date:
+            # try:
+            start = datetime.strptime(request.start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(request.end_date, '%Y-%m-%d').date()
+            
+            stock_movement = stock_movement.filter(
+                and_(
+                    StockMovement.date >= start,
+                    StockMovement.date <= end
                 )
             )
 
