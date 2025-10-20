@@ -269,228 +269,6 @@ class ImportLapPembelianService:
         
         return APIResponse.ok(data=summary)
 
-    # def upload_excel(self, file: UploadFile):
-    #     try:
-    #         contents = file.file.read()
-    #         wb = pd.ExcelFile(BytesIO(contents))
-    #     except Exception:
-    #         return APIResponse.not_found(message=f"Invalid Excel file.")
-
-    #     session_id = uuid.uuid4()
-    #     summary = {"session_id": str(session_id), "sheets": {}}
-        
-    #     try:
-    #         for sheet in wb.sheet_names:
-    #             df = pd.read_excel(wb, sheet_name=sheet, header=6)
-    #             df = df.iloc[:, :-2]  # Drop 2 kolom terakhir (junk cols)
-                
-    #             valid_rows, preview_rows = 0, []
-
-    #             for idx, row in df.iterrows():
-    #                 # Ambil semua data yang diperlukan
-    #                 acc_no = row.get("NO.ACC")
-    #                 acc_name = row.get("ACCOUNT")
-    #                 nama_barang = str(row.get("NAMA BARANG", "")).strip()
-    #                 satuan = str(row.get("SATUAN", "")).strip().upper()
-    #                 kode_supplier = str(row.get("KODE SUPPLIER", "")).strip().upper()
-    #                 nama_supplier = str(row.get("SUPPLIER", "")).strip()
-                    
-    #                 # Ambil data transaksi (jika ada)
-    #                 qty = row.get("QTY")
-    #                 harga = row.get("HARGA SAT")
-    #                 no_bukti = str(row.get("NO.BUKTI", "")).strip()
-    #                 tanggal = row.get("TANGGAL")
-
-    #                 # Convert tanggal
-    #                 if pd.notna(tanggal):
-    #                     if isinstance(tanggal, (pd.Timestamp, datetime)):
-    #                         tanggal = tanggal.strftime("%Y-%m-%d")
-    #                     else:
-    #                         tanggal = str(tanggal).strip()
-    #                 else:
-    #                     tanggal = None
-
-    #                 # Skip row yang benar-benar kosong
-    #                 if not any([acc_no, acc_name, nama_barang, kode_supplier, nama_supplier]):
-    #                     continue
-
-    #                 # 1️⃣ ACCOUNT - Jika ada NO.ACC dan ACCOUNT
-    #                 if pd.notna(acc_no) and pd.notna(acc_name):
-    #                     missing = []
-    #                     if not pd.notna(acc_no):
-    #                         missing.append("NO.ACC")
-    #                     if not pd.notna(acc_name):
-    #                         missing.append("ACCOUNT")
-                        
-    #                     status = "valid" if not missing else "skipped"
-    #                     reason = None if not missing else f"missing: {', '.join(missing)}"
-                        
-    #                     parsed = {
-    #                         "account_no": int(acc_no) if pd.notna(acc_no) else None,
-    #                         "name": str(acc_name).strip() if pd.notna(acc_name) else None
-    #                     }
-                        
-    #                     temp_data = TempImport(
-    #                         session_id=session_id,
-    #                         sheet_name=sheet,
-    #                         table_target="account",
-    #                         row_number=idx + 7 + 1,  # +7 karena header di row 7, +1 untuk row number
-    #                         raw_data=self._serialize_for_json(row.to_dict()),
-    #                         parsed_data=parsed,
-    #                         status=status,
-    #                         reason=reason
-    #                     )
-    #                     self.db.add(temp_data)
-                        
-    #                     if status == "valid":
-    #                         valid_rows += 1
-
-    #                 # 2️⃣ PRODUCT - Jika ada NAMA BARANG
-    #                 if nama_barang:
-    #                     missing = []
-    #                     if not nama_barang:
-    #                         missing.append("NAMA BARANG")
-    #                     if not satuan:
-    #                         missing.append("SATUAN")
-    #                     if not pd.notna(acc_no):
-    #                         missing.append("NO.ACC")
-                        
-    #                     status = "valid" if not missing else "skipped"
-    #                     reason = None if not missing else f"missing: {', '.join(missing)}"
-                        
-    #                     parsed = {
-    #                         "name": nama_barang or None,
-    #                         "unit": satuan or None,
-    #                         "account_no": int(acc_no) if pd.notna(acc_no) else None
-    #                     }
-                        
-    #                     temp_data = TempImport(
-    #                         session_id=session_id,
-    #                         sheet_name=sheet,
-    #                         table_target="product",
-    #                         row_number=idx + 7 + 1,
-    #                         raw_data=self._serialize_for_json(row.to_dict()),
-    #                         parsed_data=parsed,
-    #                         status=status,
-    #                         reason=reason
-    #                     )
-    #                     self.db.add(temp_data)
-                        
-    #                     if status == "valid":
-    #                         valid_rows += 1
-
-    #                 # 3️⃣ SUPPLIER - Jika ada KODE SUPPLIER dan SUPPLIER
-    #                 if kode_supplier and nama_supplier:
-    #                     missing = []
-    #                     if not kode_supplier:
-    #                         missing.append("KODE SUPPLIER")
-    #                     if not nama_supplier:
-    #                         missing.append("SUPPLIER")
-                        
-    #                     status = "valid" if not missing else "skipped"
-    #                     reason = None if not missing else f"missing: {', '.join(missing)}"
-                        
-    #                     parsed = {
-    #                         "code": kode_supplier or None,
-    #                         "name": nama_supplier or None
-    #                     }
-                        
-    #                     temp_data = TempImport(
-    #                         session_id=session_id,
-    #                         sheet_name=sheet,
-    #                         table_target="supplier",
-    #                         row_number=idx + 7 + 1,
-    #                         raw_data=self._serialize_for_json(row.to_dict()),
-    #                         parsed_data=parsed,
-    #                         status=status,
-    #                         reason=reason
-    #                     )
-    #                     self.db.add(temp_data)
-                        
-    #                     if status == "valid":
-    #                         valid_rows += 1
-
-    #                 # 4️⃣ PURCHASING - Jika ada transaksi (KODE SUPPLIER, NAMA BARANG, dan data transaksi)
-    #                 # 4️⃣ PURCHASING - Validasi lebih ketat sesuai _run
-    #                 if nama_barang:  # Product name harus ada
-    #                     # Normalisasi product name
-    #                     product_name_normalized = nama_barang.upper().strip()
-                        
-    #                     # Skip jika product name invalid
-    #                     if product_name_normalized in {"NAT", "NONE", "TOTAL", "JUMLAH", "GRAND TOTAL"}:
-    #                         continue
-                        
-    #                     # Ambil semua kolom purchasing
-    #                     no_po = str(row.get("NO.PO", "")).strip()
-    #                     ppn = row.get("PPN")
-    #                     dpp = row.get("DPP")
-    #                     pph = row.get("PPH")
-    #                     pot = row.get("POT.")  # discount
-    #                     faktur_pajak = str(row.get("FAKTUR PAJAK", "")).strip()
-    #                     kurs = row.get("KURS")  # exchange_rate
-                        
-    #                     # Validasi required fields untuk purchasing
-    #                     missing = []
-    #                     if not kode_supplier:
-    #                         missing.append("KODE SUPPLIER")
-    #                     if not tanggal and not no_bukti:
-    #                         missing.append("TANGGAL/NO.BUKTI")  # minimal salah satu
-                        
-    #                     status = "valid" if not missing else "skipped"
-    #                     reason = None if not missing else f"missing column(s): {', '.join(missing)}"
-                        
-    #                     parsed = {
-    #                         "supplier_code": kode_supplier or None,
-    #                         "product_name": product_name_normalized,
-    #                         "qty": float(qty) if pd.notna(qty) else 0,
-    #                         "price": float(harga) if pd.notna(harga) else 0,
-    #                         "discount": float(pot) if pd.notna(pot) else 0.0,
-    #                         "ppn": float(ppn) if pd.notna(ppn) else 0.0,
-    #                         "dpp": float(dpp) if pd.notna(dpp) else 0.0,
-    #                         "pph": float(pph) if pd.notna(pph) else 0.0,
-    #                         "tax_no": faktur_pajak or None,
-    #                         "exchange_rate": float(kurs) if pd.notna(kurs) else 0.0,
-    #                         "tanggal": tanggal,
-    #                         "no_bukti": no_bukti or None,
-    #                         "no_po": no_po or None
-    #                     }
-                        
-    #                     temp_data = TempImport(
-    #                         session_id=session_id,
-    #                         sheet_name=sheet,
-    #                         table_target="purchasing",
-    #                         row_number=idx + 7 + 1,
-    #                         raw_data=self._serialize_for_json(row.to_dict()),
-    #                         parsed_data=parsed,
-    #                         status=status,
-    #                         reason=reason
-    #                     )
-    #                     self.db.add(temp_data)
-                        
-    #                     if status == "valid":
-    #                         valid_rows += 1
-                            
-    #                     # Preview
-    #                     if len(preview_rows) < 30:
-    #                         preview_rows.append({
-    #                             "supplier": kode_supplier,
-    #                             "product": product_name_normalized,
-    #                             "qty": float(qty) if pd.notna(qty) else 0,
-    #                             "price": float(harga) if pd.notna(harga) else 0,
-    #                             "dpp": float(dpp) if pd.notna(dpp) else 0.0,
-    #                             "ppn": float(ppn) if pd.notna(ppn) else 0.0,
-    #                         })
-
-    #             summary["sheets"][sheet] = {
-    #                 "valid_rows": valid_rows,
-    #                 "preview_rows": preview_rows
-    #             }
-                
-    #     except Exception as e:
-    #         return APIResponse.internal_error(message=f"Failed to process Excel file: {str(e)}")
-        
-    #     return APIResponse.ok(data=summary)
-
     def commit_data(self, session_id: str):
         try:
             # 1️⃣ Import Account
@@ -632,6 +410,140 @@ class ImportLapPembelianService:
             import traceback
             print(traceback.format_exc())
             return APIResponse.internal_error(message=f"Import failed: {str(e)}")
+
+    def get_preview(self, session_id: str, table_target: str, page: int = 1, per_page: int = 50):
+        """Get preview data by session_id and table_target with pagination"""
+        
+        # Validate table_target
+        valid_targets = ["account", "supplier", "product", "purchasing"]
+        if table_target not in valid_targets:
+            return APIResponse.bad_request(
+                message=f"Invalid table_target. Must be one of: {', '.join(valid_targets)}"
+            )
+        
+        try:
+            # Calculate offset
+            offset = (page - 1) * per_page
+            
+            # Query untuk mengambil data preview
+            query = text("""
+                SELECT 
+                    id,
+                    sheet_name,
+                    row_number,
+                    parsed_data,
+                    status,
+                    reason,
+                    created_at
+                FROM temp_import
+                WHERE session_id = :sid
+                AND table_target = :target
+                ORDER BY row_number ASC
+                LIMIT :limit OFFSET :offset
+            """)
+            
+            # Query untuk total count
+            count_query = text("""
+                SELECT 
+                    COUNT(*) as total,
+                    COUNT(CASE WHEN status = 'valid' THEN 1 END) as valid_count,
+                    COUNT(CASE WHEN status = 'skipped' THEN 1 END) as skipped_count
+                FROM temp_import
+                WHERE session_id = :sid
+                AND table_target = :target
+            """)
+            
+            # Execute queries
+            results = self.db.execute(
+                query, 
+                {"sid": session_id, "target": table_target, "limit": per_page, "offset": offset}
+            ).fetchall()
+            
+            count_result = self.db.execute(
+                count_query,
+                {"sid": session_id, "target": table_target}
+            ).fetchone()
+            
+            # Format results
+            preview_data = []
+            for row in results:
+                preview_data.append({
+                    "id": row[0],
+                    "sheet_name": row[1],
+                    "row_number": row[2],
+                    "data": row[3],  # parsed_data (JSON)
+                    "status": row[4],
+                    "reason": row[5],
+                    "created_at": row[6].isoformat() if row[6] else None
+                })
+            
+            total = count_result[0] if count_result else 0
+            valid_count = count_result[1] if count_result else 0
+            skipped_count = count_result[2] if count_result else 0
+            
+            total_pages = (total + per_page - 1) // per_page  # Ceiling division
+            
+            return APIResponse.ok(data={
+                "session_id": session_id,
+                "table_target": table_target,
+                "pagination": {
+                    "page": page,
+                    "per_page": per_page,
+                    "total": total,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_prev": page > 1
+                },
+                "summary": {
+                    "total": total,
+                    "valid": valid_count,
+                    "skipped": skipped_count
+                },
+                "data": preview_data
+            })
+            
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            return APIResponse.internal_error(message=f"Failed to get preview: {str(e)}")
+
+    def get_preview_summary(self, session_id: str):
+        """Get summary of all table_targets for a session"""
+        try:
+            summary_query = text("""
+                SELECT 
+                    table_target,
+                    status,
+                    COUNT(*) as count
+                FROM temp_import
+                WHERE session_id = :sid
+                GROUP BY table_target, status
+                ORDER BY table_target, status
+            """)
+            
+            results = self.db.execute(summary_query, {"sid": session_id}).fetchall()
+            
+            summary = {}
+            for row in results:
+                table = row[0]
+                status = row[1]
+                count = row[2]
+                
+                if table not in summary:
+                    summary[table] = {"valid": 0, "skipped": 0, "total": 0}
+                
+                summary[table][status] = count
+                summary[table]["total"] = summary[table].get("valid", 0) + summary[table].get("skipped", 0)
+            
+            return APIResponse.ok(data={
+                "session_id": session_id,
+                "summary": summary
+            })
+            
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            return APIResponse.internal_error(message=f"Failed to get summary: {str(e)}")
 
     def _get_import_summary(self, session_id: str):
         """Get import summary statistics"""

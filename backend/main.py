@@ -8,7 +8,7 @@ from app.utils.response import APIResponse
 from app.core import events
 from app.models import *
 
-from app.api.dashboard.routes import dashboard_router
+from app.api.dashboard.routes import dashboard_router as dashboard_router
 from app.api.product.routes import product_router
 from app.api.account.routes import account_router
 from app.api.supplier.routes import supplier_router
