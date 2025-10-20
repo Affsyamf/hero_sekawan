@@ -5,7 +5,6 @@ import ProductForm from "../../components/features/product/ProductForm";
 import ImportProductModal from "../../components/features/product/ImportProductModal";
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
 import {
   createProduct,
   deleteProduct,
@@ -14,7 +13,7 @@ import {
 } from "../../services/product_service";
 import { searchAccount } from "../../services/account_service";
 
-const SAMPLE_PRODUCTS = [];
+// const SAMPLE_PRODUCTS = [];
 
 export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);

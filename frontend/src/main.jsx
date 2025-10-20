@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ThemeProvider>
-      <AppRouter />
+        <AppRouter />
     </ThemeProvider>
   </StrictMode>
 );

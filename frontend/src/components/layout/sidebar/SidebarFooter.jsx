@@ -10,7 +10,7 @@ export default function SidebarFooter({ user }) {
       className="p-6 space-y-1 border-t"
       style={{ borderColor: colors.border.primary }}
     >
-      <button
+      {/* <button
         onClick={toggleTheme}
         className="flex items-center w-full gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all"
         style={{ color: colors.text.secondary }}
@@ -25,7 +25,7 @@ export default function SidebarFooter({ user }) {
       >
         {isDark ? <Sun size={18} /> : <Moon size={18} />}
         <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
-      </button>
+      </button> */}
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg">

@@ -1,18 +1,43 @@
-import MainLayout from "../../layouts/MainLayout/MainLayout";
-import Table from "../../components/ui/table/Table";
-import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
+import { Edit2, Eye, Trash2, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
 import ImportStockMovementModal from "../../components/features/stock-movement/ImportStockMovementModal";
-import { useState } from "react";
-import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
+import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
+import Table from "../../components/ui/table/Table";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
+import {
+  createStockMovement,
+  searchStockMovement,
+  updateStockMovement,
+} from "../../services/stock_movement_service";
 import { formatDate } from "../../utils/helpers";
-import { createStockMovement, searchStockMovement, updateStockMovement } from "../../services/stock_movement_service";
+import { useFilteredFetch } from "../../hooks/useFilteredFetch";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 
 export default function StockMovementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
+
+  //filter global
+  const { dateRange } = useGlobalFilter();
+  const filteredSearchStockMovement = useFilteredFetch(searchStockMovement, "date");
+
+  useEffect(() => {
+    setRefresh((prev) => prev + 1);
+  }, [dateRange.startDate, dateRange.endDate]);
+
+  // useEffect(() => {
+  //   const fetchSuppliers = async () => {
+  //     try {
+  //       const response = await searchSupplier({});
+  //       setSuppliers(response.data?.data || []);
+  //     } catch (error) {
+  //       console.error("Failed to fetch suppliers:", error);
+  //     }
+  //   };
+  //   fetchSuppliers();
+  // }, []);
 
   const columns = [
     {
@@ -116,9 +141,15 @@ export default function StockMovementsPage() {
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Stock Movement Management
           </h1>
-          <p className="mb-6 text-secondary-text">
+          <p className="mb-2 text-secondary-text">
             Track stock movements with detailed product quantities.
           </p>
+          {dateRange.startDate && dateRange.endDate && (
+            <p className="mt-1 mb-4 text-xs text-blue-600">
+              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+              {formatDate(dateRange.endDate)}
+            </p>
+          )}
 
           <div className="mb-4">
             <button
@@ -133,14 +164,14 @@ export default function StockMovementsPage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={searchStockMovement}
+            fetchData={filteredSearchStockMovement}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);
               setIsModalOpen(true);
             }}
             pageSizeOptions={[10, 20, 50, 100]}
-            dateFilterKey="date"
+            showDateRangeFilter={false}
           />
 
           <StockMovementForm

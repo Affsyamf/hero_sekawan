@@ -1,9 +1,8 @@
-import MainLayout from "../../layouts/MainLayout/MainLayout";
-import Table from "../../components/ui/table/Table";
-import SupplierForm from "../../components/features/supplier/SupplierForm";
+import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
+import SupplierForm from "../../components/features/supplier/SupplierForm";
+import Table from "../../components/ui/table/Table";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createSupplier,
   deleteSupplier,
@@ -11,17 +10,11 @@ import {
   updateSupplier,
 } from "../../services/supplier_service";
 
-const SAMPLE_SUPPLIERS = [];
 
 export default function SuppliersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const { value: suppliers = SAMPLE_SUPPLIERS, set: setSuppliers } = useTemp(
-    "suppliers:working-list",
-    SAMPLE_SUPPLIERS
-  );
 
   // Fetch function for Table component
   // const fetchSuppliers = async (params) => {
@@ -186,6 +179,7 @@ export default function SuppliersPage() {
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}
+            showDateRangeFilter={false}
           />
 
           <SupplierForm

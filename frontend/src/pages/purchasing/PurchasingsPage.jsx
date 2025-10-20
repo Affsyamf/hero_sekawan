@@ -1,3 +1,4 @@
+// pages/purchasing/PurchasingsPage.jsx
 import MainLayout from "../../layouts/MainLayout/MainLayout";
 import Table from "../../components/ui/table/Table";
 import PurchasingForm from "../../components/features/purchasing/PurchasingForm";
@@ -5,7 +6,6 @@ import ImportPurchasingModal from "../../components/features/purchasing/ImportPu
 import ImportPurchasingTransactionModal from "../../components/features/purchasing/ImportPurchasingTransactionModal";
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Eye, Upload, Database } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
 import { formatCurrency, formatDate } from "../../utils/helpers";
 import {
   createPurchasing,
@@ -14,6 +14,8 @@ import {
   updatePurchasing,
 } from "../../services/purchasing_service";
 import { searchSupplier } from "../../services/supplier_service";
+import { useFilteredFetch } from "../../hooks/useFilteredFetch";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 
 export default function PurchasingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,13 +25,21 @@ export default function PurchasingsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [suppliers, setSuppliers] = useState([]);
 
+  //filter global
+  const { dateRange } = useGlobalFilter();
+  const filteredSearchPurchasing = useFilteredFetch(searchPurchasing, "date");
+
+  useEffect(() => {
+    setRefreshKey((prev) => prev + 1);
+  }, [dateRange.startDate, dateRange.endDate]);
+
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const response = await searchSupplier({}); // bisa tambahkan filter jika ada
+        const response = await searchSupplier({});
         setSuppliers(response.data?.data || []);
       } catch (error) {
-        console.error("Failed to fetch accounts:", error);
+        console.error("Failed to fetch suppliers:", error);
       }
     };
     fetchSuppliers();
@@ -73,15 +83,17 @@ export default function PurchasingsPage() {
       key: "item_count",
       label: "Items",
       sortable: false,
-      render: (v) => (
-        <span className="text-secondary-text">{v || 0}</span>
-      ),
+      render: (v) => <span className="text-secondary-text">{v || 0}</span>,
     },
     {
       key: "total_amount",
       label: "Total Amount",
       sortable: false,
-      render: (v) => <span className="font-medium text-primary">{formatCurrency(v || 0)}</span>
+      render: (v) => (
+        <span className="font-medium text-primary">
+          {formatCurrency(v || 0)}
+        </span>
+      ),
     },
   ];
 
@@ -92,8 +104,8 @@ export default function PurchasingsPage() {
           setSelectedPurchasing(row);
           setIsModalOpen(true);
         }}
-        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all duration-200"
-        title="View Details"
+        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all"
+        title="View"
       >
         <Eye className="w-4 h-4" />
       </button>
@@ -102,14 +114,14 @@ export default function PurchasingsPage() {
           setSelectedPurchasing(row);
           setIsModalOpen(true);
         }}
-        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all duration-200"
+        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition-all"
         title="Edit"
       >
         <Edit2 className="w-4 h-4" />
       </button>
       <button
         onClick={() => handleDelete(row)}
-        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all duration-200"
+        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all"
         title="Delete"
       >
         <Trash2 className="w-4 h-4" />
@@ -117,10 +129,10 @@ export default function PurchasingsPage() {
     </div>
   );
 
-  const handleSave = async (productData) => {
+  const handleSave = async (purchasingData) => {
     try {
       const payload = Object.fromEntries(
-        Object.entries(productData).filter(
+        Object.entries(purchasingData).filter(
           ([_, value]) => value != null && value !== ""
         )
       );
@@ -130,19 +142,17 @@ export default function PurchasingsPage() {
       } else {
         await createPurchasing(payload);
       }
-      setRefreshKey((prev) => prev + 1);
 
+      setRefreshKey((prev) => prev + 1);
       setIsModalOpen(false);
       setSelectedPurchasing(null);
     } catch (error) {
-      alert("Failed to save product: " + error.message);
+      alert("Failed to save: " + error.message);
     }
   };
 
   const handleDelete = async (row) => {
-    if (
-      window.confirm(`Are you sure you want to delete product ${row.name}?`)
-    ) {
+    if (window.confirm(`Delete purchasing ${row.code}?`)) {
       try {
         await deletePurchasing(row.id);
         setRefreshKey((prev) => prev + 1);
@@ -159,10 +169,15 @@ export default function PurchasingsPage() {
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Purchasing Management
           </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage product purchases from suppliers with detailed tracking and
-            calculations.
+          <p className="mb-2 text-secondary-text">
+            Manage product purchases with global date filter
           </p>
+          {dateRange.startDate && dateRange.endDate && (
+            <p className="mt-1 mb-4 text-xs text-blue-600">
+              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+              {formatDate(dateRange.endDate)}
+            </p>
+          )}
 
           <div className="flex gap-3 mb-4">
             <button
@@ -170,28 +185,30 @@ export default function PurchasingsPage() {
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
               <Database className="w-4 h-4" />
-              Import Data Master
+              Import Master Data
             </button>
             <button
               onClick={() => setIsImportTrxOpen(true)}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
             >
               <Upload className="w-4 h-4" />
-              Import Purchasing
+              Import Transactions
             </button>
           </div>
 
+          {/* ✅ Pass filtered fetch function */}
           <Table
             key={refreshKey}
             columns={columns}
-            fetchData={searchPurchasing}
+            fetchData={filteredSearchPurchasing} // ✅ Pakai wrapped function
             actions={renderActions}
             onCreate={() => {
               setSelectedPurchasing(null);
               setIsModalOpen(true);
             }}
             pageSizeOptions={[10, 20, 50, 100]}
-            dateFilterKey="date"
+            showNumbering={true}
+            showDateRangeFilter={false}
           />
 
           <PurchasingForm
@@ -209,6 +226,7 @@ export default function PurchasingsPage() {
             onClose={() => setIsImportMDOpen(false)}
             onImportSuccess={() => setRefreshKey((p) => p + 1)}
           />
+
           <ImportPurchasingTransactionModal
             isOpen={isImportTrxOpen}
             onClose={() => setIsImportTrxOpen(false)}

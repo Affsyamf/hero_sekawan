@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Palette, FileText, Layers, Save, BookOpen } from "lucide-react";
-import Modal from "../../ui/modal/Modal";
+import { BookOpen, FileText, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { searchDesignType } from "../../../services/design_type_service";
+import Button from "../../ui/button/Button";
+import DropdownServer from "../../ui/dropdown-server/DropdownServer";
 import Form from "../../ui/form/Form";
 import Input from "../../ui/input/Input";
-import Button from "../../ui/button/Button";
-import { useTemp } from "../../../hooks/useTemp";
-import { searchDesign } from "../../../services/design_service";
-import DropdownServer from "../../ui/dropdown-server/DropdownServer";
-import { searchDesignType } from "../../../services/design_type_service";
+import Modal from "../../ui/modal/Modal";
 
 export default function DesignForm({ design = null, isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, and_
 from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.color_kitchen_input_models import ColorKitchenEntryCreate, ColorKitchenEntryUpdate
@@ -38,7 +38,20 @@ class ColorKitchenEntryService:
                     ColorKitchenEntry.design.has(Design.name.ilike(like))
                 )
             )
-            entry = entry.order_by(ColorKitchenEntry.id.desc())
+            
+        if request.start_date and request.end_date:
+            # try:
+            start = datetime.strptime(request.start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(request.end_date, '%Y-%m-%d').date()
+            
+            entry = entry.filter(
+                and_(
+                    ColorKitchenEntry.date >= start,
+                    ColorKitchenEntry.date <= end
+                )
+            )
+            
+        entry = entry.order_by(ColorKitchenEntry.id.desc())
 
         return APIResponse.paginated(entry, request, lambda row: {
             "id": row.ColorKitchenEntry.id,
@@ -47,7 +60,7 @@ class ColorKitchenEntryService:
             "rolls": row.ColorKitchenEntry.rolls or 0,
             "paste_quantity": float(row.ColorKitchenEntry.paste_quantity) if row.ColorKitchenEntry.paste_quantity else 0,
             "design_id": row.ColorKitchenEntry.design_id,
-            "design_name": row.ColorKitchenEntry.design.name if row.ColorKitchenEntry.design else None,
+            "design_name": row.ColorKitchenEntry.design.code if row.ColorKitchenEntry.design else None,
             "batch_id": row.ColorKitchenEntry.batch_id,
             "batch_code": row.ColorKitchenEntry.batch.code if row.ColorKitchenEntry.batch else None,
             "details": [],

@@ -1,14 +1,11 @@
-import MainLayout from "../../layouts/MainLayout/MainLayout";
-import Table from "../../components/ui/table/Table";
+import { Edit2, Eye, Trash2, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
 import DesignForm from "../../components/features/design/DesignForm";
 import ImportDesignModal from "../../components/features/design/ImportDesignModal";
-import { useState, useEffect } from "react";
-import { Edit2, Trash2, Eye, Upload } from "lucide-react";
-import { useTemp } from "../../hooks/useTemp";
+import Table from "../../components/ui/table/Table";
+import MainLayout from "../../layouts/MainLayout/MainLayout";
 import { createDesign, deleteDesign, searchDesign, updateDesign } from "../../services/design_service";
 import { searchDesignType } from "../../services/design_type_service";
-
-const SAMPLE_DESIGNS = [];
 
 export default function DesignsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,13 +13,6 @@ export default function DesignsPage() {
   const [selectedDesign, setSelectedDesign] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [designTypes, setDesignType] = useState([]);
-
-  // const { value: designs = SAMPLE_DESIGNS, set: setDesigns } = useTemp(
-  //   "designs:working-list",
-  //   SAMPLE_DESIGNS
-  // );
-
-  // const { value: designTypes = [] } = useTemp("design-types:working-list", []);
 
   useEffect(() => {
     const fetchDesignTypes = async () => {
@@ -184,6 +174,7 @@ export default function DesignsPage() {
             actions={renderActions}
             onCreate={handleAdd}
             pageSizeOptions={[10, 20, 50, 100]}
+            showDateRangeFilter={false}
           />
 
           <DesignForm

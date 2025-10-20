@@ -22,10 +22,10 @@ import SidebarFooter from "./SidebarFooter";
 const menuItems = [
   { isHeader: true, text: "Main" },
   {
-    label: "Overview",
-    icon: Bag,
+    label: "Reports",
+    icon: FileBarChart2,
     children: [
-      { label: "Overview", path: "/" },
+      { label: "Dashboard", path: "/" },
       { label: "Purchasing", icon: FileBarChart2, path: "/dashboard/purchasings" },
       { label: "Color Kitchen", icon: FileBarChart2, path: "/dashboard/color-kitchens" },
     ],
@@ -53,8 +53,8 @@ const menuItems = [
   { label: "Color Kitchen", icon: FlaskConical, path: "/color-kitchens" },
   { label: "Stock Opname", icon: ClipboardCheck, path: "/stock-opnames" },
 
-  { isHeader: true, text: "Reports" },
-  { label: "Reports", icon: FileBarChart2, path: "/reports/purchasings" },
+  // { isHeader: true, text: "Reports" },
+  // { label: "Reports", icon: FileBarChart2, path: "/reports/purchasings" },
 
   // { isHeader: true, text: "Settings" },
   // {
