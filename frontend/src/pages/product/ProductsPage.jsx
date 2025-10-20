@@ -12,6 +12,7 @@ import {
   updateProduct,
 } from "../../services/product_service";
 import { searchAccount } from "../../services/account_service";
+import ImportDataMasterModal from "../../components/features/import/ImportDataMasterModal";
 
 // const SAMPLE_PRODUCTS = [];
 
@@ -121,11 +122,6 @@ export default function ProductsPage() {
   const handleImportSuccess = (result) => {
     // Refresh table data after successful import
     setRefreshKey((prev) => prev + 1);
-
-    // Log success (you can replace with your notification system)
-    console.log("Import successful:", result);
-
-    // Optionally reload products from API if you have one
   };
 
   const renderActions = (row) => (
@@ -201,7 +197,13 @@ export default function ProductsPage() {
             onSave={handleSave}
           />
 
-          <ImportProductModal
+          {/* <ImportProductModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImportSuccess={handleImportSuccess}
+          /> */}
+
+          <ImportDataMasterModal
             isOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onImportSuccess={handleImportSuccess}

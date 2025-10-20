@@ -12,7 +12,7 @@ import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
-import { importApi } from "../../../services/import_service";
+// import { importApi } from "../../../services/import_service";
 
 export default function ImportStockMovementModal({
   isOpen,
@@ -274,7 +274,7 @@ export default function ImportStockMovementModal({
     if (processing)
       return (
         <div
-          className="py-10 text-center text-sm"
+          className="py-10 text-sm text-center"
           style={{ color: colors.text.secondary }}
         >
           Generating preview...
@@ -284,7 +284,7 @@ export default function ImportStockMovementModal({
     if (!preview.movements.length)
       return (
         <div
-          className="py-10 text-center text-sm"
+          className="py-10 text-sm text-center"
           style={{ color: colors.text.secondary }}
         >
           No preview data available.
@@ -372,7 +372,7 @@ export default function ImportStockMovementModal({
                     ].map((c) => (
                       <th
                         key={c}
-                        className="px-2 py-2 text-left font-semibold whitespace-nowrap"
+                        className="px-2 py-2 font-semibold text-left whitespace-nowrap"
                         style={{ color: colors.text.secondary }}
                       >
                         {c}
@@ -437,7 +437,7 @@ export default function ImportStockMovementModal({
                     {["Row", "Code", "Reason", "Qty"].map((c) => (
                       <th
                         key={c}
-                        className="px-2 py-2 text-left font-semibold whitespace-nowrap"
+                        className="px-2 py-2 font-semibold text-left whitespace-nowrap"
                         style={{ color: colors.text.secondary }}
                       >
                         {c}

@@ -16,6 +16,7 @@ import {
 import { searchSupplier } from "../../services/supplier_service";
 import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
+import Button from "../../components/ui/button/Button";
 
 export default function PurchasingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -179,21 +180,13 @@ export default function PurchasingsPage() {
             </p>
           )}
 
-          <div className="flex gap-3 mb-4">
-            <button
+          <div className="mb-4">
+            <Button
+              icon={Upload}
+              label="Import from Excel"
               onClick={() => setIsImportMDOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-            >
-              <Database className="w-4 h-4" />
-              Import Master Data
-            </button>
-            <button
-              onClick={() => setIsImportTrxOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-            >
-              <Upload className="w-4 h-4" />
-              Import Transactions
-            </button>
+              className="bg-green-600 hover:bg-green-700"
+            />
           </div>
 
           {/* ✅ Pass filtered fetch function */}

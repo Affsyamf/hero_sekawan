@@ -11,6 +11,7 @@ import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
+import { importDataMasterLapChemical } from "../../../services/import_data_master_service";
 // import { importApi } from "../../../services/endpoints";
 
 export default function ImportProductModal({
@@ -165,7 +166,7 @@ export default function ImportProductModal({
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await importApi.importMasterDataProductCode(file);
+      const response = await importDataMasterLapChemical(file);
 
       const result = await response.json();
 

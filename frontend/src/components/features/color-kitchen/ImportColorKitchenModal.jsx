@@ -10,7 +10,7 @@ import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
-import { importApi } from "../../../services/import_service";
+// import { importApi } from "../../../services/import_service";
 
 export default function ImportColorKitchenModal({
   isOpen,
@@ -263,7 +263,7 @@ export default function ImportColorKitchenModal({
     if (processing) {
       return (
         <div
-          className="py-10 text-center text-sm"
+          className="py-10 text-sm text-center"
           style={{ color: colors.text.secondary }}
         >
           Loading preview...

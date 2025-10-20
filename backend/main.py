@@ -22,6 +22,7 @@ from app.api.stock_opname.routes import stock_opname_router
 from app.api.ledger.routes import ledger_router
 
 from app.api.imports.routes import excel_import_router
+from app.api.import_lap_pembelian.routes import import_lap_pembelian_router
 
 from app.api.reporting.purchasing_report import router as purchasing_report_router
 from app.api.reporting.color_kitchen_report import router as color_kitchen_report_router
@@ -43,6 +44,7 @@ def read_root():
     return {"Hello": "World"}
 
 app.include_router(excel_import_router)
+app.include_router(import_lap_pembelian_router)
 
 app.include_router(purchasing_report_router)
 app.include_router(color_kitchen_report_router)

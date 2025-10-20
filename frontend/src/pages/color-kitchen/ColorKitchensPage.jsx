@@ -13,6 +13,7 @@ import {
 import { searchDesign } from "../../services/design_service";
 import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
+import Button from "../../components/ui/button/Button";
 
 export default function ColorKitchensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -172,13 +173,12 @@ export default function ColorKitchensPage() {
           )}
 
           <div className="mb-4">
-            <button
+            <Button
+              icon={Upload}
+              label="Import from Excel"
               onClick={() => setIsImportOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-            >
-              <Upload className="w-4 h-4" />
-              Import from Excel
-            </button>
+              className="bg-green-600 hover:bg-green-700"
+            />
           </div>
 
           <Table
