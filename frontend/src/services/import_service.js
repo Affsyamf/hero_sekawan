@@ -11,6 +11,7 @@ export const importApi = {
   },
 
   previewLapPembelian: (file) => {
+    console.log("DELETE ME");
     const fd = new FormData();
     fd.append("file", file);
     return api.post("/import/lap-pembelian/preview", fd, {
