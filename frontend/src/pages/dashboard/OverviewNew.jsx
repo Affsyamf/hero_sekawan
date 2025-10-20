@@ -192,7 +192,7 @@ export default function OverviewNew() {
 
           {/* Cost Produksi Trend */}
           <Chart.Line
-            data={cost_trend.map((d) => d.value)}
+            data={cost_trend}
             value={formatCompactCurrency(totalCostProduksi)}
             trend={
               cost_trend.length > 1
@@ -209,8 +209,7 @@ export default function OverviewNew() {
         </div>
 
         {/* Product Usage */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Most Used Dye */}
+        {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -249,7 +248,6 @@ export default function OverviewNew() {
             </div>
           </Card>
 
-          {/* Most Used Auxiliary */}
           <Card>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -287,7 +285,8 @@ export default function OverviewNew() {
               ))}
             </div>
           </Card>
-        </div>
+        </div> */}
+        
       </div>
     </MainLayout>
   );

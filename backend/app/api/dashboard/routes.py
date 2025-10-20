@@ -10,8 +10,16 @@ from app.utils.datatable.request import ListRequest
 
 dashboard_router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
+# @dashboard_router.post("/overview")
+# def get_dashboard_overview(request: ListRequest = Depends(), service: DashboardService = Depends()):
+#     return service.run(filters=request)
+
 @dashboard_router.post("/overview")
-def get_dashboard_overview(request: ListRequest = Depends(), service: DashboardService = Depends()):
+def get_dashboard_overview(
+    request: ListRequest = Depends(),
+    db: Session = Depends(get_db),  # ✅ ambil db session dengan Depends
+):
+    service = DashboardService(db)  # ✅ buat instance service secara manual
     return service.run(filters=request)
 
 # @router.get("/overview")
