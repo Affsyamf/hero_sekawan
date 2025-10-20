@@ -102,7 +102,10 @@ export default function OverviewNew() {
   const { metrics, cost_trend, stock_flow, most_used_dye, most_used_aux } =
     dashboardData;
 
-  const totalCostProduksi = cost_trend.reduce((sum, d) => sum + d.value, 0);
+  const totalCostProduksi = cost_trend.reduce(
+    (sum, d) => sum + (d.total_cost || 0),
+    0
+  );
 
   return (
     <MainLayout>
@@ -192,14 +195,13 @@ export default function OverviewNew() {
 
           {/* Cost Produksi Trend */}
           <Chart.Line
-            data={cost_trend}
+            data={cost_trend.map((d) => d.total_cost)}
             value={formatCompactCurrency(totalCostProduksi)}
             trend={
-              cost_trend.length > 1
+              cost_trend.length > 1 && cost_trend[0].total_cost > 0
                 ? (
-                    ((cost_trend[cost_trend.length - 1].value -
-                      cost_trend[0].value) /
-                      cost_trend[0].value) *
+                    ((cost_trend.at(-1).total_cost - cost_trend[0].total_cost) /
+                      cost_trend[0].total_cost) *
                     100
                   ).toFixed(1)
                 : 0
@@ -286,7 +288,6 @@ export default function OverviewNew() {
             </div>
           </Card>
         </div> */}
-        
       </div>
     </MainLayout>
   );

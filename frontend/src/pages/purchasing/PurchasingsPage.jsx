@@ -180,11 +180,20 @@ export default function PurchasingsPage() {
             </p>
           )}
 
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <Button
               icon={Upload}
               label="Import from Excel"
               onClick={() => setIsImportMDOpen(true)}
+              className="bg-green-600 hover:bg-green-700"
+            />
+          </div> */}
+
+          <div className="mb-4">
+            <Button
+              icon={Upload}
+              label="Import from Excel"
+              onClick={() => setIsImportTrxOpen(true)}
               className="bg-green-600 hover:bg-green-700"
             />
           </div>

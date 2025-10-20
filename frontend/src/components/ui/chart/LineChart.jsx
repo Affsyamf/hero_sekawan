@@ -9,7 +9,7 @@ export function LineChart({
   trend, // Trend percentage (optional)
   trendLabel = "from last period", // Custom trend label
   timestamp, // Timestamp (optional)
-  period = "Week", // Period selector
+  granularity = "monthly", // Period selector
   labels, // X-axis labels (optional, defaults to Mon-Sun)
   summaryData, // Summary data array (optional)
   type = "single", // "single" or "dual"
@@ -19,9 +19,48 @@ export function LineChart({
   const { colors } = useTheme();
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
-  const [chartDimensions, setChartDimensions] = useState({ width: 800, height: 240 });
+  const [chartDimensions, setChartDimensions] = useState({
+    width: 800,
+    height: 240,
+  });
   const svgRef = useRef(null);
   const containerRef = useRef(null);
+
+  const periodMap = {
+    daily: "Day",
+    weekly: "Week",
+    monthly: "Month",
+    yearly: "Year",
+  };
+  const periodLabel = periodMap[granularity?.toLowerCase()] || "Period";
+
+  // ✅ Generate default labels depending on granularity
+  let defaultLabels = [];
+
+  if (granularity === "daily") {
+    defaultLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  } else if (granularity === "weekly") {
+    defaultLabels = ["W1", "W2", "W3", "W4"];
+  } else if (granularity === "monthly") {
+    defaultLabels = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+  } else if (granularity === "yearly") {
+    defaultLabels = ["2021", "2022", "2023", "2024", "2025"];
+  }
+
+  const xAxisLabels = labels || defaultLabels;
 
   // Responsive chart sizing
   useEffect(() => {
@@ -30,14 +69,14 @@ export function LineChart({
         const width = containerRef.current.offsetWidth;
         setChartDimensions({
           width: Math.max(300, width),
-          height: 240
+          height: 240,
         });
       }
     };
 
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
   // Default line configuration with fallbacks
@@ -102,8 +141,8 @@ export function LineChart({
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
   // Default labels
-  const defaultLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const xAxisLabels = labels || defaultLabels;
+  // const defaultLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // const xAxisLabels = labels || defaultLabels;
 
   // Get all data points for scaling
   let allData = [...primaryData];
@@ -152,7 +191,10 @@ export function LineChart({
 
     if (x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight) {
       const dataIndex = Math.round((x / innerWidth) * (primaryData.length - 1));
-      const clampedIndex = Math.max(0, Math.min(dataIndex, primaryData.length - 1));
+      const clampedIndex = Math.max(
+        0,
+        Math.min(dataIndex, primaryData.length - 1)
+      );
 
       const hoverData = {
         index: clampedIndex,
@@ -161,7 +203,9 @@ export function LineChart({
 
       if (type === "dual") {
         hoverData.current = primaryData[clampedIndex];
-        hoverData.previous = chartData.previous ? chartData.previous[clampedIndex] : null;
+        hoverData.previous = chartData.previous
+          ? chartData.previous[clampedIndex]
+          : null;
       } else {
         hoverData.value = primaryData[clampedIndex];
       }
@@ -178,9 +222,10 @@ export function LineChart({
     setHoveredPoint(null);
   };
 
-  const trendColor = trend >= 0 
-    ? (colors?.status?.success || "#10b981")
-    : (colors?.status?.error || "#ef4444");
+  const trendColor =
+    trend >= 0
+      ? colors?.status?.success || "#10b981"
+      : colors?.status?.error || "#ef4444";
   const TrendIcon = trend >= 0 ? TrendingUp : TrendingDown;
 
   // Fallback colors
@@ -258,7 +303,7 @@ export function LineChart({
             color: textSecondary,
           }}
         >
-          <span className="text-xs font-medium">{period}</span>
+          <span className="text-xs font-medium">{periodLabel}</span>
           <ChevronDown size={14} />
         </button>
       </div>
@@ -278,8 +323,12 @@ export function LineChart({
           {trend !== undefined && (
             <div className="flex items-center gap-1.5 mb-1">
               <TrendIcon size={14} style={{ color: trendColor }} />
-              <span className="text-xs font-medium" style={{ color: trendColor }}>
-                {trend >= 0 ? "+" : ""}{trend}%
+              <span
+                className="text-xs font-medium"
+                style={{ color: trendColor }}
+              >
+                {trend >= 0 ? "+" : ""}
+                {trend}%
               </span>
               <span className="text-xs" style={{ color: textSecondary }}>
                 {trendLabel}
@@ -296,7 +345,11 @@ export function LineChart({
       )}
 
       {/* Chart Container */}
-      <div ref={containerRef} className="relative w-full" style={{ height: `${chartHeight}px` }}>
+      <div
+        ref={containerRef}
+        className="relative w-full"
+        style={{ height: `${chartHeight}px` }}
+      >
         <svg
           ref={svgRef}
           width={chartWidth}
@@ -308,21 +361,59 @@ export function LineChart({
           <defs>
             {/* Gradients */}
             {type === "single" && (
-              <linearGradient id="singleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient
+                id="singleGradient"
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
                 <stop offset="0%" stopColor={config.color} stopOpacity="0.2" />
-                <stop offset="100%" stopColor={config.color} stopOpacity="0.02" />
+                <stop
+                  offset="100%"
+                  stopColor={config.color}
+                  stopOpacity="0.02"
+                />
               </linearGradient>
             )}
 
             {type === "dual" && (
               <>
-                <linearGradient id="currentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor={config.current.color} stopOpacity="0.2" />
-                  <stop offset="100%" stopColor={config.current.color} stopOpacity="0.02" />
+                <linearGradient
+                  id="currentGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    stopColor={config.current.color}
+                    stopOpacity="0.2"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor={config.current.color}
+                    stopOpacity="0.02"
+                  />
                 </linearGradient>
-                <linearGradient id="previousGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor={config.previous.color} stopOpacity="0.2" />
-                  <stop offset="100%" stopColor={config.previous.color} stopOpacity="0.02" />
+                <linearGradient
+                  id="previousGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    stopColor={config.previous.color}
+                    stopOpacity="0.2"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor={config.previous.color}
+                    stopOpacity="0.02"
+                  />
                 </linearGradient>
               </>
             )}
@@ -332,16 +423,26 @@ export function LineChart({
             {/* Grid lines */}
             <g stroke={borderPrimary} strokeWidth="1">
               {yAxisLabels.map((_, index) => {
-                const y = innerHeight - (index / (yAxisLabels.length - 1)) * innerHeight;
+                const y =
+                  innerHeight -
+                  (index / (yAxisLabels.length - 1)) * innerHeight;
                 return (
-                  <line key={index} x1="0" y1={y} x2={innerWidth} y2={y} opacity="0.3" />
+                  <line
+                    key={index}
+                    x1="0"
+                    y1={y}
+                    x2={innerWidth}
+                    y2={y}
+                    opacity="0.3"
+                  />
                 );
               })}
             </g>
 
             {/* Y-axis labels */}
             {yAxisLabels.map((label, index) => {
-              const y = innerHeight - (index / (yAxisLabels.length - 1)) * innerHeight;
+              const y =
+                innerHeight - (index / (yAxisLabels.length - 1)) * innerHeight;
               return (
                 <text
                   key={index}
@@ -358,16 +459,25 @@ export function LineChart({
 
             {/* Area fills */}
             {type === "single" && config.showArea && (
-              <path d={generateAreaPath(primaryData)} fill="url(#singleGradient)" />
+              <path
+                d={generateAreaPath(primaryData)}
+                fill="url(#singleGradient)"
+              />
             )}
 
             {type === "dual" && (
               <>
                 {chartData.previous && config.previous.showArea && (
-                  <path d={generateAreaPath(chartData.previous)} fill="url(#previousGradient)" />
+                  <path
+                    d={generateAreaPath(chartData.previous)}
+                    fill="url(#previousGradient)"
+                  />
                 )}
                 {config.current.showArea && (
-                  <path d={generateAreaPath(primaryData)} fill="url(#currentGradient)" />
+                  <path
+                    d={generateAreaPath(primaryData)}
+                    fill="url(#currentGradient)"
+                  />
                 )}
               </>
             )}
@@ -409,7 +519,8 @@ export function LineChart({
             {type === "single" ? (
               primaryData.map((point, index) => {
                 const x = (index / (primaryData.length - 1)) * innerWidth;
-                const y = innerHeight - ((point - minVal) / range) * innerHeight;
+                const y =
+                  innerHeight - ((point - minVal) / range) * innerHeight;
                 const isHovered = hoveredPoint?.index === index;
 
                 return (
@@ -430,7 +541,8 @@ export function LineChart({
               <>
                 {primaryData.map((point, index) => {
                   const x = (index / (primaryData.length - 1)) * innerWidth;
-                  const y = innerHeight - ((point - minVal) / range) * innerHeight;
+                  const y =
+                    innerHeight - ((point - minVal) / range) * innerHeight;
                   const isHovered = hoveredPoint?.index === index;
 
                   return (
@@ -447,33 +559,40 @@ export function LineChart({
                   );
                 })}
 
-                {chartData.previous && chartData.previous.map((point, index) => {
-                  const x = (index / (chartData.previous.length - 1)) * innerWidth;
-                  const y = innerHeight - ((point - minVal) / range) * innerHeight;
-                  const isHovered = hoveredPoint?.index === index;
+                {chartData.previous &&
+                  chartData.previous.map((point, index) => {
+                    const x =
+                      (index / (chartData.previous.length - 1)) * innerWidth;
+                    const y =
+                      innerHeight - ((point - minVal) / range) * innerHeight;
+                    const isHovered = hoveredPoint?.index === index;
 
-                  return (
-                    <circle
-                      key={`previous-${index}`}
-                      cx={x}
-                      cy={y}
-                      r={isHovered ? 5 : 3}
-                      fill={bgCard}
-                      stroke={config.previous.color}
-                      strokeWidth="2"
-                      className="transition-all cursor-pointer"
-                    />
-                  );
-                })}
+                    return (
+                      <circle
+                        key={`previous-${index}`}
+                        cx={x}
+                        cy={y}
+                        r={isHovered ? 5 : 3}
+                        fill={bgCard}
+                        stroke={config.previous.color}
+                        strokeWidth="2"
+                        className="transition-all cursor-pointer"
+                      />
+                    );
+                  })}
               </>
             )}
 
             {/* Hover line */}
             {hoveredPoint && (
               <line
-                x1={(hoveredPoint.index / (primaryData.length - 1)) * innerWidth}
+                x1={
+                  (hoveredPoint.index / (primaryData.length - 1)) * innerWidth
+                }
                 y1="0"
-                x2={(hoveredPoint.index / (primaryData.length - 1)) * innerWidth}
+                x2={
+                  (hoveredPoint.index / (primaryData.length - 1)) * innerWidth
+                }
                 y2={innerHeight}
                 stroke={textTertiary}
                 strokeWidth="1"
@@ -514,7 +633,10 @@ export function LineChart({
               boxShadow: shadowMd,
             }}
           >
-            <div className="mb-0.5 text-xs font-medium" style={{ color: textPrimary }}>
+            <div
+              className="mb-0.5 text-xs font-medium"
+              style={{ color: textPrimary }}
+            >
               {hoveredPoint.label}
             </div>
 
@@ -558,7 +680,10 @@ export function LineChart({
               <span className="text-xs" style={{ color: textSecondary }}>
                 {item.label}
               </span>
-              <span className="text-xs font-medium" style={{ color: textPrimary }}>
+              <span
+                className="text-xs font-medium"
+                style={{ color: textPrimary }}
+              >
                 {item.value}
               </span>
             </div>
