@@ -1,4 +1,5 @@
 import { useTheme } from "../../contexts/ThemeContext";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ import global filter
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
@@ -12,44 +13,51 @@ import {
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
-import { getDashboardData } from "../../services/dashboard_service"; // ⬅️ pakai API asli
-import { formatNumber, formatCompactCurrency } from "../../utils/helpers";
+import { getDashboardData } from "../../services/dashboard_service";
+import {
+  formatNumber,
+  formatCompactCurrency,
+  formatDate,
+} from "../../utils/helpers";
 
 export default function OverviewNew() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
+  const { dateRange } = useGlobalFilter(); // ✅ ambil global date range
 
-  // default filter (misalnya 1 bulan terakhir, monthly)
-  const filters = {
-    start_date: "2025-09-20",
-    end_date: "2025-10-20",
-    granularity: "monthly",
-  };
-
+  // ✅ Refetch data setiap kali filter global berubah
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (dateRange.startDate && dateRange.endDate) {
+      fetchDashboardData();
+    }
+  }, [dateRange.startDate, dateRange.endDate]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await getDashboardData(filters);
-      // backend return: { message, data, meta }
+      const params = {
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate,
+        granularity: "monthly",
+      };
+
+      const response = await getDashboardData(params);
       setDashboardData(response.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      setDashboardData(null);
     } finally {
       setLoading(false);
     }
   };
 
   const handleExport = async () => {
-    setExporting(true);
     try {
-      // implement nanti kalau ada export API
-      console.log("Export belum diimplementasi");
+      setExporting(true);
+      // belum implementasi export
+      alert("Export belum diimplementasi");
     } finally {
       setExporting(false);
     }
@@ -108,7 +116,16 @@ export default function OverviewNew() {
             <p className="mt-1 text-sm text-gray-600">
               Overview Stock, Cost, dan Usage Produksi Kain Printing
             </p>
+
+            {/* ✅ tampilkan tanggal aktif */}
+            {dateRange.startDate && dateRange.endDate && (
+              <p className="mt-1 text-xs text-blue-600">
+                📅 Filtered: {formatDate(dateRange.startDate)} –{" "}
+                {formatDate(dateRange.endDate)}
+              </p>
+            )}
           </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <Button
               icon={Download}
@@ -148,8 +165,9 @@ export default function OverviewNew() {
           />
         </div>
 
-        {/* Chart Stock Flow & Cost Trend */}
+        {/* Main Charts Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Stock Flow Chart */}
           <Card className="w-full h-full">
             <Chart.Bar
               initialData={stock_flow}
@@ -172,6 +190,7 @@ export default function OverviewNew() {
             />
           </Card>
 
+          {/* Cost Produksi Trend */}
           <Chart.Line
             data={cost_trend.map((d) => d.value)}
             value={formatCompactCurrency(totalCostProduksi)}
@@ -189,9 +208,9 @@ export default function OverviewNew() {
           />
         </div>
 
-        {/* Most Used Dye & AUX */}
+        {/* Product Usage */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Dye */}
+          {/* Most Used Dye */}
           <Card>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -209,8 +228,8 @@ export default function OverviewNew() {
               </div>
             </div>
             <div className="space-y-5">
-              {most_used_dye.map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {most_used_dye.map((item, index) => (
+                <div key={index} className="flex items-center gap-3">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-medium text-gray-700">
@@ -230,7 +249,7 @@ export default function OverviewNew() {
             </div>
           </Card>
 
-          {/* Aux */}
+          {/* Most Used Auxiliary */}
           <Card>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -248,8 +267,8 @@ export default function OverviewNew() {
               </div>
             </div>
             <div className="space-y-5">
-              {most_used_aux.map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {most_used_aux.map((item, index) => (
+                <div key={index} className="flex items-center gap-3">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-medium text-gray-700">

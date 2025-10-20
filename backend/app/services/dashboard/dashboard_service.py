@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
+from warnings import filters
 from fastapi import Depends
 from sqlalchemy import func, desc
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models import (
-    Ledger, Product, LedgerRef,
+    Ledger, Product, LedgerRef, PurchasingDetail, Purchasing, Account,
     ColorKitchenEntry, ColorKitchenEntryDetail,
     ColorKitchenBatch, ColorKitchenBatchDetail,
     ProductAvgCostCache,
@@ -116,12 +117,23 @@ class DashboardService:
         }
 
     def _calc_total_purchasing(self, start_date: datetime, end_date: datetime) -> float:
-        q = (
-            self.db.query(func.coalesce(func.sum(Ledger.quantity_in * ProductAvgCostCache.avg_cost), 0))
-            .join(ProductAvgCostCache, ProductAvgCostCache.product_id == Ledger.product_id)
-            .filter(Ledger.ref == LedgerRef.Purchasing, Ledger.date >= start_date, Ledger.date <= end_date)
+        """
+        Total nilai pembelian (Goods + Services)
+        """
+        base = (
+            self.db.query(
+                func.coalesce(func.sum(PurchasingDetail.quantity * PurchasingDetail.price), 0)
+            )
+            .join(Product, Product.id == PurchasingDetail.product_id)
+            .join(Account, Account.id == Product.account_id)
+            .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
         )
-        return float(q.scalar() or 0)
+        if start_date:
+            base = base.filter(Purchasing.date >= start_date)
+        if end_date:
+            base = base.filter(Purchasing.date <= end_date)
+
+        return float(base.scalar() or 0)
 
     def _calc_total_stock_terpakai(self, start_date: datetime, end_date: datetime) -> float:
         q = (
