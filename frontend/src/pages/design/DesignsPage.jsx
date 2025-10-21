@@ -4,7 +4,12 @@ import DesignForm from "../../components/features/design/DesignForm";
 import ImportDesignModal from "../../components/features/design/ImportDesignModal";
 import Table from "../../components/ui/table/Table";
 import MainLayout from "../../layouts/MainLayout/MainLayout";
-import { createDesign, deleteDesign, searchDesign, updateDesign } from "../../services/design_service";
+import {
+  createDesign,
+  deleteDesign,
+  searchDesign,
+  updateDesign,
+} from "../../services/design_service";
 import { searchDesignType } from "../../services/design_type_service";
 
 export default function DesignsPage() {
@@ -17,7 +22,7 @@ export default function DesignsPage() {
   useEffect(() => {
     const fetchDesignTypes = async () => {
       try {
-        const response = await searchDesignType({}); // bisa tambahkan filter jika ada        
+        const response = await searchDesignType({}); // bisa tambahkan filter jika ada
         setDesignType(response.data?.data || []);
       } catch (error) {
         console.error("Failed to fetch design type:", error);
@@ -107,9 +112,7 @@ export default function DesignsPage() {
   };
 
   const handleDelete = async (row) => {
-    if (
-      window.confirm(`Are you sure you want to delete design ${row.name}?`)
-    ) {
+    if (window.confirm(`Are you sure you want to delete design ${row.name}?`)) {
       try {
         await deleteDesign(row.id);
         setRefreshKey((prev) => prev + 1);
@@ -156,17 +159,6 @@ export default function DesignsPage() {
             Manage designs with codes and type classifications.
           </p>
 
-          {/* Custom header actions */}
-          <div className="mb-4">
-            <button
-              onClick={handleImport}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white transition-colors bg-green-600 rounded-lg hover:bg-green-700"
-            >
-              <Upload className="w-4 h-4" />
-              Import from Excel
-            </button>
-          </div>
-
           <Table
             key={refreshKey}
             columns={columns}
@@ -182,12 +174,6 @@ export default function DesignsPage() {
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
-          />
-
-          <ImportDesignModal
-            isOpen={isImportModalOpen}
-            onClose={() => setIsImportModalOpen(false)}
-            onImportSuccess={handleImportSuccess}
           />
         </div>
       </div>

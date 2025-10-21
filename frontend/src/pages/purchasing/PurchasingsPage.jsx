@@ -180,15 +180,6 @@ export default function PurchasingsPage() {
             </p>
           )}
 
-          {/* <div className="mb-4">
-            <Button
-              icon={Upload}
-              label="Import from Excel"
-              onClick={() => setIsImportMDOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
-            />
-          </div> */}
-
           <div className="mb-4">
             <Button
               icon={Upload}
@@ -221,12 +212,6 @@ export default function PurchasingsPage() {
               setSelectedPurchasing(null);
             }}
             onSave={handleSave}
-          />
-
-          <ImportPurchasingModal
-            isOpen={isImportMDOpen}
-            onClose={() => setIsImportMDOpen(false)}
-            onImportSuccess={() => setRefreshKey((p) => p + 1)}
           />
 
           <ImportPurchasingTransactionModal
