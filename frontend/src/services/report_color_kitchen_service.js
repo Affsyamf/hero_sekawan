@@ -25,15 +25,33 @@ export const reportsColorKitchenSummary = async (filters = {}) => {
  */
 export const reportsColorKitchenChemicalUsageSummary = async (filters = {}) => {
   const payload = normalizeFilters(filters);
-  const response = await api.post("reports/color-kitchen/chemical-usage/summary", payload);
+  const response = await api.post(
+    "reports/color-kitchen/chemical-usage/summary",
+    payload
+  );
   return response.data;
 };
 
 /**
  * ColorKitchen Chemical Usage Type — time-based type (daily, weekly, monthly, yearly)
  */
-export const reportsColorKitchenChemicalUsage = async (filters = {}) => {
+export const reportsColorKitchenChemicalUsage = async (
+  parent_type,
+  filters = {}
+) => {
   const payload = normalizeFilters(filters);
-  const response = await api.post("reports/color-kitchen/chemical-usage", payload);
+  const response = await api.post(
+    `reports/color-kitchen/chemical-usage?parent_type=${parent_type}`,
+    payload
+  );
+  return response.data;
+};
+
+/**
+ * ColorKitchen Trend — time-based type (daily, weekly, monthly, yearly)
+ */
+export const reportsColorKitchenTrend = async (filters = {}) => {
+  const payload = normalizeFilters(filters);
+  const response = await api.post(`reports/color-kitchen/trend`, payload);
   return response.data;
 };
