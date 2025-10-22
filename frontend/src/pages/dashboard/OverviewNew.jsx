@@ -1,8 +1,10 @@
 import { useTheme } from "../../contexts/ThemeContext";
-import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ import global filter
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
+import HighchartsBar from "../../components/ui/highchart/HighchartsBar";
+import HighchartsLine from "../../components/ui/highchart/HighchartsLine";
 import {
   DollarSign,
   Download,
@@ -25,14 +27,24 @@ export default function OverviewNew() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
-  const { dateRange } = useGlobalFilter(); // ✅ ambil global date range
+  const { dateRange } = useGlobalFilter();
 
-  // ✅ Refetch data setiap kali filter global berubah
+  // ✅ Granularity state untuk Cost Trend
+  const [costTrendGranularity, setCostTrendGranularity] = useState("monthly");
+
+  // ✅ Fetch initial data ketika dateRange berubah
   useEffect(() => {
     if (dateRange.startDate && dateRange.endDate) {
       fetchDashboardData();
     }
   }, [dateRange.startDate, dateRange.endDate]);
+
+  // ✅ Refetch cost_trend ketika granularity berubah
+  useEffect(() => {
+    if (dashboardData && dateRange.startDate && dateRange.endDate) {
+      fetchCostTrendData();
+    }
+  }, [costTrendGranularity]);
 
   const fetchDashboardData = async () => {
     try {
@@ -40,7 +52,7 @@ export default function OverviewNew() {
       const params = {
         start_date: dateRange.startDate,
         end_date: dateRange.endDate,
-        granularity: "monthly",
+        granularity: costTrendGranularity,
       };
 
       const response = await getDashboardData(params);
@@ -53,10 +65,30 @@ export default function OverviewNew() {
     }
   };
 
+  // ✅ Fetch cost trend data only
+  const fetchCostTrendData = async () => {
+    try {
+      const params = {
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate,
+        granularity: costTrendGranularity,
+      };
+
+      const response = await getDashboardData(params);
+
+      // Update hanya cost_trend, biarkan data lain tetap
+      setDashboardData((prev) => ({
+        ...prev,
+        cost_trend: response.data.cost_trend,
+      }));
+    } catch (error) {
+      console.error("Error fetching cost trend data:", error);
+    }
+  };
+
   const handleExport = async () => {
     try {
       setExporting(true);
-      // belum implementasi export
       alert("Export belum diimplementasi");
     } finally {
       setExporting(false);
@@ -120,7 +152,6 @@ export default function OverviewNew() {
               Overview Stock, Cost, dan Usage Produksi Kain Printing
             </p>
 
-            {/* ✅ tampilkan tanggal aktif */}
             {dateRange.startDate && dateRange.endDate && (
               <p className="mt-1 text-xs text-blue-600">
                 📅 Filtered: {formatDate(dateRange.startDate)} –{" "}
@@ -172,7 +203,7 @@ export default function OverviewNew() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Stock Flow Chart */}
           <Card className="w-full h-full">
-            <Chart.Bar
+            <HighchartsBar
               initialData={stock_flow}
               title="Trend Stock Masuk vs Terpakai"
               subtitle="Perbandingan purchasing dan usage di Color Kitchen"
@@ -193,101 +224,46 @@ export default function OverviewNew() {
             />
           </Card>
 
-          {/* Cost Produksi Trend */}
-          <Chart.Line
-            data={cost_trend.map((d) => d.total_cost)}
-            value={formatCompactCurrency(totalCostProduksi)}
-            trend={
-              cost_trend.length > 1 && cost_trend[0].total_cost > 0
-                ? (
-                    ((cost_trend.at(-1).total_cost - cost_trend[0].total_cost) /
-                      cost_trend[0].total_cost) *
-                    100
-                  ).toFixed(1)
-                : 0
-            }
-            title="Trend Cost Produksi (Dye + Aux)"
-          />
+          {/* Cost Produksi Trend - ✅ Pattern sama dengan DashboardPurchasing */}
+          <Card className="w-full h-full">
+            <div className="flex items-center justify-between px-4 pt-4 mb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                  Trend Cost Produksi (Dye + Aux)
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Total biaya produksi per periode
+                </p>
+              </div>
+              {/* ✅ Filter dropdown di luar HighchartsLine */}
+              {/* <select
+                value={costTrendGranularity}
+                onChange={(e) => setCostTrendGranularity(e.target.value)}
+                className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
+              >
+                <option value="daily">Perhari</option>
+                <option value="weekly">Perminggu</option>
+                <option value="monthly">Perbulan</option>
+                <option value="yearly">Pertahun</option>
+              </select> */}
+            </div>
+            <HighchartsLine
+              initialData={cost_trend}
+              title=""
+              subtitle=""
+              datasets={[
+                {
+                  key: "total_cost",
+                  label: "Cost Produksi",
+                  color: "primary",
+                },
+              ]}
+              onFetchData={() => cost_trend}
+              showSummary={true}
+              yAxisLabel="Cost (Rp)"
+            />
+          </Card>
         </div>
-
-        {/* Product Usage */}
-        {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg">
-                  <Droplets className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    Most Used Dye (Dyestuff)
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    Top 5 pewarna paling banyak digunakan
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-5">
-              {most_used_dye.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-gray-700">
-                        {item.label}
-                      </span>
-                      <span className="text-xs font-semibold text-gray-900">
-                        {formatNumber(item.value)} kg
-                      </span>
-                    </div>
-                    <Chart.Progress
-                      value={item.value}
-                      maxValue={item.maxValue}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg">
-                  <Palette className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    Most Used Auxiliary (AUX)
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    Top 5 bahan auxiliary paling banyak digunakan
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-5">
-              {most_used_aux.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-gray-700">
-                        {item.label}
-                      </span>
-                      <span className="text-xs font-semibold text-gray-900">
-                        {formatNumber(item.value)} kg
-                      </span>
-                    </div>
-                    <Chart.Progress
-                      value={item.value}
-                      maxValue={item.maxValue}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div> */}
       </div>
     </MainLayout>
   );

@@ -5,11 +5,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 30000, // Increase timeout untuk upload file
-  // HAPUS default Content-Type dari sini
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
+  timeout: 30000,
 });
 
 // Interceptor untuk request
@@ -17,10 +13,7 @@ api.interceptors.request.use(
   (config) => {
     loadingManager.setLoading(true);
     
-    // Set Content-Type berdasarkan tipe data
     if (config.data instanceof FormData) {
-      // Untuk FormData, biarkan browser yang set Content-Type dengan boundary
-      // JANGAN set Content-Type manual
       delete config.headers["Content-Type"];
     } else {
       // Untuk data JSON biasa

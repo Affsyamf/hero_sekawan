@@ -10,7 +10,7 @@ export const getDashboardData = async (filters = {}) => {
       granularity: filters.granularity || "monthly",
     },
   });
-  return response.data; // format: { message, data, meta }
+  return response.data; 
 };
 
 // /**
