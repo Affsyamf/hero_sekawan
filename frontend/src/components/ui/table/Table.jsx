@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -14,13 +14,15 @@ import Button from "../button/Button";
 
 export default function Table({
   columns = [],
+  data,
   fetchData,
   actions,
   onCreate,
   pageSizeOptions = [5, 10, 20, 50],
   dateFilterKey = "date",
   showNumbering = true,
-  showDateRangeFilter = true, // New prop untuk mengontrol date range filter
+  showDateRangeFilter = true,
+  pagination = true,
 }) {
   const { colors } = useTheme();
 
@@ -62,7 +64,14 @@ export default function Table({
     }
   }, [showNumbering, columns, page, pageSize]);
 
-  const loadData = async () => {
+  const fetchRef = useRef(fetchData);
+  useEffect(() => {
+    fetchRef.current = fetchData;
+  }, [fetchData]);
+
+  const loadData = useCallback(async () => {
+    if (!fetchRef.current) return;
+
     setLoading(true);
     setError(null);
 
@@ -71,29 +80,24 @@ export default function Table({
         Object.entries({
           page,
           page_size: pageSize,
-          q: search,
+          ...(search ? { q: search } : {}),
           filters,
           sortBy: sortConfig.key,
           sortDir: sortConfig.direction,
-          ...(showDateRangeFilter && { dateRange }), // Only include dateRange if filter is enabled
+          ...(showDateRangeFilter && { dateRange }),
         }).filter(([, v]) => v !== null && v !== undefined && v !== "")
       );
 
-      const response = await fetchData(params);
+      const response = await fetchRef.current(params); // 👈 use ref here
 
-      // Handle response structure: { success, message, data, meta }
-      if (response.status == 200) {
+      if (response.status === 200) {
         const result = response.data;
-
         setRows(result.data || []);
-
-        // Extract pagination info from meta
         if (result.meta?.pagination) {
           const { total: totalRecords, total_pages } = result.meta.pagination;
           setTotal(totalRecords || 0);
           setTotalPages(total_pages || 0);
         } else {
-          // Fallback jika meta tidak ada
           setTotal(result.data?.length || 0);
           setTotalPages(1);
         }
@@ -112,11 +116,32 @@ export default function Table({
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    // ❗️no fetchData here
+    page,
+    pageSize,
+    search,
+    filters,
+    sortConfig,
+    dateRange,
+    showDateRangeFilter,
+  ]);
 
+  // Fetch mode (fetchRef.current exists)
   useEffect(() => {
-    loadData();
-  }, [page, pageSize, search, filters, sortConfig, dateRange]);
+    if (fetchRef.current) {
+      loadData();
+    }
+  }, [loadData]);
+
+  // Static mode (explicit array passed)
+  useEffect(() => {
+    if (!fetchRef.current && Array.isArray(data)) {
+      setRows(data);
+      setTotal(data.length);
+      setTotalPages(1);
+    }
+  }, [data]);
 
   const clearDateRange = () => {
     setDateRange({ start: "", end: "" });
@@ -481,188 +506,189 @@ export default function Table({
       </div>
 
       {/* Pagination */}
-      <div
-        className="flex items-center justify-between px-4 py-3 border-t"
-        style={{ borderColor: colors.border.primary }}
-      >
-        {/* Left: Rows per page + Results info */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center gap-2">
-            <span
-              className="text-xs font-medium"
-              style={{ color: colors.text.primary }}
-            >
-              {pageSize}
-            </span>
-            <button
-              onClick={() => setShowPageSizeMenu(!showPageSizeMenu)}
-              className="p-0.5 transition-all rounded hover:bg-gray-100"
-            >
-              <ChevronDown
-                size={14}
-                style={{ color: colors.text.secondary }}
-                className={cn(
-                  "transition-transform",
-                  showPageSizeMenu && "rotate-180"
-                )}
-              />
-            </button>
-
-            {/* Page Size Menu */}
-            {showPageSizeMenu && (
-              <div
-                className="absolute left-0 z-10 w-16 py-0.5 mb-1 rounded-lg shadow-lg bottom-full"
-                style={{
-                  background: colors.background.card,
-                  border: `1px solid ${colors.border.primary}`,
-                }}
+      {pagination && (
+        <div
+          className="flex items-center justify-between px-4 py-3 border-t"
+          style={{ borderColor: colors.border.primary }}
+        >
+          {/* Left: Rows per page + Results info */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex items-center gap-2">
+              <span
+                className="text-xs font-medium"
+                style={{ color: colors.text.primary }}
               >
-                {pageSizeOptions.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => handlePageSizeChange(size)}
-                    className={cn(
-                      "w-full px-3 py-1.5 text-xs text-left transition-all hover:bg-gray-100",
-                      size === pageSize &&
-                        "bg-blue-50 text-blue-600 font-medium"
-                    )}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+                {pageSize}
+              </span>
+              <button
+                onClick={() => setShowPageSizeMenu(!showPageSizeMenu)}
+                className="p-0.5 transition-all rounded hover:bg-gray-100"
+              >
+                <ChevronDown
+                  size={14}
+                  style={{ color: colors.text.secondary }}
+                  className={cn(
+                    "transition-transform",
+                    showPageSizeMenu && "rotate-180"
+                  )}
+                />
+              </button>
 
-          <span className="text-xs" style={{ color: colors.text.secondary }}>
-            {total > 0 ? (
-              <>
-                Results: {(page - 1) * pageSize + 1} -{" "}
-                {Math.min(page * pageSize, total)} of {total}
-              </>
-            ) : (
-              "No results"
-            )}
-          </span>
-        </div>
-
-        {/* Right: Page navigation */}
-        <div className="flex items-center gap-1.5">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-            className="px-3 py-1.5 text-xs font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
-            style={{
-              color: colors.text.secondary,
-            }}
-          >
-            Previous
-          </button>
-
-          {/* Page numbers */}
-          <div className="flex items-center gap-1">
-            {/* First page */}
-            {page > 2 && (
-              <>
-                <button
-                  onClick={() => setPage(1)}
-                  className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
+              {/* Page Size Menu */}
+              {showPageSizeMenu && (
+                <div
+                  className="absolute left-0 z-10 w-16 py-0.5 mb-1 rounded-lg shadow-lg bottom-full"
                   style={{
-                    background: colors.background.primary,
-                    color: colors.text.primary,
+                    background: colors.background.card,
+                    border: `1px solid ${colors.border.primary}`,
                   }}
                 >
-                  1
-                </button>
-                {page > 3 && (
-                  <span
-                    className="px-0.5 text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    ...
-                  </span>
-                )}
-              </>
-            )}
+                  {pageSizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => handlePageSizeChange(size)}
+                      className={cn(
+                        "w-full px-3 py-1.5 text-xs text-left transition-all hover:bg-gray-100",
+                        size === pageSize &&
+                          "bg-blue-50 text-blue-600 font-medium"
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {/* Previous page */}
-            {page > 1 && (
-              <button
-                onClick={() => setPage(page - 1)}
-                className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
-                style={{
-                  background: colors.background.primary,
-                  color: colors.text.primary,
-                }}
-              >
-                {page - 1}
-              </button>
-            )}
+            <span className="text-xs" style={{ color: colors.text.secondary }}>
+              {total > 0 ? (
+                <>
+                  Results: {(page - 1) * pageSize + 1} -{" "}
+                  {Math.min(page * pageSize, total)} of {total}
+                </>
+              ) : (
+                "No results"
+              )}
+            </span>
+          </div>
 
-            {/* Current page */}
+          {/* Right: Page navigation */}
+          <div className="flex items-center gap-1.5">
             <button
-              className="min-w-[24px] h-6 text-xs font-medium rounded-md px-1.5"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-3 py-1.5 text-xs font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
               style={{
-                background: colors.background.primary,
-                color: colors.primary,
-                border: `1.5px solid ${colors.primary}`,
+                color: colors.text.secondary,
               }}
             >
-              {page}
+              Previous
             </button>
 
-            {/* Next page */}
-            {page < totalPages && (
-              <button
-                onClick={() => setPage(page + 1)}
-                className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
-                style={{
-                  background: colors.background.primary,
-                  color: colors.text.primary,
-                }}
-              >
-                {page + 1}
-              </button>
-            )}
-
-            {/* Last pages */}
-            {page < totalPages - 1 && (
-              <>
-                {page < totalPages - 2 && (
-                  <span
-                    className="px-0.5 text-xs"
-                    style={{ color: colors.text.secondary }}
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {/* First page */}
+              {page > 2 && (
+                <>
+                  <button
+                    onClick={() => setPage(1)}
+                    className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
+                    style={{
+                      background: colors.background.primary,
+                      color: colors.text.primary,
+                    }}
                   >
-                    ...
-                  </span>
-                )}
+                    1
+                  </button>
+                  {page > 3 && (
+                    <span
+                      className="px-0.5 text-xs"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      ...
+                    </span>
+                  )}
+                </>
+              )}
+
+              {/* Previous page */}
+              {page > 1 && (
                 <button
-                  onClick={() => setPage(totalPages)}
+                  onClick={() => setPage(page - 1)}
                   className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
                   style={{
                     background: colors.background.primary,
                     color: colors.text.primary,
                   }}
                 >
-                  {totalPages}
+                  {page - 1}
                 </button>
-              </>
-            )}
-          </div>
+              )}
 
-          <button
-            disabled={page === totalPages || totalPages === 0}
-            onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1.5 text-xs font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
-            style={{
-              color: colors.text.primary,
-            }}
-          >
-            Next
-          </button>
+              {/* Current page */}
+              <button
+                className="min-w-[24px] h-6 text-xs font-medium rounded-md px-1.5"
+                style={{
+                  background: colors.background.primary,
+                  color: colors.primary,
+                  border: `1.5px solid ${colors.primary}`,
+                }}
+              >
+                {page}
+              </button>
+
+              {/* Next page */}
+              {page < totalPages && (
+                <button
+                  onClick={() => setPage(page + 1)}
+                  className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
+                  style={{
+                    background: colors.background.primary,
+                    color: colors.text.primary,
+                  }}
+                >
+                  {page + 1}
+                </button>
+              )}
+
+              {/* Last pages */}
+              {page < totalPages - 1 && (
+                <>
+                  {page < totalPages - 2 && (
+                    <span
+                      className="px-0.5 text-xs"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      ...
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setPage(totalPages)}
+                    className="min-w-[24px] h-6 text-xs font-medium transition-all rounded-md hover:bg-gray-100 px-1.5"
+                    style={{
+                      background: colors.background.primary,
+                      color: colors.text.primary,
+                    }}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+            </div>
+
+            <button
+              disabled={page === totalPages || totalPages === 0}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1.5 text-xs font-medium transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
+              style={{
+                color: colors.text.primary,
+              }}
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
- 

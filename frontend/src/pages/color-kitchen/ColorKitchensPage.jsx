@@ -14,8 +14,10 @@ import { searchDesign } from "../../services/design_service";
 import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
+import { useNavigate } from "react-router-dom";
 
 export default function ColorKitchensPage() {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -33,18 +35,6 @@ export default function ColorKitchensPage() {
     setRefresh((prev) => prev + 1);
   }, [dateRange.startDate, dateRange.endDate]);
 
-  useEffect(() => {
-    const fetchDesigns = async () => {
-      try {
-        const response = await searchDesign({});
-        setDesigns(response.data?.data || []);
-      } catch (error) {
-        console.error("Failed to fetch designs:", error);
-      }
-    };
-    fetchDesigns();
-  }, []);
-
   const columns = [
     {
       key: "code",
@@ -61,21 +51,13 @@ export default function ColorKitchensPage() {
       ),
     },
     {
-      key: "design_id",
+      key: "design_name",
       label: "Design",
       sortable: true,
-      render: (value) => {
-        const design = (designs || []).find((a) => a.id === value);
-        return (
-          <span className="text-primary-text">
-            {design ? `${design.code}` : "-"}
-          </span>
-        );
-      },
     },
     {
-      key: "quantity",
-      label: "Quantity",
+      key: "rolls",
+      label: "Quantity (Roll)",
       sortable: true,
       render: (v) => <span className="text-secondary-text">{v}</span>,
     },
@@ -85,14 +67,6 @@ export default function ColorKitchensPage() {
       sortable: true,
       render: (v) => <span className="text-secondary-text">{v}</span>,
     },
-    {
-      key: "details",
-      label: "Items",
-      sortable: false,
-      render: (v) => (
-        <span className="text-secondary-text">{v?.length || 0}</span>
-      ),
-    },
   ];
 
   const renderActions = (row) => (
@@ -100,7 +74,7 @@ export default function ColorKitchensPage() {
       <button
         onClick={() => {
           setSelected(row);
-          setIsModalOpen(true);
+          navigate(`/color-kitchens/detail/${row.id}`);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
         title="View"
@@ -120,7 +94,8 @@ export default function ColorKitchensPage() {
       <button
         onClick={() => {
           if (confirm(`Delete ${row.code}?`))
-            setEntries((p) => p.filter((e) => e.id !== row.id));
+            // setEntries((p) => p.filter((e) => e.id !== row.id));
+            console.log("Delete", row.id);
         }}
         className="p-1.5 text-red-600 hover:bg-red-50 rounded"
         title="Delete"
@@ -157,58 +132,56 @@ export default function ColorKitchensPage() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Color Kitchen Management
-          </h1>
-          <p className="mb-2 text-secondary-text">
-            Manage color kitchen entries with design and product details.
+      <div className="bg-background mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Color Kitchen Management
+        </h1>
+        <p className="mb-2 text-secondary-text">
+          Manage color kitchen entries with design and product details.
+        </p>
+        {dateRange.startDate && dateRange.endDate && (
+          <p className="mt-1 mb-4 text-xs text-blue-600">
+            📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+            {formatDate(dateRange.endDate)}
           </p>
-          {dateRange.startDate && dateRange.endDate && (
-            <p className="mt-1 mb-4 text-xs text-blue-600">
-              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
-              {formatDate(dateRange.endDate)}
-            </p>
-          )}
+        )}
 
-          <div className="mb-4">
-            <Button
-              icon={Upload}
-              label="Import from Excel"
-              onClick={() => setIsImportOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
-            />
-          </div>
-
-          <Table
-            key={refresh}
-            columns={columns}
-            fetchData={filteredSearchColorKitchen}
-            actions={renderActions}
-            onCreate={() => {
-              setSelected(null);
-              setIsModalOpen(true);
-            }}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
-
-          <ColorKitchenForm
-            entry={selected}
-            isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setSelected(null);
-            }}
-            onSave={handleSave}
-          />
-          <ImportColorKitchenModal
-            isOpen={isImportOpen}
-            onClose={() => setIsImportOpen(false)}
-            onImportSuccess={() => setRefresh((p) => p + 1)}
+        <div className="mb-4">
+          <Button
+            icon={Upload}
+            label="Import from Excel"
+            onClick={() => setIsImportOpen(true)}
+            className="bg-green-600 hover:bg-green-700"
           />
         </div>
+
+        <Table
+          key={refresh}
+          columns={columns}
+          fetchData={filteredSearchColorKitchen}
+          actions={renderActions}
+          onCreate={() => {
+            setSelected(null);
+            setIsModalOpen(true);
+          }}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
+
+        <ColorKitchenForm
+          entry={selected}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelected(null);
+          }}
+          onSave={handleSave}
+        />
+        <ImportColorKitchenModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onImportSuccess={() => setRefresh((p) => p + 1)}
+        />
       </div>
     </MainLayout>
   );
