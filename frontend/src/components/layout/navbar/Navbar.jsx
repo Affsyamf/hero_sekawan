@@ -1,6 +1,7 @@
 import { Menu } from "lucide-react";
 import NotificationDropdown from "../../ui/notification-dropdown/NotificationDropdown";
 import ProfileDropdown from "../../ui/profile-dropdown/ProfileDropdown";
+import { DateRangeFilter } from "../../ui";
 
 export default function Navbar({ onMenuClick }) {
   return (
@@ -11,6 +12,10 @@ export default function Navbar({ onMenuClick }) {
       >
         <Menu size={20} className="text-gray-600" />
       </button>
+
+      <div className="flex justify-end flex-1 ml-4">
+        <DateRangeFilter />
+      </div>
 
       <div className="flex items-center gap-4 ml-auto">
         {/* <NotificationDropdown /> */}

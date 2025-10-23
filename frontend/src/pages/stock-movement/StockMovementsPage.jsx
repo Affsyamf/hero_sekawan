@@ -1,7 +1,8 @@
 import { Edit2, Eye, Trash2, Upload } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import ImportStockMovementModal from "../../components/features/stock-movement/ImportStockMovementModal";
 import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
+import Button from "../../components/ui/button/Button";
 import Table from "../../components/ui/table/Table";
 import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
@@ -9,10 +10,8 @@ import {
   searchStockMovement,
   updateStockMovement,
 } from "../../services/stock_movement_service";
+import useDateFilterStore from "../../stores/useDateFilterStore";
 import { formatDate } from "../../utils/helpers";
-import { useFilteredFetch } from "../../hooks/useFilteredFetch";
-import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
-import Button from "../../components/ui/button/Button";
 
 export default function StockMovementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,28 +19,28 @@ export default function StockMovementsPage() {
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
 
-  //filter global
-  const { dateRange } = useGlobalFilter();
-  const filteredSearchStockMovement = useFilteredFetch(
-    searchStockMovement,
-    "date"
-  );
+  const dateRange = useDateFilterStore((state) => state.dateRange);
 
   useEffect(() => {
     setRefresh((prev) => prev + 1);
-  }, [dateRange.startDate, dateRange.endDate]);
+  }, [dateRange]);
 
-  // useEffect(() => {
-  //   const fetchSuppliers = async () => {
-  //     try {
-  //       const response = await searchSupplier({});
-  //       setSuppliers(response.data?.data || []);
-  //     } catch (error) {
-  //       console.error("Failed to fetch suppliers:", error);
-  //     }
-  //   };
-  //   fetchSuppliers();
-  // }, []);
+  const fetchDataWithDateFilter = async (params) => {
+    try {
+      const queryParams = { ...params };
+
+      if (dateRange?.dateFrom && dateRange?.dateTo) {
+        queryParams.start_date = dateRange.dateFrom;
+        queryParams.end_date = dateRange.dateTo;
+      }
+
+      const response = await searchStockMovement(queryParams);
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch stock movements:", error);
+      throw error;
+    }
+  };
 
   const columns = [
     {
@@ -70,9 +69,9 @@ export default function StockMovementsPage() {
       key: "total",
       label: "Total Qty",
       sortable: false,
-      render: (v) => (
+      render: (v, row) => (
         <span className="font-medium text-primary">
-          {v?.reduce((s, d) => s + (d.quantity || 0), 0) || 0}
+          {row.details?.reduce((s, d) => s + (d.quantity || 0), 0) || 0}
         </span>
       ),
     },
@@ -102,8 +101,10 @@ export default function StockMovementsPage() {
       </button>
       <button
         onClick={() => {
-          if (confirm(`Delete ${row.code}?`))
-            setStockMovements((p) => p.filter((sm) => sm.id !== row.id));
+          if (confirm(`Delete ${row.code}?`)) {
+            // Implement delete functionality here
+            setRefresh((prev) => prev + 1);
+          }
         }}
         className="p-1.5 text-red-600 hover:bg-red-50 rounded"
         title="Delete"
@@ -148,11 +149,42 @@ export default function StockMovementsPage() {
           <p className="mb-2 text-secondary-text">
             Track stock movements with detailed product quantities.
           </p>
-          {dateRange.startDate && dateRange.endDate && (
-            <p className="mt-1 mb-4 text-xs text-blue-600">
-              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
-              {formatDate(dateRange.endDate)}
-            </p>
+
+          {/* Display active filter info */}
+          {dateRange && (
+            <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">📅 Active Filter:</span>{" "}
+                {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+                {dateRange.mode === "year" && `Year ${dateRange.year}`}
+                {dateRange.mode === "month-year" && (
+                  <>
+                    {new Date(
+                      dateRange.year,
+                      dateRange.month - 1
+                    ).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </>
+                )}
+                {(dateRange.mode === "days" || !dateRange.mode) && (
+                  <>
+                    {formatDate(dateRange.dateFrom)} to{" "}
+                    {formatDate(dateRange.dateTo)}
+                    {dateRange.days !== undefined && (
+                      <span className="ml-2 text-xs">
+                        (
+                        {dateRange.days === 0
+                          ? "Today"
+                          : `Last ${dateRange.days} days`}
+                        )
+                      </span>
+                    )}
+                  </>
+                )}
+              </p>
+            </div>
           )}
 
           <div className="mb-4">
@@ -167,7 +199,7 @@ export default function StockMovementsPage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={filteredSearchStockMovement}
+            fetchData={fetchDataWithDateFilter}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);

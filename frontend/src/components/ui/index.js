@@ -7,4 +7,5 @@ export { default as DropdownSelect } from './dropdown-select/DropdownSelect';
 export { default as Input } from './input/Input';
 export { default as Table } from './table/Table';
 export { default as Modal } from './modal/Modal';
+export { default as DateRangeFilter } from './date-range-filter/DateRangeFilter';
 

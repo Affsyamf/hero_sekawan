@@ -14,6 +14,7 @@ import { searchDesign } from "../../services/design_service";
 import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
+import useDateFilterStore from "../../stores/useDateFilterStore";
 
 export default function ColorKitchensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,15 +24,38 @@ export default function ColorKitchensPage() {
   const [designs, setDesigns] = useState([]);
 
   //filter global
-  const { dateRange } = useGlobalFilter();
-  const filteredSearchColorKitchen = useFilteredFetch(
-    searchColorKitchen,
-    "date"
-  );
+  // const { dateRange } = useGlobalFilter();
+  // const filteredSearchColorKitchen = useFilteredFetch(
+  //   searchColorKitchen,
+  //   "date"
+  // );
+
+  // useEffect(() => {
+  //   setRefresh((prev) => prev + 1);
+  // }, [dateRange.startDate, dateRange.endDate]);
+
+  const dateRange = useDateFilterStore((state) => state.dateRange);
 
   useEffect(() => {
     setRefresh((prev) => prev + 1);
-  }, [dateRange.startDate, dateRange.endDate]);
+  }, [dateRange]);
+
+  const fetchDataWithDateFilter = async (params) => {
+    try {
+      const queryParams = { ...params };
+
+      if (dateRange?.dateFrom && dateRange?.dateTo) {
+        queryParams.start_date = dateRange.dateFrom;
+        queryParams.end_date = dateRange.dateTo;
+      }
+
+      const response = await searchColorKitchen(queryParams);
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch stock movements:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const fetchDesigns = async () => {
@@ -165,11 +189,40 @@ export default function ColorKitchensPage() {
           <p className="mb-2 text-secondary-text">
             Manage color kitchen entries with design and product details.
           </p>
-          {dateRange.startDate && dateRange.endDate && (
-            <p className="mt-1 mb-4 text-xs text-blue-600">
-              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
-              {formatDate(dateRange.endDate)}
-            </p>
+          {dateRange && (
+            <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">📅 Active Filter:</span>{" "}
+                {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+                {dateRange.mode === "year" && `Year ${dateRange.year}`}
+                {dateRange.mode === "month-year" && (
+                  <>
+                    {new Date(
+                      dateRange.year,
+                      dateRange.month - 1
+                    ).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </>
+                )}
+                {(dateRange.mode === "days" || !dateRange.mode) && (
+                  <>
+                    {formatDate(dateRange.dateFrom)} to{" "}
+                    {formatDate(dateRange.dateTo)}
+                    {dateRange.days !== undefined && (
+                      <span className="ml-2 text-xs">
+                        (
+                        {dateRange.days === 0
+                          ? "Today"
+                          : `Last ${dateRange.days} days`}
+                        )
+                      </span>
+                    )}
+                  </>
+                )}
+              </p>
+            </div>
           )}
 
           <div className="mb-4">
@@ -184,7 +237,7 @@ export default function ColorKitchensPage() {
           <Table
             key={refresh}
             columns={columns}
-            fetchData={filteredSearchColorKitchen}
+            fetchData={fetchDataWithDateFilter}
             actions={renderActions}
             onCreate={() => {
               setSelected(null);

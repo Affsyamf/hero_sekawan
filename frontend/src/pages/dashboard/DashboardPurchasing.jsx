@@ -29,6 +29,7 @@ import {
   reportsPurchasingBreakdown,
 } from "../../services/report_purchasing_service";
 import { MetricGrid } from "../../components/ui/chart/MetricCard";
+import useDateFilterStore from "../../stores/useDateFilterStore";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -38,6 +39,7 @@ export default function DashboardPurchasing() {
 
   // ✅ Use global filter instead of local state
   const { dateRange } = useGlobalFilter();
+  // const dateRange = useDateFilterStore((state) => state.dateRange);
 
   // Granularity per chart
   const [trendGranularity, setTrendGranularity] = useState("monthly");

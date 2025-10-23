@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Dropdown from "./Dropdown";
+import Dropdown from "../dropdown/Dropdown";
 
 export default function DropdownSelect({ options = [], value, onChange }) {
   const selected = options.find((opt) => opt.value === value);
