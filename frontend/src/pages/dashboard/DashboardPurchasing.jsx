@@ -36,9 +36,7 @@ export default function DashboardPurchasing() {
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
 
-  // ✅ Use global filter instead of local state
   const { dateRange } = useGlobalFilter();
-  // const dateRange = useDateFilterStore((state) => state.dateRange);
 
   // Granularity per chart
   const [trendGranularity, setTrendGranularity] = useState("monthly");
