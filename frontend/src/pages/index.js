@@ -16,4 +16,5 @@ export { default as OverviewOld } from "./dashboard/OverviewOld";
 export { default as DashboardPurchasing } from "./dashboard/DashboardPurchasing";
 export { default as DashboardColorKitchen } from "./dashboard/DashboardColorKitchen";
 
-export { default as ColorKitchenDetail } from "./color-kitchen/ColorKitchenDetail";
+export { default as ColorKitchenDetailPage } from "./color-kitchen/ColorKitchenDetailPage";
+export { default as PurchasingDetailPage } from "./purchasing/PurchasingDetailPage";

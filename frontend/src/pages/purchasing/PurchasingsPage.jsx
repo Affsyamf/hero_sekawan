@@ -17,8 +17,11 @@ import { searchSupplier } from "../../services/supplier_service";
 import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
+import { useNavigate } from "react-router-dom";
 
 export default function PurchasingsPage() {
+  const navigate = useNavigate();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportMDOpen, setIsImportMDOpen] = useState(false);
   const [isImportTrxOpen, setIsImportTrxOpen] = useState(false);
@@ -68,23 +71,9 @@ export default function PurchasingsPage() {
       render: (v) => <span className="text-secondary-text">{v || "-"}</span>,
     },
     {
-      key: "supplier_id",
+      key: "supplier_name",
       label: "Supplier",
       sortable: true,
-      render: (value) => {
-        const supplier = (suppliers || []).find((a) => a.id === value);
-        return (
-          <span className="text-primary-text">
-            {supplier ? `${supplier.code} - ${supplier.name}` : "-"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "item_count",
-      label: "Items",
-      sortable: false,
-      render: (v) => <span className="text-secondary-text">{v || 0}</span>,
     },
     {
       key: "total_amount",
@@ -103,7 +92,7 @@ export default function PurchasingsPage() {
       <button
         onClick={() => {
           setSelectedPurchasing(row);
-          setIsModalOpen(true);
+          navigate(`/purchasings/detail/${row.id}`);
         }}
         className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all"
         title="View"
