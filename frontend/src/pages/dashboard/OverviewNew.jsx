@@ -1,5 +1,4 @@
 import { useTheme } from "../../contexts/ThemeContext";
-import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
@@ -14,75 +13,86 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getDashboardData } from "../../services/dashboard_service";
 import {
   formatNumber,
   formatCompactCurrency,
   formatDate,
 } from "../../utils/helpers";
+import useDateFilterStore from "../../stores/useDateFilterStore";
 
 export default function OverviewNew() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
-  const { dateRange } = useGlobalFilter();
+
+  // ✅ Gunakan useDateFilterStore seperti di Stock Movement
+  const dateRange = useDateFilterStore((state) => state.dateRange);
 
   // ✅ Granularity state untuk Cost Trend
   const [costTrendGranularity, setCostTrendGranularity] = useState("monthly");
 
-  // ✅ Fetch initial data ketika dateRange berubah
-  useEffect(() => {
-    if (dateRange.startDate && dateRange.endDate) {
-      fetchDashboardData();
-    }
-  }, [dateRange.startDate, dateRange.endDate]);
+  // ✅ Gunakan ref untuk mencegah multiple fetch
+  const isFetchingRef = useRef(false);
+  const lastFetchParams = useRef(null);
 
-  // ✅ Refetch cost_trend ketika granularity berubah
+  // ✅ Fetch data ketika dateRange berubah
   useEffect(() => {
-    if (dashboardData && dateRange.startDate && dateRange.endDate) {
-      fetchCostTrendData();
+    console.log("🔍 DateRange changed:", dateRange);
+
+    // Pastikan dateRange valid
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) {
+      console.log("⚠️ DateRange not valid, skipping fetch");
+      setLoading(false);
+      return;
     }
-  }, [costTrendGranularity]);
+
+    // Cek apakah params sama dengan fetch terakhir
+    const currentParams = `${dateRange.dateFrom}-${dateRange.dateTo}-${costTrendGranularity}`;
+    if (lastFetchParams.current === currentParams) {
+      console.log("⏭️ Same params, skipping fetch");
+      return;
+    }
+
+    // Cek apakah sedang fetching
+    if (isFetchingRef.current) {
+      console.log("⏳ Already fetching, skipping");
+      return;
+    }
+
+    lastFetchParams.current = currentParams;
+    fetchDashboardData();
+  }, [dateRange?.dateFrom, dateRange?.dateTo, costTrendGranularity]);
 
   const fetchDashboardData = async () => {
+    if (isFetchingRef.current) {
+      console.log("⏳ Fetch already in progress");
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
+
       const params = {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        start_date: dateRange?.dateFrom,
+        end_date: dateRange?.dateTo,
         granularity: costTrendGranularity,
       };
 
+      console.log("📡 Fetching dashboard data with params:", params);
       const response = await getDashboardData(params);
+      console.log("✅ Dashboard data received:", response.data);
+
       setDashboardData(response.data);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      console.error("❌ Error fetching dashboard data:", error);
       setDashboardData(null);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // ✅ Fetch cost trend data only
-  const fetchCostTrendData = async () => {
-    try {
-      const params = {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
-        granularity: costTrendGranularity,
-      };
-
-      const response = await getDashboardData(params);
-
-      // Update hanya cost_trend, biarkan data lain tetap
-      setDashboardData((prev) => ({
-        ...prev,
-        cost_trend: response.data.cost_trend,
-      }));
-    } catch (error) {
-      console.error("Error fetching cost trend data:", error);
+      isFetchingRef.current = false;
     }
   };
 
@@ -107,6 +117,9 @@ export default function OverviewNew() {
           <div className="text-center">
             <div className="w-16 h-16 mx-auto border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
             <p className="mt-4 text-gray-600">Loading dashboard...</p>
+            <p className="mt-2 text-xs text-gray-500">
+              Date: {dateRange?.dateFrom} to {dateRange?.dateTo}
+            </p>
           </div>
         </div>
       </MainLayout>
@@ -119,8 +132,14 @@ export default function OverviewNew() {
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <p className="text-gray-600">No data available</p>
+            <p className="mt-2 text-xs text-gray-500">
+              DateRange: {JSON.stringify(dateRange)}
+            </p>
             <button
-              onClick={fetchDashboardData}
+              onClick={() => {
+                lastFetchParams.current = null;
+                fetchDashboardData();
+              }}
               className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
             >
               Retry
@@ -134,11 +153,6 @@ export default function OverviewNew() {
   const { metrics, cost_trend, stock_flow, most_used_dye, most_used_aux } =
     dashboardData;
 
-  const totalCostProduksi = cost_trend.reduce(
-    (sum, d) => sum + (d.total_cost || 0),
-    0
-  );
-
   return (
     <MainLayout>
       <div className="max-w-full space-y-6">
@@ -151,13 +165,6 @@ export default function OverviewNew() {
             <p className="mt-1 text-sm text-gray-600">
               Overview Stock, Cost, dan Usage Produksi Kain Printing
             </p>
-
-            {dateRange.startDate && dateRange.endDate && (
-              <p className="mt-1 text-xs text-blue-600">
-                📅 Filtered: {formatDate(dateRange.startDate)} –{" "}
-                {formatDate(dateRange.endDate)}
-              </p>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -170,6 +177,43 @@ export default function OverviewNew() {
             />
           </div>
         </div>
+
+        {/* ✅ Display active filter info - sama seperti Stock Movement */}
+        {dateRange && (
+          <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">📅 Active Filter:</span>{" "}
+              {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+              {dateRange.mode === "year" && `Year ${dateRange.year}`}
+              {dateRange.mode === "month-year" && (
+                <>
+                  {new Date(
+                    dateRange.year,
+                    dateRange.month - 1
+                  ).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </>
+              )}
+              {(dateRange.mode === "days" || !dateRange.mode) && (
+                <>
+                  {formatDate(dateRange.dateFrom)} to{" "}
+                  {formatDate(dateRange.dateTo)}
+                  {dateRange.days !== undefined && (
+                    <span className="ml-2 text-xs">
+                      (
+                      {dateRange.days === 0
+                        ? "Today"
+                        : `Last ${dateRange.days} days`}
+                      )
+                    </span>
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
         {/* KPI Metric Cards */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -224,7 +268,7 @@ export default function OverviewNew() {
             />
           </Card>
 
-          {/* Cost Produksi Trend - ✅ Pattern sama dengan DashboardPurchasing */}
+          {/* Cost Produksi Trend */}
           <Card className="w-full h-full">
             <div className="flex items-center justify-between px-4 pt-4 mb-3">
               <div>
@@ -235,17 +279,6 @@ export default function OverviewNew() {
                   Total biaya produksi per periode
                 </p>
               </div>
-              {/* ✅ Filter dropdown di luar HighchartsLine */}
-              {/* <select
-                value={costTrendGranularity}
-                onChange={(e) => setCostTrendGranularity(e.target.value)}
-                className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
-              >
-                <option value="daily">Perhari</option>
-                <option value="weekly">Perminggu</option>
-                <option value="monthly">Perbulan</option>
-                <option value="yearly">Pertahun</option>
-              </select> */}
             </div>
             <HighchartsLine
               initialData={cost_trend}

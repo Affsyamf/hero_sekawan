@@ -1,35 +1,34 @@
 // pages/dashboard/DashboardPurchasing.jsx
-import { useTheme } from "../../contexts/ThemeContext";
-import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ Import
-import Card from "../../components/ui/card/Card";
-import Button from "../../components/ui/button/Button";
-import Chart from "../../components/ui/chart/Chart";
-import { Highchart } from "../../components/ui/highchart";
 import {
-  ShoppingCart,
-  Package,
-  Wrench,
-  Download,
-  TrendingUp,
   Building2,
+  Download,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Wrench,
 } from "lucide-react";
-import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
+import Button from "../../components/ui/button/Button";
+import Card from "../../components/ui/card/Card";
+import Chart from "../../components/ui/chart/Chart";
+import { MetricGrid } from "../../components/ui/chart/MetricCard";
+import { Highchart } from "../../components/ui/highchart";
+import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ Import
+import { useTheme } from "../../contexts/ThemeContext";
+import { MainLayout } from "../../layouts";
 import {
-  formatNumber,
+  reportsPurchasingBreakdown,
+  reportsPurchasingBreakdownSummary,
+  reportsPurchasingProducts,
+  reportsPurchasingSummary,
+  reportsPurchasingSuppliers,
+  reportsPurchasingTrend,
+} from "../../services/report_purchasing_service";
+import {
   formatCompactCurrency,
   formatDate,
+  formatNumber,
 } from "../../utils/helpers";
-import {
-  reportsPurchasingSummary,
-  reportsPurchasingTrend,
-  reportsPurchasingProducts,
-  reportsPurchasingSuppliers,
-  reportsPurchasingBreakdownSummary,
-  reportsPurchasingBreakdown,
-} from "../../services/report_purchasing_service";
-import { MetricGrid } from "../../components/ui/chart/MetricCard";
-import useDateFilterStore from "../../stores/useDateFilterStore";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
