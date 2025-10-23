@@ -48,8 +48,8 @@ export default function ImportDataMasterModal({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const steps = [
-    { number: 1, label: "Laporan Chemical", key: "chemical" },
-    { number: 2, label: "Laporan Pembelian", key: "pembelian" },
+    { number: 1, label: "Laporan Pembelian", key: "pembelian" },
+    { number: 2, label: "Laporan Chemical", key: "chemical" },
     { number: 3, label: "Laporan CK", key: "ck" },
   ];
 
@@ -62,22 +62,6 @@ export default function ImportDataMasterModal({
   const getCurrentStepConfig = () => {
     switch (currentStep) {
       case 1:
-        return {
-          key: "chemical",
-          file: chemicalFile,
-          setFile: setChemicalFile,
-          preview: chemicalPreview,
-          setPreview: setChemicalPreview,
-          result: chemicalResult,
-          setResult: setChemicalResult,
-          error: chemicalError,
-          setError: setChemicalError,
-          title: "Import Data Master - Laporan Chemical",
-          description: "Upload file Excel dari Laporan Chemical",
-          importApi: importDataMasterLapChemical,
-          previewApi: importDataMasterLapChemicalPreview,
-        };
-      case 2:
         return {
           key: "pembelian",
           file: pembelianFile,
@@ -93,6 +77,24 @@ export default function ImportDataMasterModal({
           importApi: importDataMasterLapPembelian,
           previewApi: importDataMasterLapPembelianPreview,
         };
+
+      case 2:
+        return {
+          key: "chemical",
+          file: chemicalFile,
+          setFile: setChemicalFile,
+          preview: chemicalPreview,
+          setPreview: setChemicalPreview,
+          result: chemicalResult,
+          setResult: setChemicalResult,
+          error: chemicalError,
+          setError: setChemicalError,
+          title: "Import Data Master - Laporan Chemical",
+          description: "Upload file Excel dari Laporan Chemical",
+          importApi: importDataMasterLapChemical,
+          previewApi: importDataMasterLapChemicalPreview,
+        };
+
       case 3:
         return {
           key: "ck",

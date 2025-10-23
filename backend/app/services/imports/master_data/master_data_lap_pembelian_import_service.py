@@ -114,16 +114,30 @@ class MasterDataLapPembelianImportService(BaseImportService):
         return summary
     
     def preview(self, file: UploadFile):
+        """
+        Simulates the master-data import exactly like _run(),
+        but never writes to DB.  Returns counts + sample data.
+        """
+
+        # --- small helpers --------------------------------------------------
+        def safe_int(x):
+            try:
+                if pd.isna(x):
+                    return None
+                return int(float(x))
+            except (ValueError, TypeError):
+                return None
+
         contents: bytes = file.file.read()
         xls = pd.ExcelFile(BytesIO(contents))
         frames = []
         for sheet in xls.sheet_names:
             df = pd.read_excel(BytesIO(contents), sheet_name=sheet, header=6)
-            df = df.iloc[:, :-2]
+            df = df.iloc[:, :-2]  # drop trailing junk cols
             frames.append(df)
-
         all_data = pd.concat(frames, ignore_index=True)
 
+        # --- working sets ---------------------------------------------------
         seen_accounts = set()
         seen_products = set()
         seen_suppliers = set()
@@ -132,66 +146,82 @@ class MasterDataLapPembelianImportService(BaseImportService):
         skipped = {"accounts": [], "products": [], "suppliers": []}
         missing_account_refs = []
 
+        # --------------------------------------------------------------------
         for _, row in all_data.iterrows():
-            # --- Accounts ---
-            acc_no = row.get("NO.ACC")
-            acc_name = row.get("ACCOUNT")
-            if pd.notna(acc_no) and pd.notna(acc_name):
-                acc_no = int(acc_no)
+            # ========== ACCOUNTS ============================================
+            acc_no_raw = row.get("NO.ACC")
+            acc_name_raw = row.get("ACCOUNT")
+            acc_no = safe_int(acc_no_raw)
+            if acc_no and pd.notna(acc_name_raw):
                 if acc_no not in seen_accounts:
                     seen_accounts.add(acc_no)
                     existing = self.db.query(Account).filter_by(account_no=acc_no).first()
                     if existing:
-                        skipped["accounts"].append({"account_no": acc_no, "name": acc_name})
+                        skipped["accounts"].append({"account_no": acc_no, "name": acc_name_raw})
                     else:
                         to_insert["accounts"].append({
                             "account_no": acc_no,
-                            "name": normalise_account_name(acc_name),
+                            "name": normalise_account_name(acc_name_raw),
                             "account_type": AccountType.Goods.value
                         })
 
-            # --- Products ---
+            # ========== PRODUCTS ============================================
             raw_name = row.get("NAMA BARANG")
             if pd.notna(raw_name):
                 name = normalise_product_name(raw_name)
                 if name and name not in seen_products:
                     seen_products.add(name)
                     unit = str(row.get("SATUAN") or "").strip().upper() or None
-                    acc_no = row.get("NO.ACC")
+                    acc_no = safe_int(row.get("NO.ACC"))
 
-                    existing = self.db.query(Product).filter_by(name=name).first()
-                    if existing:
+                    existing_product = self.db.query(Product).filter_by(name=name).first()
+                    if existing_product:
                         skipped["products"].append({"name": name, "reason": "Already exists"})
                         continue
 
-                    account = None
-                    if pd.notna(acc_no):
-                        account = self.db.query(Account).filter_by(account_no=int(acc_no)).first()
-                    if account:
+                    # check if account exists now or will exist after import
+                    account_exists = None
+                    if acc_no:
+                        account_exists = self.db.query(Account).filter_by(account_no=acc_no).first()
+                    will_exist = bool(
+                        account_exists or any(a["account_no"] == acc_no for a in to_insert["accounts"])
+                    )
+
+                    if will_exist:
                         to_insert["products"].append({
                             "name": name,
                             "unit": unit,
-                            "account_no": int(acc_no),
-                            "account_name": account.name
+                            "account_no": acc_no,
+                            "account_name": getattr(account_exists, "name",
+                                normalise_account_name(row.get("ACCOUNT") or "")),
                         })
                     else:
+                        # still show it, but mark the account missing
+                        to_insert["products"].append({
+                            "name": name,
+                            "unit": unit,
+                            "account_no": acc_no,
+                            "account_name": None,
+                            "has_missing_account": True,
+                        })
                         missing_account_refs.append({
                             "name": name,
                             "account_no": acc_no,
                             "reason": "Account not found"
                         })
 
-            # --- Suppliers ---
+            # ========== SUPPLIERS ===========================================
             code = str(row.get("KODE SUPPLIER") or "").strip().upper()
-            name = normalise_supplier_name(row.get("SUPPLIER") or "")
-            if code and name and code not in seen_suppliers:
+            supp_name = normalise_supplier_name(row.get("SUPPLIER") or "")
+            if code and supp_name and code not in seen_suppliers:
                 seen_suppliers.add(code)
                 existing = self.db.query(Supplier).filter_by(code=code).first()
                 if existing:
-                    skipped["suppliers"].append({"code": code, "name": name, "reason": "Already exists"})
+                    skipped["suppliers"].append({"code": code, "name": supp_name, "reason": "Already exists"})
                 else:
-                    to_insert["suppliers"].append({"code": code, "name": name})
+                    to_insert["suppliers"].append({"code": code, "name": supp_name})
 
+        # --- build response -------------------------------------------------
         return APIResponse.ok(
             data={
                 "summary": {
@@ -211,6 +241,7 @@ class MasterDataLapPembelianImportService(BaseImportService):
                     "skipped_accounts": skipped["accounts"][:10],
                     "skipped_products": skipped["products"][:10],
                     "skipped_suppliers": skipped["suppliers"][:10],
-                }
+                },
             }
         )
+            

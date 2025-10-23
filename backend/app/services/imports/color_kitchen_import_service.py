@@ -284,7 +284,9 @@ class ColorKitchenImportService(BaseImportService):
                     else:
                         aux_accum[pname] = aux_accum.get(pname, 0.0) + total_val
                 else:
-                    batch_agg[pname] = batch_agg.get(pname, 0.0) + total_val
+                    # dyestuff values are in grams → convert to kilograms
+                    total_val_kg = total_val / 1000.0
+                    batch_agg[pname] = batch_agg.get(pname, 0.0) + total_val_kg
             for pname, qty in aux_accum.items():
                 entry["details"].append({"product_name": pname, "quantity": qty})
         
@@ -371,7 +373,9 @@ class ColorKitchenImportService(BaseImportService):
                     else:
                         aux_accum[pname] = aux_accum.get(pname, 0.0) + total_val
                 else:
-                    batch_agg[pname] = batch_agg.get(pname, 0.0) + total_val
+                    # dyestuff values are in grams → convert to kilograms
+                    total_val_kg = total_val / 1000.0
+                    batch_agg[pname] = batch_agg.get(pname, 0.0) + total_val_kg
 
             for pname, qty in aux_accum.items():
                 entry["details"].append({"product_name": pname, "quantity": qty})
