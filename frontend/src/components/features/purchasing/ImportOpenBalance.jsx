@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Upload,
   FileSpreadsheet,
@@ -6,7 +6,6 @@ import {
   AlertCircle,
   ChevronRight,
   AlertTriangle,
-  XCircle,
 } from "lucide-react";
 import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
@@ -14,7 +13,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
 import { importApi } from "../../../services/import_service";
 
-export default function ImportColorKitchenModal({
+export default function ImportOpeningBalanceModal({
   isOpen,
   onClose,
   onImportSuccess,
@@ -42,11 +41,11 @@ export default function ImportColorKitchenModal({
     setProcessing(false);
   };
 
-  // 🔹 Fetch preview from backend
+  // --- Fetch preview from backend ---
   const fetchPreview = async (f) => {
     setProcessing(true);
     try {
-      const res = await importApi.previewLapCk(f);
+      const res = await importApi.previewOpeningBalance(f);
       const data = res.data?.data;
 
       setPreview(data);
@@ -77,20 +76,9 @@ export default function ImportColorKitchenModal({
       setError("Select file");
       return;
     }
-    if (step === 2 && !preview) {
-      setError("No preview data available");
+    if (step === 2 && !preview?.summary?.valid_products) {
+      setError("No valid data to import");
       return;
-    }
-    // Check for missing products/designs before allowing to proceed
-    if (step === 2) {
-      const hasMissingProducts = preview?.missing_products?.length > 0;
-      const hasMissingDesigns = preview?.missing_designs?.length > 0;
-      if (hasMissingProducts || hasMissingDesigns) {
-        setError(
-          "Cannot proceed: Missing products or designs. Please fix these issues first."
-        );
-        return;
-      }
     }
     setError(null);
     setStep((p) => p + 1);
@@ -101,14 +89,16 @@ export default function ImportColorKitchenModal({
     setStep((p) => p - 1);
   };
 
-  // 🔹 Perform actual import
+  // --- Perform actual import ---
   const doImport = async () => {
     if (!file) return;
     setProcessing(true);
     setError(null);
+
     try {
-      const res = await importApi.importLapCk(file);
+      const res = await importApi.importOpeningBalance(file);
       const data = res.data?.data || res.data;
+
       setResult(data);
       if (onImportSuccess) onImportSuccess(data);
     } catch (err) {
@@ -120,7 +110,7 @@ export default function ImportColorKitchenModal({
     }
   };
 
-  // --- Step indicator
+  // --- Render Step Indicator ---
   const renderIndicator = () => (
     <div
       className="px-6 py-4 border-b"
@@ -177,7 +167,7 @@ export default function ImportColorKitchenModal({
     </div>
   );
 
-  // --- Step 1: Upload
+  // --- Step 1: Upload ---
   const renderStep1 = () => (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="w-full max-w-md">
@@ -196,18 +186,18 @@ export default function ImportColorKitchenModal({
             Upload Excel File
           </h3>
           <p className="mb-4 text-sm" style={{ color: colors.text.secondary }}>
-            Select .xlsx with Color Kitchen data
+            Select .xlsx with opening balance data (Sheet: GUDANG BESAR)
           </p>
           <input
             type="file"
             accept=".xlsx"
             onChange={selectFile}
             className="hidden"
-            id="file-ck"
+            id="file-opening-balance"
             disabled={processing}
           />
           <label
-            htmlFor="file-ck"
+            htmlFor="file-opening-balance"
             className={cn(
               "inline-block px-4 py-2 rounded-lg",
               processing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
@@ -237,23 +227,11 @@ export default function ImportColorKitchenModal({
             </div>
           )}
         </div>
-        <div
-          className="p-4 mt-4 rounded-lg"
-          style={{ backgroundColor: colors.background.secondary }}
-        >
-          <p className="text-xs" style={{ color: colors.text.secondary }}>
-            <strong>Format:</strong> Sheet "TEMPLATE QTY" with OPJ, DESIGN,
-            JENIS KAIN, ROLL, and TGL columns.
-          </p>
-          <p className="mt-1 text-xs" style={{ color: colors.text.secondary }}>
-            Empty rows separate batches.
-          </p>
-        </div>
       </div>
     </div>
   );
 
-  // --- Step 2: Preview
+  // --- Step 2: Preview ---
   const renderStep2 = () => {
     if (!preview) {
       return (
@@ -266,37 +244,8 @@ export default function ImportColorKitchenModal({
       );
     }
 
-    if (processing) {
-      return (
-        <div
-          className="py-10 text-sm text-center"
-          style={{ color: colors.text.secondary }}
-        >
-          Loading preview...
-        </div>
-      );
-    }
-
-    const {
-      batches = [],
-      missing_products = [],
-      missing_designs = [],
-      skipped_rows = [],
-      batch_count = 0,
-      skipped_rows_count = 0,
-    } = preview;
-
-    // Flatten entries for display
-    const allEntries = batches.flatMap((b) =>
-      b.entries.map((e) => ({
-        batch_code: b.code,
-        batch_date: b.date,
-        ...e,
-      }))
-    );
-
-    const totalEntries = allEntries.length;
-    const hasErrors = missing_products.length > 0 || missing_designs.length > 0;
+    const { summary, preview_rows = [], skipped_sample = [] } = preview;
+    const displayed = preview_rows.slice(0, 30);
 
     return (
       <div>
@@ -314,13 +263,13 @@ export default function ImportColorKitchenModal({
               className="mb-1 text-xs"
               style={{ color: colors.text.secondary }}
             >
-              Batches
+              Total Rows
             </p>
             <p
               className="text-2xl font-bold"
               style={{ color: colors.text.primary }}
             >
-              {batch_count}
+              {summary?.total_rows || 0}
             </p>
           </div>
 
@@ -336,13 +285,13 @@ export default function ImportColorKitchenModal({
               className="mb-1 text-xs"
               style={{ color: colors.text.secondary }}
             >
-              Entries
+              Valid Products
             </p>
             <p
               className="text-2xl font-bold"
               style={{ color: colors.status.success }}
             >
-              {totalEntries}
+              {summary?.valid_products || 0}
             </p>
           </div>
 
@@ -358,105 +307,19 @@ export default function ImportColorKitchenModal({
               className="mb-1 text-xs"
               style={{ color: colors.text.secondary }}
             >
-              Skipped Rows
+              Skipped
             </p>
             <p
               className="text-2xl font-bold"
               style={{ color: colors.status.warning }}
             >
-              {skipped_rows_count}
+              {summary?.skipped_products || 0}
             </p>
           </div>
         </div>
 
-        {/* Missing Products Error */}
-        {missing_products.length > 0 && (
-          <div
-            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.error}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.error,
-            }}
-          >
-            <XCircle
-              className="flex-shrink-0 w-5 h-5 mt-0.5"
-              style={{ color: colors.status.error }}
-            />
-            <div className="flex-1">
-              <p
-                className="mb-2 text-sm font-medium"
-                style={{ color: colors.status.error }}
-              >
-                Missing Products ({missing_products.length})
-              </p>
-              <p
-                className="mb-2 text-xs"
-                style={{ color: colors.text.secondary }}
-              >
-                These products are referenced but don't exist in the database.
-                Please add them first:
-              </p>
-              <div className="space-y-1 overflow-y-auto max-h-40">
-                {missing_products.map((product, idx) => (
-                  <p
-                    key={idx}
-                    className="font-mono text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    • {product}
-                  </p>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Missing Designs Error */}
-        {missing_designs.length > 0 && (
-          <div
-            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.error}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.error,
-            }}
-          >
-            <XCircle
-              className="flex-shrink-0 w-5 h-5 mt-0.5"
-              style={{ color: colors.status.error }}
-            />
-            <div className="flex-1">
-              <p
-                className="mb-2 text-sm font-medium"
-                style={{ color: colors.status.error }}
-              >
-                Missing Designs ({missing_designs.length})
-              </p>
-              <p
-                className="mb-2 text-xs"
-                style={{ color: colors.text.secondary }}
-              >
-                These designs are referenced but don't exist in the database.
-                Please add them first:
-              </p>
-              <div className="space-y-1 overflow-y-auto max-h-40">
-                {missing_designs.map((design, idx) => (
-                  <p
-                    key={idx}
-                    className="font-mono text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    • {design}
-                  </p>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Skipped Rows Warning */}
-        {skipped_rows.length > 0 && (
+        {/* Skipped Products Warning */}
+        {skipped_sample.length > 0 && (
           <div
             className="flex items-start gap-3 p-4 mb-4 rounded-lg"
             style={{
@@ -474,36 +337,40 @@ export default function ImportColorKitchenModal({
                 className="mb-2 text-sm font-medium"
                 style={{ color: colors.text.primary }}
               >
-                {skipped_rows.length} row(s) skipped (empty separators)
+                {skipped_sample.length} product(s) will be skipped:
               </p>
-              <div className="flex flex-wrap gap-2">
-                {skipped_rows.slice(0, 20).map((item, idx) => (
-                  <span
+              <div className="space-y-1 overflow-y-auto max-h-32">
+                {skipped_sample.slice(0, 10).map((item, idx) => (
+                  <p
                     key={idx}
-                    className="px-2 py-1 text-xs rounded"
-                    style={{
-                      backgroundColor: colors.background.secondary,
-                      color: colors.text.secondary,
-                    }}
-                  >
-                    Row {item.row}
-                  </span>
-                ))}
-                {skipped_rows.length > 20 && (
-                  <span
                     className="text-xs"
                     style={{ color: colors.text.secondary }}
                   >
-                    +{skipped_rows.length - 20} more
-                  </span>
+                    • {item.name} - {item.reason}
+                  </p>
+                ))}
+                {skipped_sample.length > 10 && (
+                  <p
+                    className="text-xs italic"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    ... and {skipped_sample.length - 10} more
+                  </p>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Preview Table - Only show if no errors */}
-        {!hasErrors && (
+        {/* Preview Table */}
+        {processing ? (
+          <div
+            className="py-6 text-sm text-center"
+            style={{ color: colors.text.secondary }}
+          >
+            Loading preview...
+          </div>
+        ) : (
           <div
             className="overflow-hidden border rounded-lg"
             style={{ borderColor: colors.border.primary }}
@@ -520,13 +387,12 @@ export default function ImportColorKitchenModal({
                   <tr>
                     {[
                       "No",
-                      "Batch Code",
-                      "OPJ",
-                      "Design",
-                      "Jenis Kain",
-                      "Rolls",
-                      "Date",
-                      "Paste Qty",
+                      "Product",
+                      "Quantity",
+                      "Unit Price",
+                      "DPP",
+                      "PPN (11%)",
+                      "Total",
                     ].map((col) => (
                       <th
                         key={col}
@@ -539,7 +405,7 @@ export default function ImportColorKitchenModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {allEntries.slice(0, 30).map((r, i) => (
+                  {displayed.map((r, i) => (
                     <tr
                       key={i}
                       style={{
@@ -554,46 +420,40 @@ export default function ImportColorKitchenModal({
                         {i + 1}
                       </td>
                       <td
-                        className="px-3 py-2 font-mono text-xs"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {r.batch_code}
-                      </td>
-                      <td
                         className="px-3 py-2 font-medium"
                         style={{ color: colors.text.primary }}
                       >
-                        {r.code}
-                      </td>
-                      <td
-                        className="px-3 py-2"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.design}
-                      </td>
-                      <td
-                        className="px-3 py-2"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {r.jenis_kain}
+                        {r.product}
                       </td>
                       <td
                         className="px-3 py-2 text-right"
                         style={{ color: colors.text.primary }}
                       >
-                        {r.rolls}
-                      </td>
-                      <td
-                        className="px-3 py-2"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {r.date?.split("T")[0] || "-"}
+                        {r.quantity?.toLocaleString() || 0}
                       </td>
                       <td
                         className="px-3 py-2 text-right"
                         style={{ color: colors.text.primary }}
                       >
-                        {r.paste_quantity?.toFixed(2) || 0}
+                        {r.unit_price?.toLocaleString() || 0}
+                      </td>
+                      <td
+                        className="px-3 py-2 text-right"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.dpp?.toLocaleString() || 0}
+                      </td>
+                      <td
+                        className="px-3 py-2 text-right"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.ppn?.toLocaleString() || 0}
+                      </td>
+                      <td
+                        className="px-3 py-2 font-medium text-right"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.total?.toLocaleString() || 0}
                       </td>
                     </tr>
                   ))}
@@ -607,50 +467,20 @@ export default function ImportColorKitchenModal({
                 color: colors.text.secondary,
               }}
             >
-              Showing {Math.min(30, allEntries.length)} of {totalEntries}{" "}
-              entries
+              Showing {displayed.length} of {summary?.valid_products || 0} valid
+              products
             </div>
-          </div>
-        )}
-
-        {/* Blocking message if there are errors */}
-        {hasErrors && (
-          <div
-            className="p-6 text-center rounded-lg"
-            style={{
-              backgroundColor: colors.background.secondary,
-              borderWidth: "2px",
-              borderColor: colors.status.error,
-            }}
-          >
-            <XCircle
-              className="w-12 h-12 mx-auto mb-3"
-              style={{ color: colors.status.error }}
-            />
-            <p
-              className="mb-1 text-sm font-medium"
-              style={{ color: colors.text.primary }}
-            >
-              Cannot Proceed with Import
-            </p>
-            <p className="text-xs" style={{ color: colors.text.secondary }}>
-              Please fix the missing products and/or designs above before
-              importing.
-            </p>
           </div>
         )}
       </div>
     );
   };
 
-  // --- Step 3: Confirm/Result
+  // --- Step 3: Confirm/Result ---
   const renderStep3 = () => {
     if (!result) {
-      const totalEntries =
-        preview?.batches?.reduce(
-          (sum, b) => sum + (b.entries?.length || 0),
-          0
-        ) || 0;
+      const validProducts = preview?.summary?.valid_products || 0;
+      const skippedProducts = preview?.summary?.skipped_products || 0;
 
       return (
         <div className="flex flex-col items-center justify-center py-12">
@@ -666,13 +496,19 @@ export default function ImportColorKitchenModal({
           </h3>
           <div className="space-y-2 text-center">
             <p className="text-sm" style={{ color: colors.text.secondary }}>
-              <strong style={{ color: colors.primary }}>{totalEntries}</strong>{" "}
-              entries in{" "}
-              <strong style={{ color: colors.primary }}>
-                {preview?.batch_count || 0}
+              <strong style={{ color: colors.status.success }}>
+                {validProducts}
               </strong>{" "}
-              batches will be imported
+              products will be imported
             </p>
+            {skippedProducts > 0 && (
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                <strong style={{ color: colors.status.warning }}>
+                  {skippedProducts}
+                </strong>{" "}
+                products will be skipped
+              </p>
+            )}
           </div>
         </div>
       );
@@ -690,18 +526,27 @@ export default function ImportColorKitchenModal({
         >
           Import Success!
         </h3>
-        <p className="text-sm" style={{ color: colors.text.secondary }}>
-          Color Kitchen data imported successfully.
-        </p>
+        <div className="mt-4 space-y-2 text-center">
+          <p className="text-sm" style={{ color: colors.text.secondary }}>
+            <strong style={{ color: colors.status.success }}>
+              {result.added || 0}
+            </strong>{" "}
+            products imported successfully
+          </p>
+          {result.skipped > 0 && (
+            <p className="text-sm" style={{ color: colors.text.secondary }}>
+              <strong style={{ color: colors.status.warning }}>
+                {result.skipped}
+              </strong>{" "}
+              products were skipped
+            </p>
+          )}
+        </div>
       </div>
     );
   };
 
-  // --- Actions
-  const hasValidationErrors =
-    preview?.missing_products?.length > 0 ||
-    preview?.missing_designs?.length > 0;
-
+  // --- Actions ---
   const actions = (
     <>
       {step > 1 && !result && (
@@ -720,7 +565,6 @@ export default function ImportColorKitchenModal({
             reset();
             onClose();
           }}
-          disabled={processing}
           className="px-4 py-2 text-sm font-medium rounded-lg"
           style={{
             backgroundColor: colors.background.primary,
@@ -736,10 +580,10 @@ export default function ImportColorKitchenModal({
             {step < 3 && (
               <Button
                 icon={ChevronRight}
-                label={processing ? "Loading..." : "Next"}
+                label="Next"
                 onClick={next}
                 disabled={
-                  processing || !file || (step === 2 && hasValidationErrors)
+                  !file || (step === 2 && !preview?.summary?.valid_products)
                 }
               />
             )}
@@ -769,8 +613,8 @@ export default function ImportColorKitchenModal({
         reset();
         onClose();
       }}
-      title="Import Color Kitchen"
-      subtitle="Import batches and entries from Excel"
+      title="Import Opening Balance"
+      subtitle="Import opening balance from Excel (Sheet: GUDANG BESAR)"
       size="xl"
       actions={actions}
       closeOnOverlayClick={!processing}

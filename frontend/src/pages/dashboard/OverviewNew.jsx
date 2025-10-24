@@ -13,7 +13,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { getDashboardData } from "../../services/dashboard_service";
 import {
   formatNumber,
@@ -27,58 +27,39 @@ export default function OverviewNew() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // ✅ Gunakan useDateFilterStore seperti di Stock Movement
+  // ✅ Gunakan useDateFilterStore - sama seperti di Purchasing page
   const dateRange = useDateFilterStore((state) => state.dateRange);
 
   // ✅ Granularity state untuk Cost Trend
   const [costTrendGranularity, setCostTrendGranularity] = useState("monthly");
 
-  // ✅ Gunakan ref untuk mencegah multiple fetch
-  const isFetchingRef = useRef(false);
-  const lastFetchParams = useRef(null);
-
-  // ✅ Fetch data ketika dateRange berubah
+  // ✅ Trigger refresh when dateRange changes - sama seperti di Purchasing page
   useEffect(() => {
     console.log("🔍 DateRange changed:", dateRange);
+    setRefreshKey((prev) => prev + 1);
+  }, [dateRange]);
 
-    // Pastikan dateRange valid
+  // ✅ Fetch data ketika refreshKey atau granularity berubah
+  useEffect(() => {
+    fetchDashboardData();
+  }, [refreshKey, costTrendGranularity]);
+
+  const fetchDashboardData = async () => {
+    // Validasi dateRange sebelum fetch
     if (!dateRange?.dateFrom || !dateRange?.dateTo) {
       console.log("⚠️ DateRange not valid, skipping fetch");
       setLoading(false);
       return;
     }
 
-    // Cek apakah params sama dengan fetch terakhir
-    const currentParams = `${dateRange.dateFrom}-${dateRange.dateTo}-${costTrendGranularity}`;
-    if (lastFetchParams.current === currentParams) {
-      console.log("⏭️ Same params, skipping fetch");
-      return;
-    }
-
-    // Cek apakah sedang fetching
-    if (isFetchingRef.current) {
-      console.log("⏳ Already fetching, skipping");
-      return;
-    }
-
-    lastFetchParams.current = currentParams;
-    fetchDashboardData();
-  }, [dateRange?.dateFrom, dateRange?.dateTo, costTrendGranularity]);
-
-  const fetchDashboardData = async () => {
-    if (isFetchingRef.current) {
-      console.log("⏳ Fetch already in progress");
-      return;
-    }
-
     try {
-      isFetchingRef.current = true;
       setLoading(true);
 
       const params = {
-        start_date: dateRange?.dateFrom,
-        end_date: dateRange?.dateTo,
+        start_date: dateRange.dateFrom,
+        end_date: dateRange.dateTo,
         granularity: costTrendGranularity,
       };
 
@@ -92,7 +73,6 @@ export default function OverviewNew() {
       setDashboardData(null);
     } finally {
       setLoading(false);
-      isFetchingRef.current = false;
     }
   };
 
@@ -136,10 +116,7 @@ export default function OverviewNew() {
               DateRange: {JSON.stringify(dateRange)}
             </p>
             <button
-              onClick={() => {
-                lastFetchParams.current = null;
-                fetchDashboardData();
-              }}
+              onClick={() => setRefreshKey((prev) => prev + 1)}
               className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
             >
               Retry
@@ -178,7 +155,7 @@ export default function OverviewNew() {
           </div>
         </div>
 
-        {/* ✅ Display active filter info - sama seperti Stock Movement */}
+        {/* ✅ Display active filter info - sama seperti Purchasing page */}
         {dateRange && (
           <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
             <p className="text-sm text-blue-800">

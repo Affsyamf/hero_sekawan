@@ -19,6 +19,7 @@ import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
 import useDateFilterStore from "../../stores/useDateFilterStore";
 import { useNavigate } from "react-router-dom";
+import ImportOpeningBalanceModal from "../../components/features/purchasing/ImportOpenBalance";
 
 export default function PurchasingsPage() {
   const navigate = useNavigate();
@@ -230,6 +231,15 @@ export default function PurchasingsPage() {
             />
           </div>
 
+          <div className="mb-4">
+            <Button
+              icon={Upload}
+              label="Import Opening Balance"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-green-600 hover:bg-green-700"
+            />
+          </div>
+
           {/* ✅ Pass filtered fetch function */}
           <Table
             key={refreshKey}
@@ -260,6 +270,13 @@ export default function PurchasingsPage() {
             onClose={() => setIsImportTrxOpen(false)}
             onImportSuccess={() => setRefreshKey((p) => p + 1)}
           />
+
+          <ImportOpeningBalanceModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onImportSuccess={() => setRefreshKey((p) => p + 1)}
+          />
+
         </div>
       </div>
     </MainLayout>

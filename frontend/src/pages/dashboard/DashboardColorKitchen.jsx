@@ -1,6 +1,5 @@
 // pages/dashboard/DashboardColorKitchen.jsx
 import { useTheme } from "../../contexts/ThemeContext";
-import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ Import
 import Card from "../../components/ui/card/Card";
 import Button from "../../components/ui/button/Button";
 import Chart from "../../components/ui/chart/Chart";
@@ -29,6 +28,7 @@ import {
   reportsColorKitchenTrend,
 } from "../../services/report_color_kitchen_service";
 import { formatPeriod, formatWeeklyPeriod } from "../../utils/dateHelper";
+import useDateFilterStore from "../../stores/useDateFilterStore";
 
 export default function DashboardColorKitchen() {
   const [ckData, setCkData] = useState(null);
@@ -36,34 +36,46 @@ export default function DashboardColorKitchen() {
 
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { colors } = useTheme();
 
   const [trendGranularity, setTrendGranularity] = useState("monthly");
 
-  // ✅ Use global filter instead of local state
-  const { dateRange } = useGlobalFilter();
+  // ✅ Use useDateFilterStore instead of useGlobalFilter
+  const dateRange = useDateFilterStore((state) => state.dateRange);
 
-  // ✅ Auto refresh when global filter changes
+  // ✅ Fetch data saat mount pertama kali
   useEffect(() => {
-    if (dateRange.startDate && dateRange.endDate) {
+    fetchCkData();
+  }, []);
+
+  // ✅ Auto refresh when dateRange changes
+  useEffect(() => {
+    if (dateRange?.dateFrom && dateRange?.dateTo) {
       fetchCkData();
     }
-  }, [dateRange.startDate, dateRange.endDate]);
+  }, [dateRange]);
 
   useEffect(() => {
-    if (dateRange.startDate && dateRange.endDate) {
+    if (dateRange?.dateFrom && dateRange?.dateTo && ckData) {
       fetchCkTrend();
     }
-  }, [dateRange.startDate, dateRange.endDate, trendGranularity]);
+  }, [dateRange, trendGranularity]);
 
   const fetchCkData = async () => {
+    // Skip jika dateRange belum ada
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // ✅ Use global dateRange directly
+      // ✅ Use dateRange from useDateFilterStore
       const params = {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        start_date: dateRange.dateFrom,
+        end_date: dateRange.dateTo,
       };
 
       // Fetch all data in parallel
@@ -82,7 +94,7 @@ export default function DashboardColorKitchen() {
       );
 
       setCkData(transformedData);
-      console.log(ckData);
+      console.log(transformedData);
     } catch (error) {
       console.error("Error fetching Color Kitchen data:", error);
       setCkData(null);
@@ -92,9 +104,11 @@ export default function DashboardColorKitchen() {
   };
 
   const fetchCkTrend = async () => {
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) return;
+
     const params = {
-      start_date: dateRange.startDate,
-      end_date: dateRange.endDate,
+      start_date: dateRange.dateFrom,
+      end_date: dateRange.dateTo,
       granularity: trendGranularity,
     };
 
@@ -209,6 +223,11 @@ export default function DashboardColorKitchen() {
   };
 
   const handleExport = async () => {
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) {
+      alert("Please select a date range first");
+      return;
+    }
+
     try {
       setExporting(true);
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -223,9 +242,11 @@ export default function DashboardColorKitchen() {
   };
 
   const onDrilldown = async (context, depth) => {
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) return [];
+
     const params = {
-      start_date: dateRange.startDate,
-      end_date: dateRange.endDate,
+      start_date: dateRange.dateFrom,
+      end_date: dateRange.dateTo,
     };
 
     let res = [];
@@ -249,8 +270,26 @@ export default function DashboardColorKitchen() {
       <MainLayout>
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-            <p className="mt-4 text-gray-600">Loading Color Kitchen data...</p>
+            <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-300 rounded-full border-t-primary animate-spin"></div>
+            <p className="text-sm text-gray-600">
+              Loading color kitchen data...
+            </p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!dateRange?.dateFrom || !dateRange?.dateTo) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="mb-2 text-gray-600">No date range selected</p>
+            <p className="text-sm text-gray-500">
+              Please select a date range from the global filter to view color
+              kitchen data
+            </p>
           </div>
         </div>
       </MainLayout>
@@ -262,13 +301,10 @@ export default function DashboardColorKitchen() {
       <MainLayout>
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
-            <p className="text-gray-600">No data available</p>
-            <button
-              onClick={fetchCkData}
-              className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
-            >
-              Retry
-            </button>
+            <p className="mb-2 text-gray-600">No data available</p>
+            <p className="text-sm text-gray-500">
+              Please check your date range or try again later
+            </p>
           </div>
         </div>
       </MainLayout>
@@ -294,88 +330,170 @@ export default function DashboardColorKitchen() {
               Color Kitchen Dashboard
             </h1>
             <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
-              Monitor produksi, usage dye & auxiliary, dan cost analysis
+              Monitor chemical usage, cost analysis, dan trend color kitchen
             </p>
-            {/* ✅ Show active filter info */}
-            {dateRange.startDate && dateRange.endDate && (
-              <p className="mt-1 text-xs text-blue-600">
-                📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
-                {formatDate(dateRange.endDate)}
-              </p>
-            )}
           </div>
           <div>
             <Button
-              icon={Download}
-              label={exporting ? "Exporting..." : "Export Data"}
-              variant="primary"
               onClick={handleExport}
               disabled={exporting}
+              label={exporting ? "Exporting..." : "Export Report"}
+              icon={Download}
+              className="text-white bg-green-600 hover:bg-green-700"
             />
           </div>
         </div>
 
-        {/* KPI Cards Row 1 */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Chart.Metric
-            title="Total Batch"
-            value={`${formatNumber(metrics.total_batch.value)} Batch`}
-            trend={metrics.total_batch.trend}
-            icon={Layers}
-            color="primary"
-          />
-          <Chart.Metric
-            title="Total Entries"
-            value={`${formatNumber(metrics.total_entries.value)} Jobs`}
-            trend={metrics.total_entries.trend}
-            icon={FileText}
-            color="success"
-          />
-          <Chart.Metric
-            title="Total Rolls"
-            value={`${formatNumber(metrics.total_rolls.value)} Rolls`}
-            trend={metrics.total_rolls.trend}
-            icon={Package2}
-            color="warning"
-          />
+        {/* Active Filter Display */}
+        {dateRange && (
+          <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">📅 Active Filter:</span>{" "}
+              {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+              {dateRange.mode === "year" && `Year ${dateRange.year}`}
+              {dateRange.mode === "month-year" && (
+                <>
+                  {new Date(
+                    dateRange.year,
+                    dateRange.month - 1
+                  ).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </>
+              )}
+              {(dateRange.mode === "days" || !dateRange.mode) && (
+                <>
+                  {formatDate(dateRange.dateFrom)} to{" "}
+                  {formatDate(dateRange.dateTo)}
+                  {dateRange.days !== undefined && (
+                    <span className="ml-2 text-xs">
+                      (
+                      {dateRange.days === 0
+                        ? "Today"
+                        : `Last ${dateRange.days} days`}
+                      )
+                    </span>
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* KPI Cards - Row 1 */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+          <Card className="relative overflow-hidden border-l-4 border-l-primary">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-lg md:w-12 md:h-12 bg-primary/10">
+                <Layers className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-600 truncate md:text-sm">
+                  Total Batch
+                </p>
+                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                  {formatNumber(metrics.total_batch.value)}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg md:w-12 md:h-12">
+                <FileText className="w-5 h-5 text-blue-600 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-600 truncate md:text-sm">
+                  Total Entries
+                </p>
+                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                  {formatNumber(metrics.total_entries.value)}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg md:w-12 md:h-12">
+                <Package2 className="w-5 h-5 text-purple-600 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-600 truncate md:text-sm">
+                  Total Rolls
+                </p>
+                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                  {formatNumber(metrics.total_rolls.value)}
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
 
-        {/* KPI Cards Row 2 */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 md:grid-cols-3">
-          <Chart.Metric
-            title="Avg Cost per Batch"
-            value={formatCompactCurrency(metrics.avg_cost_per_batch.value)}
-            trend={metrics.avg_cost_per_batch.trend}
-            icon={DollarSign}
-            color="info"
-          />
-          <Chart.Metric
-            title="Avg Cost per Entry"
-            value={formatCompactCurrency(metrics.avg_cost_per_entry.value)}
-            trend={metrics.avg_cost_per_entry.trend}
-            icon={TrendingUp}
-            color="success"
-          />
-          <Chart.Metric
-            title="Total Cost"
-            value={formatCompactCurrency(metrics.total_cost.value)}
-            trend={metrics.total_cost.trend}
-            icon={DollarSign}
-            color="error"
-          />
+        {/* KPI Cards - Row 2 */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+          <Card className="relative overflow-hidden border-l-4 border-l-green-500">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg md:w-12 md:h-12">
+                <DollarSign className="w-5 h-5 text-green-600 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-600 truncate md:text-sm">
+                  Avg Cost/Batch
+                </p>
+                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                  {formatCompactCurrency(metrics.avg_cost_per_batch.value)}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg md:w-12 md:h-12">
+                <TrendingUp className="w-5 h-5 text-orange-600 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-600 truncate md:text-sm">
+                  Avg Cost/Entry
+                </p>
+                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                  {formatCompactCurrency(metrics.avg_cost_per_entry.value)}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="relative overflow-hidden border-l-4 border-l-red-500">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg md:w-12 md:h-12">
+                <DollarSign className="w-5 h-5 text-red-600 md:w-6 md:h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-600 truncate md:text-sm">
+                  Total Cost
+                </p>
+                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                  {formatCompactCurrency(metrics.total_cost.value)}
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
 
-        {/* Cost Breakdown - Donut Charts */}
+        {/* Main Charts Row */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Card className="w-full h-full">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                    Trend Usage
+                    Chemical Usage Trend
                   </h3>
                   <p className="text-xs text-gray-600">
-                    Trend pemakaian Dye & Auxiliary
+                    Trend penggunaan dyes dan auxiliaries
                   </p>
                 </div>
                 <select
@@ -396,14 +514,14 @@ export default function DashboardColorKitchen() {
                 datasets={[
                   {
                     key: "dyes",
-                    label: "Dye",
+                    label: "Dyes",
                     color: "primary",
                     type: "column",
                     stacked: true,
                   },
                   {
                     key: "auxiliaries",
-                    label: "Auxiliary",
+                    label: "Auxiliaries",
                     color: "warning",
                     type: "column",
                     stacked: true,
@@ -425,25 +543,21 @@ export default function DashboardColorKitchen() {
             <Card className="h-full ">
               <Highchart.HighchartsDonut
                 data={chemicalSummaryTransformed}
-                // centerText={{
-                //   value: formatCompactCurrency(metrics.total_purchases.value),
-                //   label: "Total",
-                // }}
-                title="Breakdown Purchasing"
-                subtitle="Goods vs Jasa"
-                className="w-full h-full"
-                showSummary={true}
-                onDrilldownRequest={async ({ _, context, depth }) => {
-                  return onDrilldown(context, depth);
+                centerText={{
+                  value: formatCompactCurrency(metrics.total_cost.value),
+                  label: "Total Cost",
                 }}
+                title="Chemical Cost Breakdown"
+                subtitle="Dyes vs Auxiliaries"
+                onDrilldown={onDrilldown}
               />
             </Card>
           </div>
         </div>
 
-        {/* Top Dyes & Top Aux */}
+        {/* Top Products */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
-          {/* Top 5 Dyes */}
+          {/* Top Dyes */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
@@ -451,53 +565,71 @@ export default function DashboardColorKitchen() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Dyes (Dyestuff)
+                  Top 5 Dyes
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Pewarna paling banyak digunakan
+                  Dyes dengan nilai tertinggi
                 </p>
               </div>
             </div>
-
-            <Highchart.HighchartsBar
-              initialData={top_dyes.map((item) => ({
-                key: item.label,
-                value: item.value,
-                percentage: item.percentage,
-              }))}
-              title=""
-              subtitle=""
-              datasets={[
-                { key: "value", label: "Total Cost", color: "primary" },
-              ]}
-              periods={[]}
-              showSummary={false}
-            />
-
-            {/* {top_dyes.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
-                <div className="p-2 rounded-lg bg-blue-50">
-                  <p className="text-xs text-blue-600">Total dari Top 5</p>
-                  <p className="text-sm font-bold text-blue-900">
-                    {formatCompactCurrency(
-                      top_dyes.reduce((sum, item) => sum + item.cost, 0)
-                    )}
-                  </p>
-                </div>
-                <div className="p-2 rounded-lg bg-blue-50">
-                  <p className="text-xs text-blue-600">Total Quantity</p>
-                  <p className="text-sm font-bold text-blue-900">
-                    {formatNumber(
-                      top_dyes.reduce((sum, item) => sum + item.quantity, 0)
-                    )}{" "}
-                    kg
-                  </p>
-                </div>
-              </div>
-            )} */}
+            <div className="space-y-3">
+              {top_dyes.length > 0 ? (
+                top_dyes.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-3 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-blue-600 bg-blue-100 rounded-lg">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 truncate">
+                          {item.label}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-gray-600">Quantity</span>
+                        <span className="text-xs font-bold text-gray-900">
+                          {formatNumber(item.quantity)} kg
+                        </span>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-gray-600">Value</span>
+                        <span className="text-xs font-semibold text-gray-900">
+                          {formatCompactCurrency(item.value)}
+                        </span>
+                      </div>
+                      <Highchart.HighchartsProgress
+                        label=""
+                        value={item.quantity}
+                        maxValue={item.maxValue}
+                        color={
+                          index === 0
+                            ? "error"
+                            : index === 1
+                            ? "primary"
+                            : index === 2
+                            ? "warning"
+                            : index === 3
+                            ? "success"
+                            : "info"
+                        }
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-center text-gray-500">
+                  No dye data available
+                </p>
+              )}
+            </div>
           </Card>
 
-          {/* Top 5 Aux */}
+          {/* Top Auxiliaries */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
@@ -505,123 +637,70 @@ export default function DashboardColorKitchen() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Auxiliary (AUX)
+                  Top 5 Auxiliaries
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Auxiliary paling banyak digunakan
+                  Auxiliaries dengan nilai tertinggi
                 </p>
               </div>
             </div>
-
-            <Highchart.HighchartsBar
-              initialData={top_aux.map((item) => ({
-                key: item.label,
-                value: item.value,
-                percentage: item.percentage,
-              }))}
-              title=""
-              subtitle=""
-              datasets={[
-                { key: "value", label: "Total Cost", color: "primary" },
-              ]}
-              periods={[]}
-              showSummary={false}
-            />
-
-            {/* {top_aux.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
-                <div className="p-2 rounded-lg bg-purple-50">
-                  <p className="text-xs text-purple-600">Total dari Top 5</p>
-                  <p className="text-sm font-bold text-purple-900">
-                    {formatCompactCurrency(
-                      top_aux.reduce((sum, item) => sum + item.cost, 0)
-                    )}
-                  </p>
-                </div>
-                <div className="p-2 rounded-lg bg-purple-50">
-                  <p className="text-xs text-purple-600">Total Quantity</p>
-                  <p className="text-sm font-bold text-purple-900">
-                    {formatNumber(
-                      top_aux.reduce((sum, item) => sum + item.quantity, 0)
-                    )}{" "}
-                    kg
-                  </p>
-                </div>
-              </div>
-            )} */}
+            <div className="space-y-3">
+              {top_aux.length > 0 ? (
+                top_aux.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-3 transition-all border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-purple-600 bg-purple-100 rounded-lg">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-900 truncate">
+                          {item.label}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-gray-600">Quantity</span>
+                        <span className="text-xs font-bold text-gray-900">
+                          {formatNumber(item.quantity)} kg
+                        </span>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-gray-600">Value</span>
+                        <span className="text-xs font-semibold text-gray-900">
+                          {formatCompactCurrency(item.value)}
+                        </span>
+                      </div>
+                      <Highchart.HighchartsProgress
+                        label=""
+                        value={item.quantity}
+                        maxValue={item.maxValue}
+                        color={
+                          index === 0
+                            ? "error"
+                            : index === 1
+                            ? "primary"
+                            : index === 2
+                            ? "warning"
+                            : index === 3
+                            ? "success"
+                            : "info"
+                        }
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-center text-gray-500">
+                  No auxiliary data available
+                </p>
+              )}
+            </div>
           </Card>
         </div>
-
-        {/* Info Section */}
-        <Card className="border-blue-200 bg-blue-50">
-          <div className="flex items-start gap-2">
-            <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg">
-              <svg
-                className="w-4 h-4 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h4 className="mb-2 text-sm font-semibold text-blue-900">
-                Informasi Color Kitchen
-              </h4>
-              <div className="space-y-1.5 text-xs text-blue-800">
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-                  <div>
-                    <p className="font-semibold">🎨 Batch</p>
-                    <p className="text-xs">
-                      Group produksi untuk dyestuff (shared resources)
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">📋 Entry/Job</p>
-                    <p className="text-xs">
-                      Individual OPJ dengan auxiliary masing-masing
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">📦 Rolls</p>
-                    <p className="text-xs">Total rolls kain yang diproses</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">💧 Dye Cost</p>
-                    <p className="text-xs">
-                      Biaya pewarna dari ColorKitchenBatchDetail
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">🧪 Aux Cost</p>
-                    <p className="text-xs">
-                      Biaya auxiliary dari ColorKitchenEntryDetail
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">💰 Total Cost</p>
-                    <p className="text-xs">Total biaya dye + auxiliary</p>
-                  </div>
-                </div>
-                <div className="pt-1.5 mt-2 border-t border-blue-200">
-                  <p className="text-xs text-blue-700">
-                    <strong>Catatan:</strong> Data diambil dari database
-                    real-time. Gunakan filter global (tombol di kanan layar)
-                    untuk mengubah periode data. Top 5 Dyes menggunakan
-                    parent_type=dye, Top 5 Auxiliary menggunakan
-                    parent_type=aux.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
       </div>
     </MainLayout>
   );

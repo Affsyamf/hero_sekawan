@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional
+from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.services.dashboard.dashboard_service import DashboardService
@@ -10,9 +11,6 @@ from app.utils.datatable.request import ListRequest
 
 dashboard_router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
-# @dashboard_router.post("/overview")
-# def get_dashboard_overview(request: ListRequest = Depends(), service: DashboardService = Depends()):
-#     return service.run(filters=request)
 
 @dashboard_router.post("/overview")
 def get_dashboard_overview(

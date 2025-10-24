@@ -13,7 +13,7 @@ export default function Navbar({ onMenuClick }) {
         <Menu size={20} className="text-gray-600" />
       </button>
 
-      <div className="flex justify-end flex-1 ml-4">
+      <div className="flex justify-end flex-1 mr-2">
         <DateRangeFilter />
       </div>
 
