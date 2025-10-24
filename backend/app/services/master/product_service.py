@@ -5,13 +5,16 @@ from fastapi import HTTPException
 from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, or_
+from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.master_input_models import ProductCreate, ProductUpdate
 from app.core.database import Session, get_db
 from app.models import (
     Product, PurchasingDetail, StockMovementDetail, 
-    ColorKitchenEntryDetail, Ledger, StockOpnameDetail
+    ColorKitchenEntryDetail, Ledger, StockOpnameDetail,
+    Account
 )
+from app.models.enum.ledger_enum import LedgerLocation
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
 from app.utils.response import APIResponse
@@ -22,8 +25,14 @@ class ProductService:
         self.db = db
 
     def list_product(self, request: ListRequest):
-        product = self.db.query(Product)
-                
+        # === Base product query ===
+        product = (
+            self.db.query(Product)
+            .outerjoin(Account)
+            .options(joinedload(Product.account))
+        )
+
+        # === Filter (search) ===
         if request.q:
             like = f"%{request.q}%"
             product = product.filter(
@@ -31,29 +40,50 @@ class ProductService:
                     Product.code.ilike(like),
                     Product.name.ilike(like),
                     Product.unit.ilike(like),
+                    Account.name.ilike(like),
                 )
-            ).order_by(Product.id)
-            
+            )
+
+        # === Sorting ===
         if request.sort_by and request.sort_dir:
             sort_col = getattr(Product, request.sort_by)
             if request.sort_dir.lower() == "desc":
                 sort_col = sort_col.desc()
             product = product.order_by(sort_col)
-            
-        return APIResponse.paginated(product, request, lambda product: {
-                "id": product.id,
-                "code": product.code,
-                "name": product.name,
-                "unit": product.unit,
-                "account_name": product.account.name if product.account else None,
-                # "alias": product.alias,
-                # "products": [{
-                #     "id": product.id,
-                #     "code": product.code,
-                #     "name": product.name,
-                #     "name": product.name,
-                # } for product in account.products] if account.products else []
-            }
+        else:
+            product = product.order_by(Product.id)
+
+        # === Subquery: aggregate ledger per product per location ===
+        ledger_subq = (
+            self.db.query(
+                Ledger.product_id.label("product_id"),
+                func.sum(Ledger.quantity_in - Ledger.quantity_out).label("stock_qty"),
+            )
+            .filter(Ledger.location == LedgerLocation.Gudang)
+            .group_by(Ledger.product_id)
+            .subquery()
+        )
+
+        # === Join aggregated ledger to product ===
+        product = (
+            product.outerjoin(ledger_subq, ledger_subq.c.product_id == Product.id)
+            .add_columns(
+                ledger_subq.c.stock_qty.label("stock_qty"),
+            )
+        )
+
+        # === Paginate using your existing helper ===
+        return APIResponse.paginated(
+            product,
+            request,
+            lambda row: {
+                "id": row.Product.id,
+                "code": row.Product.code,
+                "name": row.Product.name,
+                "unit": row.Product.unit,
+                "account_name": row.Product.account.name if row.Product.account else None,
+                "quantity": float(row.stock_qty or 0),
+            },
         )
 
         # return APIResponse.paginated(product, request)

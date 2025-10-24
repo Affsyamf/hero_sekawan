@@ -469,9 +469,20 @@ export default function Table({
                       className="px-4 py-2.5 text-xs"
                       style={{ color: colors.text.primary }}
                     >
-                      {col.render
-                        ? col.render(row[col.key], row, i)
-                        : row[col.key] ?? "-"}
+                      {(() => {
+                        const getNestedValue = (obj, path) =>
+                          path
+                            .split(".")
+                            .reduce(
+                              (acc, key) => (acc ? acc[key] : undefined),
+                              obj
+                            );
+
+                        const value = getNestedValue(row, col.key);
+                        return col.render
+                          ? col.render(value, row, i)
+                          : value ?? "-";
+                      })()}
                     </td>
                   ))}
                   {actions && (
@@ -692,4 +703,3 @@ export default function Table({
     </div>
   );
 }
-

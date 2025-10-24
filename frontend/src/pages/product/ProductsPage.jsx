@@ -40,6 +40,14 @@ export default function ProductsPage() {
       ),
     },
     {
+      key: "quantity",
+      label: "Quantity",
+      sortable: false,
+      render: (value, row) => {
+        return <span className="font-semibold">{value}</span>;
+      },
+    },
+    {
       key: "unit",
       label: "Unit",
       sortable: true,
