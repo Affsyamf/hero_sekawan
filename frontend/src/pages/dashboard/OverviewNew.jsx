@@ -65,9 +65,26 @@ export default function OverviewNew() {
 
       console.log("📡 Fetching dashboard data with params:", params);
       const response = await getDashboardData(params);
-      console.log("✅ Dashboard data received:", response.data);
 
-      setDashboardData(response.data);
+      const stock_flow = response.data.stock_flow.map((item) => ({
+        ...item,
+        key: item.month,
+      }));
+
+      const cost_trend = response.data.cost_trend.map((item) => ({
+        ...item,
+        key: item.month,
+      }));
+
+      const res = {
+        ...response.data,
+        stock_flow: stock_flow,
+        cost_trend: cost_trend,
+      };
+
+      console.log(res);
+
+      setDashboardData(res);
     } catch (error) {
       console.error("❌ Error fetching dashboard data:", error);
       setDashboardData(null);

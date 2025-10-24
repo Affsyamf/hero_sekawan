@@ -38,11 +38,11 @@ const HighchartsLine = ({
     info: "#06b6d4",
   };
 
-  const categories = data?.map((item) => item.month || item.key) || [];
+  const categories = data?.map((item) => item.key) || [];
 
   const series =
     datasets?.map((dataset) => ({
-      name: dataset.label,
+      name: dataset.label || dataset.key,
       data: data?.map((item) => item[dataset.key]) || [],
       color: colorMap[dataset.color] || colorMap.primary,
       marker: {
@@ -119,28 +119,27 @@ const HighchartsLine = ({
       borderColor: "#e5e7eb",
       borderRadius: 6,
       padding: 10,
-      shadow: {
-        color: "rgba(0, 0, 0, 0.1)",
-        width: 5,
-        offsetX: 0,
-        offsetY: 2,
-      },
       formatter: function () {
-        let tooltip = `<div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #111827;">${this.x}</div>`;
+        const header =
+          (this.points &&
+            this.points[0] &&
+            this.points[0].point &&
+            this.points[0].point.category) ||
+          this.x;
+        let tooltip = `<div style="font-size:13px;font-weight:600;margin-bottom:8px;">${header}</div>`;
         this.points.forEach((point) => {
           tooltip += `
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
-              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${
-                point.color
-              };"></span>
-              <span style="color: #6b7280; font-size: 11px;">${
-                point.series.name
-              }:</span>
-              <span style="font-weight: 600; font-size: 11px; color: #111827;">${formatCompactCurrency(
-                point.y
-              )}</span>
-            </div>
-          `;
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:${
+            point.color
+          };"></span>
+          <span style="color:#6b7280;font-size:12px;">${
+            point.series.name
+          }:</span>
+          <span style="font-weight:600;font-size:12px;">${formatCompactCurrency(
+            point.y
+          )}</span>
+        </div>`;
         });
         return tooltip;
       },
