@@ -1,23 +1,46 @@
 import { useTheme } from "../../../contexts/ThemeContext";
 
 export default function Button({
-  icon: Icon, // komponen icon (ex: Plus)
-  label, // teks label
+  icon: Icon, // ex: Plus
+  label,
   onClick,
+  variant = "primary", // "primary" | "secondary" | "success"
   showDropdown = false,
   className = "",
   ...props
 }) {
   const { colors } = useTheme();
 
+  const variants = {
+    primary: {
+      background: colors.primary,
+      hover: colors.primaryHover,
+      color: colors.text?.inverse || "#fff",
+    },
+    secondary: {
+      background: colors.secondary,
+      hover: colors.secondaryHover,
+      color: colors.text?.inverse || "#fff",
+    },
+    success: {
+      background: colors.status.success,
+      hover: colors.status.successHover,
+      color: colors.text?.inverse || "#fff",
+    },
+  };
+
+  const { background, hover, color } = variants[variant] || variants.primary;
+
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${className}`}
+      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:cursor-pointer ${className}`}
       style={{
-        background: colors.primary,
-        color: colors.text.inverse,
+        background,
+        color,
       }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = hover)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = background)}
       {...props}
     >
       {/* Icon */}

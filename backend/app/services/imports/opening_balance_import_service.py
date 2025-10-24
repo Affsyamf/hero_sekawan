@@ -110,11 +110,13 @@ class OpeningBalanceImportService(BaseImportService):
         refresh_product_avg_cost(self.db)
         
 
-        return {
-            "skipped": skipped,
-            "skipped_products": skipped_products,
-            "added": added
-        }
+        return APIResponse.ok(
+            data={
+                "skipped": skipped,
+                "skipped_products": skipped_products,
+                "added": added
+            }
+        )
     
     def preview(self, file: UploadFile):
         contents: bytes = file.file.read()

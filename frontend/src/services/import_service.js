@@ -73,4 +73,23 @@ export const importApi = {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
+
+  async previewOpeningBalance(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await api.post("import/opening-balance/preview", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  },
+  async importOpeningBalance(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await api.post("import/opening-balance", fd, {
+      timeout: 60000,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  },
 };
