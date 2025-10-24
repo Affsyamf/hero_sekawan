@@ -45,6 +45,7 @@ class ProductService:
                 "code": product.code,
                 "name": product.name,
                 "unit": product.unit,
+                "account_name": product.account.name if product.account else None,
                 # "alias": product.alias,
                 # "products": [{
                 #     "id": product.id,
