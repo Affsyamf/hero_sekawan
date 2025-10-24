@@ -253,7 +253,7 @@ export default function OverviewNew() {
                 },
                 {
                   key: "stockTerpakai",
-                  label: "Stock Terpakai (CK Usage)",
+                  label: "Stock Terpakai (Stock Movement)",
                   color: "primary",
                 },
               ]}
