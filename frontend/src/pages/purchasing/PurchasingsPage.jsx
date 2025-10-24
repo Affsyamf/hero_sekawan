@@ -19,7 +19,6 @@ import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
 import useDateFilterStore from "../../stores/useDateFilterStore";
 import { useNavigate } from "react-router-dom";
-import ImportPurchasingOpeningBalance from "../../components/features/purchasing/ImportPurchasingOpenBalance";
 import ImportOpeningBalanceModal from "../../components/features/purchasing/ImportOpeningBalance";
 
 export default function PurchasingsPage() {
