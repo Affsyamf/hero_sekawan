@@ -13,7 +13,6 @@ import Card from "../../components/ui/card/Card";
 import Chart from "../../components/ui/chart/Chart";
 import { MetricGrid } from "../../components/ui/chart/MetricCard";
 import { Highchart } from "../../components/ui/highchart";
-import { useGlobalFilter } from "../../contexts/GlobalFilterContext"; // ✅ Import
 import { useTheme } from "../../contexts/ThemeContext";
 import { MainLayout } from "../../layouts";
 import {
@@ -29,35 +28,48 @@ import {
   formatDate,
   formatNumber,
 } from "../../utils/helpers";
+import useDateFilterStore from "../../stores/useDateFilterStore";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { colors } = useTheme();
 
-  const { dateRange } = useGlobalFilter();
+  const dateRange = useDateFilterStore((state) => state.dateRange);
 
   // Granularity per chart
   const [trendGranularity, setTrendGranularity] = useState("monthly");
   const [productsGranularity, setProductsGranularity] = useState("monthly");
 
-  // ✅ Auto refresh when global filter changes
+  // ✅ Fetch data saat mount pertama kali
   useEffect(() => {
-    if (dateRange.startDate && dateRange.endDate) {
+    fetchPurchasingData();
+  }, []);
+
+  // ✅ Auto refresh when dateRange changes
+  useEffect(() => {
+    if (dateRange?.dateFrom && dateRange?.dateTo) {
       fetchPurchasingData();
     }
-  }, [dateRange.startDate, dateRange.endDate]);
+  }, [dateRange]);
 
   const fetchPurchasingData = async () => {
     try {
       setLoading(true);
 
-      // ✅ Use global dateRange directly
+      // ✅ Use dateRange from useDateFilterStore with fallback
       const params = {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        start_date: dateRange?.dateFrom,
+        end_date: dateRange?.dateTo,
       };
+
+      // Skip fetch if no date range yet
+      if (!params.start_date || !params.end_date) {
+        setLoading(false);
+        return;
+      }
 
       // Fetch summary, breakdown, and suppliers (no granularity needed)
       const [summary, breakdown, suppliers] = await Promise.all([
@@ -94,10 +106,12 @@ export default function DashboardPurchasing() {
 
   // Fetch trend data when granularity changes
   const fetchTrendData = async () => {
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) return;
+
     try {
       const params = {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        start_date: dateRange.dateFrom,
+        end_date: dateRange.dateTo,
         granularity: trendGranularity,
       };
 
@@ -114,10 +128,12 @@ export default function DashboardPurchasing() {
 
   // Fetch products data when granularity changes
   const fetchProductsData = async () => {
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) return;
+
     try {
       const params = {
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        start_date: dateRange.dateFrom,
+        end_date: dateRange.dateTo,
         granularity: productsGranularity,
       };
 
@@ -225,17 +241,14 @@ export default function DashboardPurchasing() {
         percentage: item.percentage || 0,
       }));
 
-    const most_purchased = transformProductsData(products);
-
-    const top_purchases = (products?.most_purchased || [])
-      .sort((a, b) => b.total_value - a.total_value)
+    const top_purchases = (suppliers?.top_purchases || [])
       .slice(0, 5)
-      .map((item, index) => ({
-        label: `Item-${index + 1}`,
-        value: item.total_value || 0,
-        date: "-",
-        supplier: item.product,
+      .map((item) => ({
+        supplier: item.supplier,
+        value: item.total_spent || 0,
       }));
+
+    const most_purchased = transformProductsData(products);
 
     return {
       metrics,
@@ -247,152 +260,92 @@ export default function DashboardPurchasing() {
     };
   };
 
-  const formatWeeklyPeriod = (weekStart, weekEnd) => {
-    const start = new Date(weekStart);
-    const end = new Date(weekEnd);
-
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    const monthName = monthNames[start.getMonth()];
-    const startDay = start.getDate();
-    const endDay = end.getDate();
-    const year = start.getFullYear();
-
-    if (start.getMonth() === end.getMonth()) {
-      return `${monthName} ${startDay}-${endDay}, ${year}`;
-    } else {
-      const endMonthName = monthNames[end.getMonth()];
-      return `${monthName} ${startDay} - ${endMonthName} ${endDay}, ${year}`;
-    }
-  };
-
   const formatPeriod = (period) => {
     if (!period) return "";
-
-    if (period.length === 4) {
-      return period;
+    if (period.includes("-W")) {
+      const [year, week] = period.split("-W");
+      return `Week ${week}, ${year}`;
     }
-
-    if (period.includes("-") && period.split("-").length === 2) {
+    if (period.match(/^\d{4}-\d{2}$/)) {
       const [year, month] = period.split("-");
-      const monthNames = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
-      const monthIndex = parseInt(month, 10) - 1;
-      return `${monthNames[monthIndex]} ${year}`;
+      return new Date(year, month - 1).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
     }
-
-    if (period.includes("W")) {
-      return `Week ${period.split("W")[1]}, ${period.split("-")[0]}`;
-    }
-
-    if (period.split("-").length === 3) {
-      const [year, month, day] = period.split("-");
-      const monthNames = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
-      const monthIndex = parseInt(month, 10) - 1;
-      return `${monthNames[monthIndex]} ${parseInt(day)}, ${year}`;
-    }
-
     return period;
   };
 
-  const handleExport = async () => {
-    try {
-      setExporting(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Export successful!");
-      alert("Export berhasil!");
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      alert("Failed to export data. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+  const formatWeeklyPeriod = (weekStart, weekEnd) => {
+    const start = new Date(weekStart);
+    const end = new Date(weekEnd);
+    const startStr = start.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const endStr = end.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    return `${startStr} - ${endStr}`;
   };
 
-  const onDrilldown = async (context, depth) => {
-    const params = {
-      start_date: dateRange.startDate,
-      end_date: dateRange.endDate,
-    };
-
-    // level 1 → Goods vs Jasa
-    if (depth === 0) {
-      const res = await reportsPurchasingBreakdown(
-        "account_type",
-        context,
-        0,
-        params
-      );
-      return res.data.map((r) => ({
-        key: r.label,
-        value: r.value,
-        percentage: r.percentage,
-        context: r.account_id,
-        drilldown: true,
-      }));
+  const handleExport = async () => {
+    if (!dateRange?.dateFrom || !dateRange?.dateTo) {
+      alert("Please select a date range first");
+      return;
     }
 
-    // level 2 → Supplier → Product breakdown
-    if (depth === 1) {
-      const res = await reportsPurchasingBreakdown(
-        "account",
-        context,
-        context,
-        params
-      );
+    try {
+      setExporting(true);
+      const response = await reportsPurchasingBreakdown({
+        start_date: dateRange.dateFrom,
+        end_date: dateRange.dateTo,
+      });
 
-      return res.data.map((p) => ({
-        key: p.label,
-        value: p.value,
-      }));
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `purchasing_breakdown_${dateRange.dateFrom}_${dateRange.dateTo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Failed to export data");
+    } finally {
+      setExporting(false);
     }
   };
 
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-            <p className="mt-4 text-gray-600">Loading purchasing data...</p>
+            <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-300 rounded-full border-t-primary animate-spin"></div>
+            <p className="text-sm text-gray-600">Loading purchasing data...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!dateRange?.dateFrom || !dateRange?.dateTo) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="mb-2 text-gray-600">No date range selected</p>
+            <p className="text-sm text-gray-500">
+              Please select a date range from the global filter to view
+              purchasing data
+            </p>
           </div>
         </div>
       </MainLayout>
@@ -402,15 +355,12 @@ export default function DashboardPurchasing() {
   if (!purchasingData) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-gray-600">No data available</p>
-            <button
-              onClick={fetchPurchasingData}
-              className="px-4 py-2 mt-4 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
-            >
-              Retry
-            </button>
+            <p className="mb-2 text-gray-600">No data available</p>
+            <p className="text-sm text-gray-500">
+              Please check your date range or try again later
+            </p>
           </div>
         </div>
       </MainLayout>
@@ -759,57 +709,6 @@ export default function DashboardPurchasing() {
             )}
           </div>
         </Card>
-
-        {/* Info Section */}
-        {/* <Card className="border-blue-200 bg-blue-50">
-          <div className="flex items-start gap-2">
-            <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg">
-              <svg
-                className="w-4 h-4 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h4 className="mb-2 text-sm font-semibold text-blue-900">
-                Informasi Purchasing
-              </h4>
-              <div className="space-y-1.5 text-xs text-blue-800">
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-                  <div>
-                    <p className="font-semibold">🛒 Total Purchases</p>
-                    <p className="text-xs">
-                      Total nilai pembelian (Goods + Jasa)
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">📦 Total Goods</p>
-                    <p className="text-xs">Total pembelian produk/barang</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">🔧 Total Jasa</p>
-                    <p className="text-xs">Total pembelian jasa/services</p>
-                  </div>
-                </div>
-                <div className="pt-1.5 mt-2 border-t border-blue-200">
-                  <p className="text-xs text-blue-700">
-                    <strong>Catatan:</strong> Data diambil dari database
-                    real-time. Gunakan filter global (tombol di kanan layar)
-                    untuk mengubah periode data.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card> */}
       </div>
     </MainLayout>
   );

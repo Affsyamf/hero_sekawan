@@ -20,6 +20,7 @@ import Button from "../../components/ui/button/Button";
 import useDateFilterStore from "../../stores/useDateFilterStore";
 import { useNavigate } from "react-router-dom";
 import ImportPurchasingOpeningBalance from "../../components/features/purchasing/ImportPurchasingOpenBalance";
+import ImportOpeningBalanceModal from "../../components/features/purchasing/ImportOpeningBalance";
 
 export default function PurchasingsPage() {
   const navigate = useNavigate();
@@ -271,7 +272,7 @@ export default function PurchasingsPage() {
             onImportSuccess={() => setRefreshKey((p) => p + 1)}
           />
 
-          <ImportPurchasingOpeningBalance
+          <ImportOpeningBalanceModal
             isOpen={isImportOpenBalOpen}
             onClose={() => setIsImportOpenBalOpen(false)}
             onImportSuccess={() => setRefreshKey((p) => p + 1)}

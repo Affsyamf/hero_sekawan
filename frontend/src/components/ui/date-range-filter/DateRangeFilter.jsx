@@ -226,20 +226,17 @@ const DateRangeFilter = () => {
       return `YTD ${new Date().getFullYear()}`;
     }
 
-    if (currentRange.days !== undefined) {
-      if (currentRange.days === 0) return "Today";
-      return `Last ${currentRange.days} Days`;
-    }
-
-    const start = new Date(currentRange.dateFrom);
-    const end = new Date(currentRange.dateTo);
-    const formatDate = (date) => {
+    const formatDate = (dateStr) => {
+      const date = new Date(dateStr);
       return date.toLocaleDateString("en-US", {
-        day: "2-digit",
         month: "short",
+        day: "numeric",
         year: "numeric",
       });
     };
+
+    const start = currentRange.dateFrom;
+    const end = currentRange.dateTo;
 
     return `${formatDate(start)} - ${formatDate(end)}`;
   };
@@ -261,10 +258,10 @@ const DateRangeFilter = () => {
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
       >
         <Calendar size={16} className="text-gray-500" />
-        <span>{formatDateRange()}</span>
+        <span className="text-xs sm:text-sm">{formatDateRange()}</span>
         <ChevronDown
           size={16}
           className={`text-gray-500 transition-transform ${
@@ -283,24 +280,24 @@ const DateRangeFilter = () => {
         </button>
       )}
 
-      {/* Dropdown Panel */}
+      {/* Dropdown Panel - PERBAIKAN UTAMA DI SINI */}
       {isOpen && (
-        <div className="absolute left-0 z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg top-full w-80">
-          <div className="p-4 space-y-4">
+        <div className="absolute right-0 z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg top-full w-72 max-h-[85vh] overflow-y-auto">
+          <div className="p-3 space-y-3">
             {/* Header */}
             <h3 className="text-sm font-semibold text-gray-900">Filter Date</h3>
 
             {/* Mode Filter */}
             <div>
-              <label className="block mb-2 text-xs text-gray-500">
+              <label className="block mb-1.5 text-xs text-gray-500">
                 Filter Mode
               </label>
-              <div className="inline-flex p-1 border border-gray-200 rounded-lg">
+              <div className="inline-flex flex-wrap gap-1 p-1 border border-gray-200 rounded-lg">
                 {["days", "month-year", "year", "ytd"].map((mode) => (
                   <button
                     key={mode}
                     onClick={() => handleFilterModeChange(mode)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
                       filterMode === mode
                         ? "bg-blue-500 text-white"
                         : "text-gray-700 hover:bg-gray-100"
@@ -317,13 +314,13 @@ const DateRangeFilter = () => {
 
               {/* Month & Year Selectors */}
               {filterMode === "month-year" && (
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-2">
                   <select
                     value={selectedMonth}
                     onChange={(e) =>
                       handleMonthYearChange("month", Number(e.target.value))
                     }
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {months.map((month) => (
                       <option key={month.value} value={month.value}>
@@ -336,7 +333,7 @@ const DateRangeFilter = () => {
                     onChange={(e) =>
                       handleMonthYearChange("year", Number(e.target.value))
                     }
-                    className="w-24 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-20 px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {years.map((year) => (
                       <option key={year} value={year}>
@@ -354,7 +351,7 @@ const DateRangeFilter = () => {
                   onChange={(e) =>
                     handleMonthYearChange("year", Number(e.target.value))
                   }
-                  className="w-full px-3 py-2 mt-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1.5 mt-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {years.map((year) => (
                     <option key={year} value={year}>
@@ -366,7 +363,7 @@ const DateRangeFilter = () => {
 
               {/* YTD Info */}
               {filterMode === "ytd" && (
-                <p className="mt-3 text-xs italic text-gray-500">
+                <p className="mt-2 text-xs italic text-gray-500">
                   Year to date from Jan 1, {new Date().getFullYear()} to today
                 </p>
               )}
@@ -376,10 +373,10 @@ const DateRangeFilter = () => {
             {filterMode === "days" && (
               <>
                 <div>
-                  <label className="block mb-2 text-xs text-gray-500">
+                  <label className="block mb-1.5 text-xs text-gray-500">
                     Quick Select
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {[
                       { label: "Today", days: 0 },
                       { label: "Last 7 Days", days: 7 },
@@ -389,7 +386,7 @@ const DateRangeFilter = () => {
                       <button
                         key={option.days}
                         onClick={() => handleQuickSelect(option.days)}
-                        className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-blue-500 hover:text-white transition-colors"
+                        className="px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-blue-500 hover:text-white transition-colors"
                       >
                         {option.label}
                       </button>
@@ -401,7 +398,7 @@ const DateRangeFilter = () => {
 
                 {/* Custom Date Range */}
                 <div>
-                  <label className="block mb-2 text-xs text-gray-500">
+                  <label className="block mb-1.5 text-xs text-gray-500">
                     Custom Range
                   </label>
                   <div className="space-y-2">
@@ -413,7 +410,7 @@ const DateRangeFilter = () => {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
@@ -425,7 +422,7 @@ const DateRangeFilter = () => {
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         min={startDate}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -435,14 +432,14 @@ const DateRangeFilter = () => {
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={handleClearFilter}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                   >
                     Clear
                   </button>
                   <button
                     onClick={handleApplyFilter}
                     disabled={!startDate || !endDate}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     Apply
                   </button>
@@ -455,7 +452,7 @@ const DateRangeFilter = () => {
               <div className="flex justify-end">
                 <button
                   onClick={handleClearFilter}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Clear
                 </button>

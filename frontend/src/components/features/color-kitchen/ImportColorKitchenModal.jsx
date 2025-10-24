@@ -5,6 +5,8 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
+  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
@@ -20,7 +22,7 @@ export default function ImportColorKitchenModal({
   const { colors } = useTheme();
   const [step, setStep] = useState(1);
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState({ batches: [], total_entries: 0 });
+  const [preview, setPreview] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -34,7 +36,7 @@ export default function ImportColorKitchenModal({
   const reset = () => {
     setStep(1);
     setFile(null);
-    setPreview({ batches: [], total_entries: 0 });
+    setPreview(null);
     setResult(null);
     setError(null);
     setProcessing(false);
@@ -46,36 +48,17 @@ export default function ImportColorKitchenModal({
     try {
       const res = await importApi.previewLapCk(f);
       const data = res.data?.data;
-      const batches = data.batches || [];
 
-      // Flatten entries for preview table
-      const entries = batches.flatMap((b) =>
-        b.entries.map((e) => ({
-          batch_code: b.code,
-          ...e,
-        }))
-      );
-
-      setPreview({
-        batches,
-        total_entries: entries.length,
-        entries,
-      });
+      setPreview(data);
       setError(null);
+      setStep(2);
     } catch (err) {
       setError(err.response?.data?.detail || "Preview failed");
-      setPreview({ batches: [], entries: [], total_entries: 0 });
+      setPreview(null);
     } finally {
       setProcessing(false);
     }
   };
-
-  // 🔹 Auto-fetch preview when entering Step 2
-  useEffect(() => {
-    if (step === 2 && file && !preview.entries?.length && !processing) {
-      fetchPreview(file);
-    }
-  }, [step]);
 
   const selectFile = async (e) => {
     const f = e.target.files?.[0];
@@ -86,6 +69,7 @@ export default function ImportColorKitchenModal({
     }
     setFile(f);
     setError(null);
+    await fetchPreview(f);
   };
 
   const next = () => {
@@ -93,9 +77,20 @@ export default function ImportColorKitchenModal({
       setError("Select file");
       return;
     }
-    if (step === 2 && !(preview.entries?.length > 0)) {
-      setError("No data");
+    if (step === 2 && !preview) {
+      setError("No preview data available");
       return;
+    }
+    // Check for missing products/designs before allowing to proceed
+    if (step === 2) {
+      const hasMissingProducts = preview?.missing_products?.length > 0;
+      const hasMissingDesigns = preview?.missing_designs?.length > 0;
+      if (hasMissingProducts || hasMissingDesigns) {
+        setError(
+          "Cannot proceed: Missing products or designs. Please fix these issues first."
+        );
+        return;
+      }
     }
     setError(null);
     setStep((p) => p + 1);
@@ -113,7 +108,7 @@ export default function ImportColorKitchenModal({
     setError(null);
     try {
       const res = await importApi.importLapCk(file);
-      const data = res.data;
+      const data = res.data?.data || res.data;
       setResult(data);
       if (onImportSuccess) onImportSuccess(data);
     } catch (err) {
@@ -209,16 +204,20 @@ export default function ImportColorKitchenModal({
             onChange={selectFile}
             className="hidden"
             id="file-ck"
+            disabled={processing}
           />
           <label
             htmlFor="file-ck"
-            className="inline-block px-4 py-2 rounded-lg cursor-pointer"
+            className={cn(
+              "inline-block px-4 py-2 rounded-lg",
+              processing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            )}
             style={{
               backgroundColor: colors.primary,
               color: colors.text.inverse,
             }}
           >
-            Choose File
+            {processing ? "Processing..." : "Choose File"}
           </label>
           {file && (
             <div
@@ -243,7 +242,7 @@ export default function ImportColorKitchenModal({
           style={{ backgroundColor: colors.background.secondary }}
         >
           <p className="text-xs" style={{ color: colors.text.secondary }}>
-            <strong>Format:</strong> Sheet “TEMPLATE QTY” with OPJ, DESIGN,
+            <strong>Format:</strong> Sheet "TEMPLATE QTY" with OPJ, DESIGN,
             JENIS KAIN, ROLL, and TGL columns.
           </p>
           <p className="mt-1 text-xs" style={{ color: colors.text.secondary }}>
@@ -256,9 +255,16 @@ export default function ImportColorKitchenModal({
 
   // --- Step 2: Preview
   const renderStep2 = () => {
-    const totalBatches = preview.batches.length;
-    const totalEntries = preview.total_entries || 0;
-    const displayed = preview.entries?.slice(0, 30) || [];
+    if (!preview) {
+      return (
+        <div
+          className="py-6 text-sm text-center"
+          style={{ color: colors.text.secondary }}
+        >
+          No preview data available
+        </div>
+      );
+    }
 
     if (processing) {
       return (
@@ -271,88 +277,368 @@ export default function ImportColorKitchenModal({
       );
     }
 
+    const {
+      batches = [],
+      missing_products = [],
+      missing_designs = [],
+      skipped_rows = [],
+      batch_count = 0,
+      skipped_rows_count = 0,
+    } = preview;
+
+    // Flatten entries for display
+    const allEntries = batches.flatMap((b) =>
+      b.entries.map((e) => ({
+        batch_code: b.code,
+        batch_date: b.date,
+        ...e,
+      }))
+    );
+
+    const totalEntries = allEntries.length;
+    const hasErrors = missing_products.length > 0 || missing_designs.length > 0;
+
     return (
       <div>
-        <div
-          className="p-4 mb-4 rounded-lg"
-          style={{
-            backgroundColor: `${colors.primary}15`,
-            borderWidth: "1px",
-            borderColor: colors.primary,
-          }}
-        >
-          <p className="text-sm" style={{ color: colors.text.primary }}>
-            <strong>{totalEntries}</strong> entry(s) in{" "}
-            <strong>{totalBatches}</strong> batch(es)
-          </p>
-        </div>
-
-        <div
-          className="overflow-hidden border rounded-lg"
-          style={{ borderColor: colors.border.primary }}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead
-                style={{
-                  backgroundColor: colors.background.secondary,
-                  borderBottomWidth: "1px",
-                  borderColor: colors.border.primary,
-                }}
-              >
-                <tr>
-                  {[
-                    "No",
-                    "Batch Code",
-                    "OPJ",
-                    "Design",
-                    "Jenis Kain",
-                    "Rolls",
-                    "Date",
-                    "Paste Qty",
-                  ].map((col) => (
-                    <th
-                      key={col}
-                      className="px-2 py-2 font-semibold text-left whitespace-nowrap"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {displayed.map((r, i) => (
-                  <tr
-                    key={i}
-                    style={{
-                      borderBottomWidth: "1px",
-                      borderColor: colors.border.primary,
-                    }}
-                  >
-                    <td className="px-2 py-2">{i + 1}</td>
-                    <td className="px-2 py-2">{r.batch_code}</td>
-                    <td className="px-2 py-2 font-medium">{r.code}</td>
-                    <td className="px-2 py-2">{r.design}</td>
-                    <td className="px-2 py-2">{r.jenis_kain}</td>
-                    <td className="px-2 py-2 text-right">{r.rolls}</td>
-                    <td className="px-2 py-2">{r.date}</td>
-                    <td className="px-2 py-2 text-right">{r.paste_quantity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <div
-            className="p-3 text-sm text-center"
+            className="p-4 rounded-lg"
             style={{
-              backgroundColor: colors.background.secondary,
-              color: colors.text.secondary,
+              backgroundColor: `${colors.primary}15`,
+              borderWidth: "1px",
+              borderColor: colors.primary,
             }}
           >
-            Showing {displayed.length} of {totalEntries} entries
+            <p
+              className="mb-1 text-xs"
+              style={{ color: colors.text.secondary }}
+            >
+              Batches
+            </p>
+            <p
+              className="text-2xl font-bold"
+              style={{ color: colors.text.primary }}
+            >
+              {batch_count}
+            </p>
+          </div>
+
+          <div
+            className="p-4 rounded-lg"
+            style={{
+              backgroundColor: `${colors.status.success}15`,
+              borderWidth: "1px",
+              borderColor: colors.status.success,
+            }}
+          >
+            <p
+              className="mb-1 text-xs"
+              style={{ color: colors.text.secondary }}
+            >
+              Entries
+            </p>
+            <p
+              className="text-2xl font-bold"
+              style={{ color: colors.status.success }}
+            >
+              {totalEntries}
+            </p>
+          </div>
+
+          <div
+            className="p-4 rounded-lg"
+            style={{
+              backgroundColor: `${colors.status.warning}15`,
+              borderWidth: "1px",
+              borderColor: colors.status.warning,
+            }}
+          >
+            <p
+              className="mb-1 text-xs"
+              style={{ color: colors.text.secondary }}
+            >
+              Skipped Rows
+            </p>
+            <p
+              className="text-2xl font-bold"
+              style={{ color: colors.status.warning }}
+            >
+              {skipped_rows_count}
+            </p>
           </div>
         </div>
+
+        {/* Missing Products Error */}
+        {missing_products.length > 0 && (
+          <div
+            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
+            style={{
+              backgroundColor: `${colors.status.error}15`,
+              borderWidth: "1px",
+              borderColor: colors.status.error,
+            }}
+          >
+            <XCircle
+              className="flex-shrink-0 w-5 h-5 mt-0.5"
+              style={{ color: colors.status.error }}
+            />
+            <div className="flex-1">
+              <p
+                className="mb-2 text-sm font-medium"
+                style={{ color: colors.status.error }}
+              >
+                Missing Products ({missing_products.length})
+              </p>
+              <p
+                className="mb-2 text-xs"
+                style={{ color: colors.text.secondary }}
+              >
+                These products are referenced but don't exist in the database.
+                Please add them first:
+              </p>
+              <div className="space-y-1 overflow-y-auto max-h-40">
+                {missing_products.map((product, idx) => (
+                  <p
+                    key={idx}
+                    className="font-mono text-xs"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    • {product}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Missing Designs Error */}
+        {missing_designs.length > 0 && (
+          <div
+            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
+            style={{
+              backgroundColor: `${colors.status.error}15`,
+              borderWidth: "1px",
+              borderColor: colors.status.error,
+            }}
+          >
+            <XCircle
+              className="flex-shrink-0 w-5 h-5 mt-0.5"
+              style={{ color: colors.status.error }}
+            />
+            <div className="flex-1">
+              <p
+                className="mb-2 text-sm font-medium"
+                style={{ color: colors.status.error }}
+              >
+                Missing Designs ({missing_designs.length})
+              </p>
+              <p
+                className="mb-2 text-xs"
+                style={{ color: colors.text.secondary }}
+              >
+                These designs are referenced but don't exist in the database.
+                Please add them first:
+              </p>
+              <div className="space-y-1 overflow-y-auto max-h-40">
+                {missing_designs.map((design, idx) => (
+                  <p
+                    key={idx}
+                    className="font-mono text-xs"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    • {design}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Skipped Rows Warning */}
+        {skipped_rows.length > 0 && (
+          <div
+            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
+            style={{
+              backgroundColor: `${colors.status.warning}15`,
+              borderWidth: "1px",
+              borderColor: colors.status.warning,
+            }}
+          >
+            <AlertTriangle
+              className="flex-shrink-0 w-5 h-5 mt-0.5"
+              style={{ color: colors.status.warning }}
+            />
+            <div className="flex-1">
+              <p
+                className="mb-2 text-sm font-medium"
+                style={{ color: colors.text.primary }}
+              >
+                {skipped_rows.length} row(s) skipped (empty separators)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {skipped_rows.slice(0, 20).map((item, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-1 text-xs rounded"
+                    style={{
+                      backgroundColor: colors.background.secondary,
+                      color: colors.text.secondary,
+                    }}
+                  >
+                    Row {item.row}
+                  </span>
+                ))}
+                {skipped_rows.length > 20 && (
+                  <span
+                    className="text-xs"
+                    style={{ color: colors.text.secondary }}
+                  >
+                    +{skipped_rows.length - 20} more
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Preview Table - Only show if no errors */}
+        {!hasErrors && (
+          <div
+            className="overflow-hidden border rounded-lg"
+            style={{ borderColor: colors.border.primary }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead
+                  style={{
+                    backgroundColor: colors.background.secondary,
+                    borderBottomWidth: "1px",
+                    borderColor: colors.border.primary,
+                  }}
+                >
+                  <tr>
+                    {[
+                      "No",
+                      "Batch Code",
+                      "OPJ",
+                      "Design",
+                      "Jenis Kain",
+                      "Rolls",
+                      "Date",
+                      "Paste Qty",
+                    ].map((col) => (
+                      <th
+                        key={col}
+                        className="px-3 py-2 font-semibold text-left whitespace-nowrap"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {allEntries.slice(0, 30).map((r, i) => (
+                    <tr
+                      key={i}
+                      style={{
+                        borderBottomWidth: "1px",
+                        borderColor: colors.border.primary,
+                      }}
+                    >
+                      <td
+                        className="px-3 py-2"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {i + 1}
+                      </td>
+                      <td
+                        className="px-3 py-2 font-mono text-xs"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {r.batch_code}
+                      </td>
+                      <td
+                        className="px-3 py-2 font-medium"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.code}
+                      </td>
+                      <td
+                        className="px-3 py-2"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.design}
+                      </td>
+                      <td
+                        className="px-3 py-2"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {r.jenis_kain}
+                      </td>
+                      <td
+                        className="px-3 py-2 text-right"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.rolls}
+                      </td>
+                      <td
+                        className="px-3 py-2"
+                        style={{ color: colors.text.secondary }}
+                      >
+                        {r.date?.split("T")[0] || "-"}
+                      </td>
+                      <td
+                        className="px-3 py-2 text-right"
+                        style={{ color: colors.text.primary }}
+                      >
+                        {r.paste_quantity?.toFixed(2) || 0}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div
+              className="p-3 text-sm text-center"
+              style={{
+                backgroundColor: colors.background.secondary,
+                color: colors.text.secondary,
+              }}
+            >
+              Showing {Math.min(30, allEntries.length)} of {totalEntries}{" "}
+              entries
+            </div>
+          </div>
+        )}
+
+        {/* Blocking message if there are errors */}
+        {hasErrors && (
+          <div
+            className="p-6 text-center rounded-lg"
+            style={{
+              backgroundColor: colors.background.secondary,
+              borderWidth: "2px",
+              borderColor: colors.status.error,
+            }}
+          >
+            <XCircle
+              className="w-12 h-12 mx-auto mb-3"
+              style={{ color: colors.status.error }}
+            />
+            <p
+              className="mb-1 text-sm font-medium"
+              style={{ color: colors.text.primary }}
+            >
+              Cannot Proceed with Import
+            </p>
+            <p className="text-xs" style={{ color: colors.text.secondary }}>
+              Please fix the missing products and/or designs above before
+              importing.
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -360,6 +646,12 @@ export default function ImportColorKitchenModal({
   // --- Step 3: Confirm/Result
   const renderStep3 = () => {
     if (!result) {
+      const totalEntries =
+        preview?.batches?.reduce(
+          (sum, b) => sum + (b.entries?.length || 0),
+          0
+        ) || 0;
+
       return (
         <div className="flex flex-col items-center justify-center py-12">
           <AlertCircle
@@ -372,10 +664,16 @@ export default function ImportColorKitchenModal({
           >
             Ready to Import
           </h3>
-          <p className="mb-6 text-sm" style={{ color: colors.text.secondary }}>
-            {preview.total_entries} entries in {preview.batches.length} batches
-            will be imported
-          </p>
+          <div className="space-y-2 text-center">
+            <p className="text-sm" style={{ color: colors.text.secondary }}>
+              <strong style={{ color: colors.primary }}>{totalEntries}</strong>{" "}
+              entries in{" "}
+              <strong style={{ color: colors.primary }}>
+                {preview?.batch_count || 0}
+              </strong>{" "}
+              batches will be imported
+            </p>
+          </div>
         </div>
       );
     }
@@ -400,13 +698,17 @@ export default function ImportColorKitchenModal({
   };
 
   // --- Actions
+  const hasValidationErrors =
+    preview?.missing_products?.length > 0 ||
+    preview?.missing_designs?.length > 0;
+
   const actions = (
     <>
       {step > 1 && !result && (
         <button
           onClick={back}
           disabled={processing}
-          className="px-4 py-2 text-sm font-medium rounded-lg"
+          className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50"
           style={{ color: colors.text.primary }}
         >
           Back
@@ -437,9 +739,7 @@ export default function ImportColorKitchenModal({
                 label={processing ? "Loading..." : "Next"}
                 onClick={next}
                 disabled={
-                  processing ||
-                  !file ||
-                  (step === 2 && !(preview.entries?.length > 0))
+                  processing || !file || (step === 2 && hasValidationErrors)
                 }
               />
             )}
@@ -447,7 +747,7 @@ export default function ImportColorKitchenModal({
               <button
                 onClick={doImport}
                 disabled={processing}
-                className="px-4 py-2 text-sm font-medium rounded-lg"
+                className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50"
                 style={{
                   backgroundColor: colors.status.success,
                   color: colors.text.inverse,
