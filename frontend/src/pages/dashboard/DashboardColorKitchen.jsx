@@ -553,7 +553,7 @@ export default function DashboardColorKitchen() {
         </div>
 
         {/* Info Section */}
-        <Card className="border-blue-200 bg-blue-50">
+        {/* <Card className="border-blue-200 bg-blue-50">
           <div className="flex items-start gap-2">
             <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg">
               <svg
@@ -621,7 +621,7 @@ export default function DashboardColorKitchen() {
               </div>
             </div>
           </div>
-        </Card>
+        </Card> */}
       </div>
     </MainLayout>
   );
