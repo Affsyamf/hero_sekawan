@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.utils.deps import get_db
-from app.services.reporting.color_kitchen import (ColorKitchenSummaryService, ColorKitchenChemicalUsageService)
+from app.services.reporting.color_kitchen import (ColorKitchenSummaryService, ColorKitchenChemicalUsageService, ColorKitchenTrendService)
 from app.schemas.report_filters import ColorKitchenReportFilter
 from typing import Optional
 
@@ -24,3 +24,11 @@ def get_color_kitchen_chemical_detail(
 ):
     service = ColorKitchenChemicalUsageService(db)
     return service.run_detailed(filters, parent_type)
+
+@router.post("/trend")
+def get_color_kitchen_trend(
+    filters: ColorKitchenReportFilter,
+    db: Session = Depends(get_db)
+):
+    service = ColorKitchenTrendService(db)
+    return service.run(filters)

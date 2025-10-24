@@ -16,6 +16,8 @@ import {
   OverviewNew,
   DashboardPurchasing,
   DashboardColorKitchen,
+  ColorKitchenDetailPage,
+  PurchasingDetailPage,
 } from "./pages";
 import GlobalFilterDrawer from "./components/common/GlobalFilterDrawer.jsx";
 
@@ -23,7 +25,7 @@ export default function AppRouter() {
   return (
     <Router>
       <GlobalFilterProvider>
-        <GlobalFilterDrawer/>
+        <GlobalFilterDrawer />
         <Routes>
           <Route path="/" element={<OverviewNew />} />
           <Route
@@ -42,8 +44,19 @@ export default function AppRouter() {
           <Route path="/design-types" element={<DesignTypesPage />} />
 
           <Route path="/purchasings" element={<PurchasingsPage />} />
+          <Route
+            path="/purchasings/detail/:id"
+            element={<PurchasingDetailPage />}
+          />
+
           <Route path="/stock-movements" element={<StockMovementsPage />} />
+
           <Route path="/color-kitchens" element={<ColorKitchensPage />} />
+          <Route
+            path="/color-kitchens/detail/:id"
+            element={<ColorKitchenDetailPage />}
+          />
+
           <Route path="/stock-opnames" element={<StockOpnamePage />} />
 
           <Route

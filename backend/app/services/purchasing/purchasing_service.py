@@ -19,7 +19,7 @@ class PurchasingService:
         purchasing = self.db.query(
             Purchasing,
             func.count(PurchasingDetail.id).label('item_count'),
-            func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label('total_amount')
+            func.sum(PurchasingDetail.quantity * PurchasingDetail.price + PurchasingDetail.ppn + PurchasingDetail.pph).label('total_amount')
         ).outerjoin(Purchasing.details)\
          .outerjoin(Purchasing.supplier)\
          .group_by(Purchasing.id)

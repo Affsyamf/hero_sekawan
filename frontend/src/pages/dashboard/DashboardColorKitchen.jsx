@@ -17,18 +17,28 @@ import {
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
-import { formatNumber, formatCompactCurrency, formatDate } from "../../utils/helpers";
+import {
+  formatNumber,
+  formatCompactCurrency,
+  formatDate,
+} from "../../utils/helpers";
 import {
   reportsColorKitchenSummary,
   reportsColorKitchenChemicalUsageSummary,
   reportsColorKitchenChemicalUsage,
+  reportsColorKitchenTrend,
 } from "../../services/report_color_kitchen_service";
+import { formatPeriod, formatWeeklyPeriod } from "../../utils/dateHelper";
 
 export default function DashboardColorKitchen() {
   const [ckData, setCkData] = useState(null);
+  const [trendData, setTrendData] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const { colors } = useTheme();
+
+  const [trendGranularity, setTrendGranularity] = useState("monthly");
 
   // ✅ Use global filter instead of local state
   const { dateRange } = useGlobalFilter();
@@ -39,6 +49,12 @@ export default function DashboardColorKitchen() {
       fetchCkData();
     }
   }, [dateRange.startDate, dateRange.endDate]);
+
+  useEffect(() => {
+    if (dateRange.startDate && dateRange.endDate) {
+      fetchCkTrend();
+    }
+  }, [dateRange.startDate, dateRange.endDate, trendGranularity]);
 
   const fetchCkData = async () => {
     try {
@@ -54,8 +70,8 @@ export default function DashboardColorKitchen() {
       const [summary, chemicalSummary, dyesData, auxData] = await Promise.all([
         reportsColorKitchenSummary(params),
         reportsColorKitchenChemicalUsageSummary(params),
-        reportsColorKitchenChemicalUsage({ ...params, parent_type: "dye" }),
-        reportsColorKitchenChemicalUsage({ ...params, parent_type: "aux" }),
+        reportsColorKitchenChemicalUsage("dye", { ...params }),
+        reportsColorKitchenChemicalUsage("aux", { ...params }),
       ]);
 
       const transformedData = transformApiData(
@@ -66,12 +82,42 @@ export default function DashboardColorKitchen() {
       );
 
       setCkData(transformedData);
+      console.log(ckData);
     } catch (error) {
       console.error("Error fetching Color Kitchen data:", error);
       setCkData(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchCkTrend = async () => {
+    const params = {
+      start_date: dateRange.startDate,
+      end_date: dateRange.endDate,
+      granularity: trendGranularity,
+    };
+
+    const [trend] = await Promise.all([reportsColorKitchenTrend(params)]);
+
+    const trendTransformed = trend.data.map((item) => {
+      let displayPeriod = item.period;
+
+      if (item.week_start && item.week_end) {
+        displayPeriod = formatWeeklyPeriod(item.week_start, item.week_end);
+      } else {
+        displayPeriod = formatPeriod(item.period);
+      }
+
+      return {
+        key: displayPeriod,
+        dyes: item.dyes || 0,
+        auxiliaries: item.auxiliaries || 0,
+        total: item.total || 0,
+      };
+    });
+
+    setTrendData(trendTransformed);
   };
 
   const transformApiData = (summary, chemicalSummary, dyesData, auxData) => {
@@ -104,21 +150,22 @@ export default function DashboardColorKitchen() {
     };
 
     // Transform chemical breakdown for donut charts
-    const chemicalData = chemicalSummary.data || [];
-    const dyesBreakdown = chemicalData.find(
-      (item) => item.label === "Dyes"
-    ) || { value: 0 };
-    const auxBreakdown = chemicalData.find(
-      (item) => item.label === "Auxiliaries"
-    ) || { value: 0 };
+    const chemicalSummaryTransformed = (chemicalSummary.data || []).map(
+      (item) => ({
+        key: item.label === "Dyes" ? "Dyes" : "Auxiliaries",
+        value: item.value || 0,
+        drilldown: true,
+        context: item.label,
+      })
+    );
 
     // Transform top dyes (dari parent_type=dye)
     const dyesList = dyesData.data || [];
     const maxDyeValue = Math.max(...dyesList.map((d) => d.quantity || 0), 1);
     const top_dyes = dyesList.slice(0, 5).map((item) => ({
       label: item.product_name || item.label || "Unknown",
-      quantity: item.quantity || 0,
-      cost: item.cost || 0,
+      quantity: item.qty || 0,
+      value: item.value || 0,
       percentage: item.percentage || 0,
       maxValue: maxDyeValue,
     }));
@@ -128,8 +175,8 @@ export default function DashboardColorKitchen() {
     const maxAuxValue = Math.max(...auxList.map((a) => a.quantity || 0), 1);
     const top_aux = auxList.slice(0, 5).map((item) => ({
       label: item.product_name || item.label || "Unknown",
-      quantity: item.quantity || 0,
-      cost: item.cost || 0,
+      quantity: item.qty || 0,
+      value: item.value || 0,
       percentage: item.percentage || 0,
       maxValue: maxAuxValue,
     }));
@@ -157,6 +204,7 @@ export default function DashboardColorKitchen() {
       top_aux,
       dye_cost_breakdown,
       aux_cost_breakdown,
+      chemicalSummaryTransformed,
     };
   };
 
@@ -171,6 +219,28 @@ export default function DashboardColorKitchen() {
       alert("Failed to export data. Please try again.");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const onDrilldown = async (context, depth) => {
+    const params = {
+      start_date: dateRange.startDate,
+      end_date: dateRange.endDate,
+    };
+
+    let res = [];
+    // // level 1 → Goods vs Jasa
+    if (depth === 0) {
+      if (context === "Dyes") {
+        res = await reportsColorKitchenChemicalUsage("dye", params);
+      } else {
+        res = await reportsColorKitchenChemicalUsage("aux", params);
+      }
+      return res.data.data.map((r) => ({
+        key: r.label,
+        value: r.value,
+        percentage: r.percentage,
+      }));
     }
   };
 
@@ -205,8 +275,14 @@ export default function DashboardColorKitchen() {
     );
   }
 
-  const { metrics, top_dyes, top_aux, dye_cost_breakdown, aux_cost_breakdown } =
-    ckData;
+  const {
+    metrics,
+    top_dyes,
+    top_aux,
+    dye_cost_breakdown,
+    aux_cost_breakdown,
+    chemicalSummaryTransformed,
+  } = ckData;
 
   return (
     <MainLayout>
@@ -223,7 +299,8 @@ export default function DashboardColorKitchen() {
             {/* ✅ Show active filter info */}
             {dateRange.startDate && dateRange.endDate && (
               <p className="mt-1 text-xs text-blue-600">
-                📅 Filtered: {formatDate(dateRange.startDate)} to {formatDate(dateRange.endDate)}
+                📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+                {formatDate(dateRange.endDate)}
               </p>
             )}
           </div>
@@ -289,40 +366,79 @@ export default function DashboardColorKitchen() {
         </div>
 
         {/* Cost Breakdown - Donut Charts */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
-          {/* Cost of Dyes */}
-          <Card className="h-full">
-            <Highchart.HighchartsDonut
-              data={dye_cost_breakdown}
-              centerText={{
-                value: formatCompactCurrency(
-                  dye_cost_breakdown.reduce((sum, item) => sum + item.value, 0)
-                ),
-                label: "Total Dye Cost",
-              }}
-              title="Cost of Dyes (Dyestuff)"
-              subtitle="Breakdown biaya pewarna"
-              className="w-full h-full"
-              showSummary={true}
-            />
-          </Card>
+        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <Card className="w-full h-full">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                    Trend Usage
+                  </h3>
+                  <p className="text-xs text-gray-600">
+                    Trend pemakaian Dye & Auxiliary
+                  </p>
+                </div>
+                <select
+                  value={trendGranularity}
+                  onChange={(e) => setTrendGranularity(e.target.value)}
+                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
+                >
+                  <option value="daily">Perhari</option>
+                  <option value="weekly">Perminggu</option>
+                  <option value="monthly">Perbulan</option>
+                  <option value="yearly">Pertahun</option>
+                </select>
+              </div>
+              <Highchart.HighchartsBar
+                initialData={trendData}
+                title=""
+                subtitle=""
+                datasets={[
+                  {
+                    key: "dyes",
+                    label: "Dye",
+                    color: "primary",
+                    type: "column",
+                    stacked: true,
+                  },
+                  {
+                    key: "auxiliaries",
+                    label: "Auxiliary",
+                    color: "warning",
+                    type: "column",
+                    stacked: true,
+                  },
+                  {
+                    key: "total",
+                    label: "Total",
+                    color: "neutral",
+                    type: "spline",
+                  },
+                ]}
+                onFetchData={() => trendData}
+                showSummary={true}
+              />
+            </Card>
+          </div>
 
-          {/* Cost of Aux */}
-          <Card className="h-full">
-            <Highchart.HighchartsDonut
-              data={aux_cost_breakdown}
-              centerText={{
-                value: formatCompactCurrency(
-                  aux_cost_breakdown.reduce((sum, item) => sum + item.value, 0)
-                ),
-                label: "Total Aux Cost",
-              }}
-              title="Cost of Auxiliary (AUX)"
-              subtitle="Breakdown biaya auxiliary"
-              className="w-full h-full"
-              showSummary={true}
-            />
-          </Card>
+          <div className="lg:col-span-1">
+            <Card className="h-full ">
+              <Highchart.HighchartsDonut
+                data={chemicalSummaryTransformed}
+                // centerText={{
+                //   value: formatCompactCurrency(metrics.total_purchases.value),
+                //   label: "Total",
+                // }}
+                title="Breakdown Purchasing"
+                subtitle="Goods vs Jasa"
+                className="w-full h-full"
+                showSummary={true}
+                onDrilldownRequest={async ({ _, context, depth }) => {
+                  return onDrilldown(context, depth);
+                }}
+              />
+            </Card>
+          </div>
         </div>
 
         {/* Top Dyes & Top Aux */}
@@ -346,7 +462,7 @@ export default function DashboardColorKitchen() {
             <Highchart.HighchartsBar
               initialData={top_dyes.map((item) => ({
                 key: item.label,
-                value: item.cost,
+                value: item.value,
                 percentage: item.percentage,
               }))}
               title=""
@@ -358,7 +474,7 @@ export default function DashboardColorKitchen() {
               showSummary={false}
             />
 
-            {top_dyes.length > 0 && (
+            {/* {top_dyes.length > 0 && (
               <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
                 <div className="p-2 rounded-lg bg-blue-50">
                   <p className="text-xs text-blue-600">Total dari Top 5</p>
@@ -378,7 +494,7 @@ export default function DashboardColorKitchen() {
                   </p>
                 </div>
               </div>
-            )}
+            )} */}
           </Card>
 
           {/* Top 5 Aux */}
@@ -400,7 +516,7 @@ export default function DashboardColorKitchen() {
             <Highchart.HighchartsBar
               initialData={top_aux.map((item) => ({
                 key: item.label,
-                value: item.cost,
+                value: item.value,
                 percentage: item.percentage,
               }))}
               title=""
@@ -412,7 +528,7 @@ export default function DashboardColorKitchen() {
               showSummary={false}
             />
 
-            {top_aux.length > 0 && (
+            {/* {top_aux.length > 0 && (
               <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
                 <div className="p-2 rounded-lg bg-purple-50">
                   <p className="text-xs text-purple-600">Total dari Top 5</p>
@@ -432,7 +548,7 @@ export default function DashboardColorKitchen() {
                   </p>
                 </div>
               </div>
-            )}
+            )} */}
           </Card>
         </div>
 

@@ -1,6 +1,8 @@
 # app/services/reporting/color_kitchen/color_kitchen_summary_service.py
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from decimal import Decimal
+
 from app.models import (
     ColorKitchenBatch as CKBatch,
     ColorKitchenEntry as CKEntry,
@@ -81,6 +83,8 @@ class ColorKitchenSummaryService(BaseReportService):
         if end_date:
             q_cost = q_cost.filter(CKBatch.date <= end_date)
         total_cost = q_cost.scalar() or 0.0
+        if isinstance(total_cost, Decimal):
+            total_cost = float(total_cost)
 
         # ----------------------------------------------
         # Derived averages

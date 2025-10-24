@@ -9,7 +9,7 @@ from app.schemas.input_models.color_kitchen_input_models import ColorKitchenEntr
 from app.models.master import Design
 from app.services.common.audit_logger import AuditLoggerService
 from app.core.database import Session, get_db
-from app.models import ColorKitchenEntry, ColorKitchenEntryDetail
+from app.models import ColorKitchenEntry, ColorKitchenEntryDetail, ColorKitchenBatch, ColorKitchenBatchDetail
 from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
 from app.utils.response import APIResponse
@@ -63,7 +63,6 @@ class ColorKitchenEntryService:
             "design_name": row.ColorKitchenEntry.design.code if row.ColorKitchenEntry.design else None,
             "batch_id": row.ColorKitchenEntry.batch_id,
             "batch_code": row.ColorKitchenEntry.batch.code if row.ColorKitchenEntry.batch else None,
-            "details": [],
             "item_count": row.item_count or 0,
             "total_quantity": float(row.total_quantity) if row.total_quantity else 0,
             "total_cost": float(row.total_cost) if row.total_cost else 0,
@@ -73,23 +72,38 @@ class ColorKitchenEntryService:
     def get_color_kitchen_entry(self, entry_id: int):
         entry = self.db.query(ColorKitchenEntry).options(
             joinedload(ColorKitchenEntry.design),
-            joinedload(ColorKitchenEntry.batch),
-            joinedload(ColorKitchenEntry.details).joinedload(ColorKitchenEntryDetail.product)
+            joinedload(ColorKitchenEntry.batch).joinedload(ColorKitchenBatch.details).joinedload(ColorKitchenBatchDetail.product),
+            joinedload(ColorKitchenEntry.details).joinedload(ColorKitchenEntryDetail.product),
         ).filter(ColorKitchenEntry.id == entry_id).first()
 
         if not entry:
             raise HTTPException(status_code=404, detail=f"Color Kitchen Entry ID '{entry_id}' not found.")
 
-        details = []
-        for detail in entry.details:
-            details.append({
+        aux_details = []
+        for detail in entry.details or []:
+            aux_details.append({
                 "id": detail.id,
                 "product_id": detail.product_id,
                 "product_name": detail.product.name if detail.product else None,
-                "quantity": float(detail.quantity) if detail.quantity else 0,
-                "unit_cost_used": float(detail.unit_cost_used) if detail.unit_cost_used else 0,
-                "total_cost": float(detail.total_cost) if detail.total_cost else 0, 
+                "quantity": float(detail.quantity or 0),
+                "unit": detail.product.unit if detail.product else None,
+                "unit_cost_used": float(detail.unit_cost_used or 0),
+                "total_cost": float(detail.total_cost or 0),
             })
+
+        dye_details = []
+        if entry.batch:
+            for detail in entry.batch.details or []:
+                dye_details.append({
+                    "id": detail.id,
+                    "product_id": detail.product_id,
+                    "product_name": detail.product.name if detail.product else None,
+                    "quantity": float(detail.quantity or 0),
+                    "unit": detail.product.unit if detail.product else None,
+                    "unit_cost_used": float(detail.unit_cost_used or 0),
+                    "total_cost": float(detail.total_cost or 0),
+                })
+
 
         response = {
             "id": entry.id,
@@ -101,7 +115,10 @@ class ColorKitchenEntryService:
             "design_code": entry.design.code if entry.design else None,
             "batch_id": entry.batch_id,
             "batch_code": entry.batch.code if entry.batch else None,
-            "details": details,
+            "details": {
+                "aux": aux_details,
+                "dye": dye_details,
+            },
         }
 
         return APIResponse.ok(data=response)
