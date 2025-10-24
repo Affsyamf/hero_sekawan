@@ -202,6 +202,7 @@ export default function DashboardPurchasing() {
   };
 
   const transformPurchasesToBarData = (purchases) => {
+    console.log(purchases);
     return purchases.map((purchase) => ({
       key: purchase.supplier,
       value: purchase.value,
@@ -241,11 +242,11 @@ export default function DashboardPurchasing() {
         percentage: item.percentage || 0,
       }));
 
-    const top_purchases = (suppliers?.top_purchases || [])
+    const top_purchases = (products?.most_purchased || [])
       .slice(0, 5)
       .map((item) => ({
-        supplier: item.supplier,
-        value: item.total_spent || 0,
+        supplier: item.product,
+        value: item.total_value || 0,
       }));
 
     const most_purchased = transformProductsData(products);
@@ -376,6 +377,45 @@ export default function DashboardPurchasing() {
     most_purchased,
   } = purchasingData;
 
+  const onDrilldown = async (context, depth) => {
+    const params = {
+      start_date: dateRange?.dateFrom,
+      end_date: dateRange?.dateTo,
+    };
+
+    // level 1 → Goods vs Jasa
+    if (depth === 0) {
+      const res = await reportsPurchasingBreakdown(
+        "account_type",
+        context,
+        0,
+        params
+      );
+      return res.data.map((r) => ({
+        key: r.label,
+        value: r.value,
+        percentage: r.percentage,
+        context: r.account_id,
+        drilldown: true,
+      }));
+    }
+
+    // level 2 → Supplier → Product breakdown
+    if (depth === 1) {
+      const res = await reportsPurchasingBreakdown(
+        "account",
+        context,
+        context,
+        params
+      );
+
+      return res.data.map((p) => ({
+        key: p.label,
+        value: p.value,
+      }));
+    }
+  };
+
   return (
     <MainLayout>
       <div className="max-w-full space-y-4 p-0.5 md:p-1">
@@ -492,10 +532,10 @@ export default function DashboardPurchasing() {
             <Card className="h-full ">
               <Highchart.HighchartsDonut
                 data={goods_vs_jasa}
-                centerText={{
-                  value: formatCompactCurrency(metrics.total_purchases.value),
-                  label: "Total",
-                }}
+                // centerText={{
+                //   value: formatCompactCurrency(metrics.total_purchases.value),
+                //   label: "Total",
+                // }}
                 title="Breakdown Purchasing"
                 subtitle="Goods vs Jasa"
                 className="w-full h-full"
@@ -614,7 +654,7 @@ export default function DashboardPurchasing() {
         </div>
 
         {/* Most Purchased Products */}
-        <Card>
+        {/* <Card>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
@@ -708,7 +748,7 @@ export default function DashboardPurchasing() {
               </div>
             )}
           </div>
-        </Card>
+        </Card> */}
       </div>
     </MainLayout>
   );

@@ -65,7 +65,7 @@ class PurchasingProductInsightsService(BaseReportService):
 
         q = (
             q.group_by(Product.name)
-            .order_by(func.sum(PurchasingDetail.quantity).desc())
+            .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(5)
             .all()
         )

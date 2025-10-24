@@ -543,13 +543,14 @@ export default function DashboardColorKitchen() {
             <Card className="h-full ">
               <Highchart.HighchartsDonut
                 data={chemicalSummaryTransformed}
-                centerText={{
-                  value: formatCompactCurrency(metrics.total_cost.value),
-                  label: "Total Cost",
-                }}
+                // centerText={{
+                //   value: formatCompactCurrency(metrics.total_cost.value),
+                //   label: "Total Cost",
+                // }}
                 title="Chemical Cost Breakdown"
                 subtitle="Dyes vs Auxiliaries"
                 onDrilldown={onDrilldown}
+                showSummary={true}
               />
             </Card>
           </div>
