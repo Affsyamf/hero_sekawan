@@ -47,6 +47,12 @@ class StockOpnameService:
                 )
             )
             
+        if request.sort_by and request.sort_dir:
+            sort_col = getattr(StockOpname, request.sort_by)
+            if request.sort_dir.lower() == "desc":
+                sort_col = sort_col.desc()
+            stock_opname = stock_opname.order_by(sort_col)
+            
         stock_opname = stock_opname.order_by(StockOpname.id.desc())
 
         return APIResponse.paginated(stock_opname, request, lambda row: {

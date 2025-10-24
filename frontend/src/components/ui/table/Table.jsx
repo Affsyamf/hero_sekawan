@@ -73,8 +73,8 @@ export default function Table({
           page_size: pageSize,
           q: search,
           filters,
-          sortBy: sortConfig.key,
-          sortDir: sortConfig.direction,
+          sort_by: sortConfig.key,
+          sort_dir: sortConfig.direction,
           ...(showDateRangeFilter && { dateRange }), // Only include dateRange if filter is enabled
         }).filter(([, v]) => v !== null && v !== undefined && v !== "")
       );
@@ -665,4 +665,3 @@ export default function Table({
     </div>
   );
 }
- 

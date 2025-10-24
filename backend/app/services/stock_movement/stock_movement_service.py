@@ -48,6 +48,12 @@ class StockMovementService:
 
         stock_movement = stock_movement.order_by(StockMovement.id.desc())
         
+        if request.sort_by and request.sort_dir:
+            sort_col = getattr(StockMovement, request.sort_by)
+            if request.sort_dir.lower() == "desc":
+                sort_col = sort_col.desc()
+            stock_movement = stock_movement.order_by(sort_col)
+        
         return APIResponse.paginated(stock_movement, request, lambda row: {
             "id": row.StockMovement.id,
             "date": row.StockMovement.date.isoformat() if row.StockMovement.date else None,

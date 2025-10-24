@@ -34,6 +34,12 @@ class ProductService:
                 )
             ).order_by(Product.id)
             
+        if request.sort_by and request.sort_dir:
+            sort_col = getattr(Product, request.sort_by)
+            if request.sort_dir.lower() == "desc":
+                sort_col = sort_col.desc()
+            product = product.order_by(sort_col)
+            
         return APIResponse.paginated(product, request, lambda product: {
                 "id": product.id,
                 "code": product.code,

@@ -44,6 +44,12 @@ class PurchasingService:
                     Purchasing.date <= end
                 )
             )
+            
+        if request.sort_by and request.sort_dir:
+            sort_col = getattr(Purchasing, request.sort_by)
+            if request.sort_dir.lower() == "desc":
+                sort_col = sort_col.desc()
+            purchasing = purchasing.order_by(sort_col)
                                 
             # except ValueError as e:
             #     print(f"⚠️ Invalid date format: {e}")  # Ignore jika format salah
