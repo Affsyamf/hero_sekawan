@@ -21,19 +21,6 @@ export default function ProductsPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [accounts, setAccounts] = useState([]);
-
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      try {
-        const response = await searchAccount({}); // bisa tambahkan filter jika ada
-        setAccounts(response.data?.data || []);
-      } catch (error) {
-        console.error("Failed to fetch accounts:", error);
-      }
-    };
-    fetchAccounts();
-  }, []);
 
   const columns = [
     {
@@ -53,6 +40,14 @@ export default function ProductsPage() {
       ),
     },
     {
+      key: "quantity",
+      label: "Quantity",
+      sortable: false,
+      render: (value, row) => {
+        return <span className="font-semibold">{value}</span>;
+      },
+    },
+    {
       key: "unit",
       label: "Unit",
       sortable: true,
@@ -61,17 +56,9 @@ export default function ProductsPage() {
       ),
     },
     {
-      key: "account_id",
+      key: "account_name",
       label: "Account",
       sortable: true,
-      render: (value) => {
-        const account = (accounts || []).find((a) => a.id === value);
-        return (
-          <span className="text-primary-text">
-            {account ? `${account.account_no} - ${account.name}` : "-"}
-          </span>
-        );
-      },
     },
   ];
 
