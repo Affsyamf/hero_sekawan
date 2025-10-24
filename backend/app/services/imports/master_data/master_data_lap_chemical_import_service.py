@@ -33,6 +33,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
         for _, row in df.iterrows():
             raw_name = row.get("NAMABRG")
             code = row.get("KDBRG")
+            unit = row.get("SAT")
 
             if pd.isna(raw_name) or pd.isna(code):
                 continue
@@ -65,7 +66,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
                 new_product = Product(
                     code=code,
                     name=name,
-                    unit=None,
+                    unit=unit,
                     account_id=account.id,
                 )
                 self.db.add(new_product)
@@ -96,6 +97,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
         for _, row in df.iterrows():
             raw_name = row.get("NAMABRG")
             code = row.get("KDBRG")
+            unit = row.get("SAT")
 
             if pd.isna(raw_name) or pd.isna(code):
                 continue
@@ -120,6 +122,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
                     to_update.append({
                         "code": code,
                         "name": name,
+                        "unit": unit,
                         "current_account": product.account_id,
                         "will_set_account": account.id,
                     })
@@ -129,6 +132,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
                 to_insert.append({
                     "code": code,
                     "name": name,
+                    "unit": unit,
                     "account_id": account.id,
                 })
 
