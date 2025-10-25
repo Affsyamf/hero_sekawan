@@ -5,167 +5,250 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
-  AlertTriangle,
-  Package,
-  Users,
-  FileText,
-  Palette,
+  ChevronLeft,
 } from "lucide-react";
 import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
-import { importApi } from "../../../services/import_service";
+import {
+  importDataMasterLapChemical,
+  importDataMasterLapChemicalPreview,
+  importDataMasterLapPembelian,
+  importDataMasterLapPembelianPreview,
+  importDataMasterLapCk,
+  importDataMasterLapCkPreview,
+} from "../../../services/import_data_master_service";
 
-const IMPORT_TYPES = {
-  CHEMICAL: {
-    title: "Import Master Data - Chemical",
-    subtitle: "Import products from Chemical sheet",
-    sheetName: "CHEMICAL",
-    icon: Package,
-  },
-  PEMBELIAN: {
-    title: "Import Master Data - Pembelian",
-    subtitle: "Import accounts, products, and suppliers from purchasing data",
-    sheetName: "Multiple sheets",
-    icon: FileText,
-  },
-  CK: {
-    title: "Import Master Data - Design (CK)",
-    subtitle: "Import designs and design types from TEMPLATE QTY",
-    sheetName: "TEMPLATE QTY",
-    icon: Palette,
-  },
-};
-
-export default function ImportMasterDataModal({
+export default function ImportDataMasterModal({
   isOpen,
   onClose,
   onImportSuccess,
-  importType = "CHEMICAL", // "CHEMICAL" | "PEMBELIAN" | "CK"
 }) {
   const { colors } = useTheme();
-  const [step, setStep] = useState(1);
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [currentStep, setCurrentStep] = useState(1); // Main step: 1, 2, 3
+  const [subStep, setSubStep] = useState(1); // Sub step: 1=Upload, 2=Preview, 3=Confirm
 
-  const config = IMPORT_TYPES[importType];
+  // State untuk setiap data master
+  const [chemicalFile, setChemicalFile] = useState(null);
+  const [chemicalPreview, setChemicalPreview] = useState(null);
+  const [chemicalResult, setChemicalResult] = useState(null);
+  const [chemicalError, setChemicalError] = useState(null);
+
+  const [pembelianFile, setPembelianFile] = useState(null);
+  const [pembelianPreview, setPembelianPreview] = useState(null);
+  const [pembelianResult, setPembelianResult] = useState(null);
+  const [pembelianError, setPembelianError] = useState(null);
+
+  const [ckFile, setCkFile] = useState(null);
+  const [ckPreview, setCkPreview] = useState(null);
+  const [ckResult, setCkResult] = useState(null);
+  const [ckError, setCkError] = useState(null);
+
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const steps = [
+    { number: 1, label: "Laporan Pembelian", key: "pembelian" },
+    { number: 2, label: "Laporan Chemical", key: "chemical" },
+    { number: 3, label: "Laporan CK", key: "ck" },
+  ];
+
+  const subSteps = [
     { n: 1, l: "Upload" },
     { n: 2, l: "Preview" },
     { n: 3, l: "Confirm" },
   ];
 
-  const reset = () => {
-    setStep(1);
-    setFile(null);
-    setPreview(null);
-    setResult(null);
-    setError(null);
-    setProcessing(false);
+  const getCurrentStepConfig = () => {
+    switch (currentStep) {
+      case 1:
+        return {
+          key: "pembelian",
+          file: pembelianFile,
+          setFile: setPembelianFile,
+          preview: pembelianPreview,
+          setPreview: setPembelianPreview,
+          result: pembelianResult,
+          setResult: setPembelianResult,
+          error: pembelianError,
+          setError: setPembelianError,
+          title: "Import Data Master - Laporan Pembelian",
+          description: "Upload file Excel dari Laporan Pembelian",
+          importApi: importDataMasterLapPembelian,
+          previewApi: importDataMasterLapPembelianPreview,
+        };
+
+      case 2:
+        return {
+          key: "chemical",
+          file: chemicalFile,
+          setFile: setChemicalFile,
+          preview: chemicalPreview,
+          setPreview: setChemicalPreview,
+          result: chemicalResult,
+          setResult: setChemicalResult,
+          error: chemicalError,
+          setError: setChemicalError,
+          title: "Import Data Master - Laporan Chemical",
+          description: "Upload file Excel dari Laporan Chemical",
+          importApi: importDataMasterLapChemical,
+          previewApi: importDataMasterLapChemicalPreview,
+        };
+
+      case 3:
+        return {
+          key: "ck",
+          file: ckFile,
+          setFile: setCkFile,
+          preview: ckPreview,
+          setPreview: setCkPreview,
+          result: ckResult,
+          setResult: setCkResult,
+          error: ckError,
+          setError: setCkError,
+          title: "Import Data Master - Laporan CK",
+          description: "Upload file Excel dari Laporan CK",
+          importApi: importDataMasterLapCk,
+          previewApi: importDataMasterLapCkPreview,
+        };
+      default:
+        return null;
+    }
   };
 
-  // --- Fetch preview from backend ---
-  const fetchPreview = async (f) => {
-    setProcessing(true);
-    try {
-      let res;
-      switch (importType) {
-        case "CHEMICAL":
-          res = await importApi.previewMasterDataChemical(f);
-          break;
-        case "PEMBELIAN":
-          res = await importApi.previewMasterDataPembelian(f);
-          break;
-        case "CK":
-          res = await importApi.previewMasterDataCk(f);
-          break;
-        default:
-          throw new Error("Invalid import type");
-      }
+  const resetModal = () => {
+    setCurrentStep(1);
+    setSubStep(1);
 
-      const data = res.data?.data;
-      setPreview(data);
-      setError(null);
-      setStep(2);
+    setChemicalFile(null);
+    setChemicalPreview(null);
+    setChemicalResult(null);
+    setChemicalError(null);
+
+    setPembelianFile(null);
+    setPembelianPreview(null);
+    setPembelianResult(null);
+    setPembelianError(null);
+
+    setCkFile(null);
+    setCkPreview(null);
+    setCkResult(null);
+    setCkError(null);
+
+    setIsProcessing(false);
+  };
+
+  const handleClose = () => {
+    if (isProcessing) return;
+    resetModal();
+    onClose();
+  };
+
+  // Fetch preview from backend (sama seperti ImportPurchasingTransaction)
+  const fetchPreview = async (file, config) => {
+    setIsProcessing(true);
+    try {
+      const res = await config.previewApi(file);
+      const data = res.data?.data || res.data; // Handle both response formats
+
+      config.setPreview(data);
+      config.setError(null);
     } catch (err) {
-      setError(err.response?.data?.detail || "Preview failed");
-      setPreview(null);
+      config.setError(
+        err.response?.data?.detail || err.message || "Preview failed"
+      );
+      config.setPreview(null);
     } finally {
-      setProcessing(false);
+      setIsProcessing(false);
     }
   };
 
+  // Select file and auto-fetch preview (sama seperti ImportPurchasingTransaction)
   const selectFile = async (e) => {
+    const config = getCurrentStepConfig();
     const f = e.target.files?.[0];
+
     if (!f) return;
+
     if (!f.name.toLowerCase().endsWith(".xlsx")) {
-      setError("Upload .xlsx file");
+      config.setError("Upload .xlsx file");
       return;
     }
-    setFile(f);
-    setError(null);
-    await fetchPreview(f);
+
+    config.setFile(f);
+    config.setError(null);
+    await fetchPreview(f, config);
   };
 
-  const next = () => {
-    if (step === 1 && !file) {
-      setError("Select file");
+  const handleNext = () => {
+    const config = getCurrentStepConfig();
+
+    if (subStep === 1 && !config.file) {
+      config.setError("Select file");
       return;
     }
-    if (step === 2 && !preview) {
-      setError("No preview data available");
+    if (subStep === 2 && !config.preview) {
+      config.setError("No data");
       return;
     }
-    setError(null);
-    setStep((p) => p + 1);
+
+    config.setError(null);
+    setSubStep((prev) => prev + 1);
   };
 
-  const back = () => {
-    setError(null);
-    setStep((p) => p - 1);
+  const handleBack = () => {
+    const config = getCurrentStepConfig();
+    config.setError(null);
+    setSubStep((prev) => prev - 1);
   };
 
-  // --- Perform actual import ---
+  // Perform actual import
   const doImport = async () => {
-    if (!file) return;
-    setProcessing(true);
-    setError(null);
+    const config = getCurrentStepConfig();
+    if (!config.file) return;
+
+    setIsProcessing(true);
+    config.setError(null);
 
     try {
-      let res;
-      switch (importType) {
-        case "CHEMICAL":
-          res = await importApi.importMasterDataChemical(file);
-          break;
-        case "PEMBELIAN":
-          res = await importApi.importMasterDataPembelian(file);
-          break;
-        case "CK":
-          res = await importApi.importMasterDataCk(file);
-          break;
-        default:
-          throw new Error("Invalid import type");
-      }
+      const res = await config.importApi(config.file);
+      const data = res.data;
 
-      const data = res.data?.data || res.data;
-      setResult(data);
-      if (onImportSuccess) onImportSuccess(data);
+      config.setResult(data);
+
+      if (onImportSuccess) {
+        onImportSuccess(data);
+      }
     } catch (err) {
-      setError(
-        err.response?.data?.detail || err.message || "Failed to import data"
+      config.setError(
+        err.response?.data?.detail ||
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to import data"
       );
     } finally {
-      setProcessing(false);
+      setIsProcessing(false);
     }
   };
 
-  // --- Render Step Indicator ---
-  const renderIndicator = () => (
+  const handleNextStep = () => {
+    const config = getCurrentStepConfig();
+
+    if (!config.result) {
+      config.setError(
+        "Please complete the import before proceeding to the next step"
+      );
+      return;
+    }
+
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+      setSubStep(1); // Reset ke Upload untuk step berikutnya
+    }
+  };
+
+  // Render Main Step Indicator
+  const renderMainStepIndicator = () => (
     <div
       className="px-6 py-4 border-b"
       style={{
@@ -173,45 +256,62 @@ export default function ImportMasterDataModal({
         backgroundColor: colors.background.secondary,
       }}
     >
-      <div className="flex items-center justify-between max-w-2xl mx-auto">
-        {steps.map((s, i) => (
-          <div key={s.n} className="flex items-center flex-1">
+      <div className="flex items-center justify-between max-w-3xl mx-auto">
+        {steps.map((step, index) => (
+          <div key={step.number} className="flex items-center flex-1">
             <div className="flex flex-col items-center flex-1">
               <div
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center font-semibold",
-                  step >= s.n && "ring-2"
+                  "w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all",
+                  currentStep >= step.number ? "ring-2" : ""
                 )}
                 style={{
                   backgroundColor:
-                    step >= s.n ? colors.primary : colors.background.primary,
+                    currentStep > step.number
+                      ? colors.status.success
+                      : currentStep === step.number
+                      ? colors.primary
+                      : colors.background.primary,
                   color:
-                    step >= s.n ? colors.text.inverse : colors.text.secondary,
-                  borderWidth: step >= s.n ? 0 : "2px",
+                    currentStep >= step.number
+                      ? colors.text.inverse
+                      : colors.text.secondary,
+                  borderWidth: currentStep >= step.number ? 0 : "2px",
                   borderColor: colors.border.primary,
+                  ringColor:
+                    currentStep > step.number
+                      ? colors.status.success
+                      : colors.primary,
                 }}
               >
-                {result && s.n === 3 ? (
+                {currentStep > step.number ? (
                   <CheckCircle className="w-5 h-5" />
                 ) : (
-                  s.n
+                  step.number
                 )}
               </div>
               <span
-                className="mt-2 text-sm font-medium"
+                className="mt-2 text-xs font-medium text-center"
                 style={{
-                  color: step >= s.n ? colors.primary : colors.text.secondary,
+                  color:
+                    currentStep >= step.number
+                      ? currentStep > step.number
+                        ? colors.status.success
+                        : colors.primary
+                      : colors.text.secondary,
                 }}
               >
-                {s.l}
+                {step.label}
               </span>
             </div>
-            {i < steps.length - 1 && (
+            {index < steps.length - 1 && (
               <div
-                className="flex-1 h-1 mx-2 rounded"
+                className="flex-1 h-1 mx-2 transition-all rounded"
                 style={{
                   backgroundColor:
-                    step > s.n ? colors.primary : colors.border.primary,
+                    currentStep > step.number
+                      ? colors.status.success
+                      : colors.border.primary,
                 }}
               />
             )}
@@ -221,9 +321,69 @@ export default function ImportMasterDataModal({
     </div>
   );
 
-  // --- Step 1: Upload ---
-  const renderStep1 = () => {
-    const Icon = config.icon;
+  // Render Sub Step Indicator
+  const renderSubStepIndicator = () => (
+    <div
+      className="px-6 py-3 border-b"
+      style={{
+        borderColor: colors.border.primary,
+      }}
+    >
+      <div className="flex items-center justify-between max-w-xl mx-auto">
+        {subSteps.map((s, i) => (
+          <div key={s.n} className="flex items-center flex-1">
+            <div className="flex flex-col items-center flex-1">
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
+                  subStep >= s.n && "ring-2"
+                )}
+                style={{
+                  backgroundColor:
+                    subStep >= s.n ? colors.primary : colors.background.primary,
+                  color:
+                    subStep >= s.n
+                      ? colors.text.inverse
+                      : colors.text.secondary,
+                  borderWidth: subStep >= s.n ? 0 : "2px",
+                  borderColor: colors.border.primary,
+                }}
+              >
+                {getCurrentStepConfig()?.result && s.n === 3 ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  s.n
+                )}
+              </div>
+              <span
+                className="mt-1 text-xs font-medium"
+                style={{
+                  color:
+                    subStep >= s.n ? colors.primary : colors.text.secondary,
+                }}
+              >
+                {s.l}
+              </span>
+            </div>
+            {i < subSteps.length - 1 && (
+              <div
+                className="flex-1 h-1 mx-2 rounded"
+                style={{
+                  backgroundColor:
+                    subStep > s.n ? colors.primary : colors.border.primary,
+                }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Step 1: Upload
+  const renderUploadStep = () => {
+    const config = getCurrentStepConfig();
+
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="w-full max-w-md">
@@ -239,39 +399,38 @@ export default function ImportMasterDataModal({
               className="mb-2 text-lg font-semibold"
               style={{ color: colors.text.primary }}
             >
-              Upload Excel File
+              {config.description}
             </h3>
             <p
-              className="mb-1 text-sm"
+              className="mb-4 text-sm"
               style={{ color: colors.text.secondary }}
             >
-              Select .xlsx file
-            </p>
-            <p className="mb-4 text-xs" style={{ color: colors.text.tertiary }}>
-              Sheet: {config.sheetName}
+              Select .xlsx file with {config.key} data
             </p>
             <input
               type="file"
               accept=".xlsx"
               onChange={selectFile}
               className="hidden"
-              id={`file-master-${importType}`}
-              disabled={processing}
+              id={`file-${config.key}`}
+              disabled={isProcessing}
             />
             <label
-              htmlFor={`file-master-${importType}`}
+              htmlFor={`file-${config.key}`}
               className={cn(
                 "inline-block px-4 py-2 rounded-lg",
-                processing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                isProcessing
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
               )}
               style={{
                 backgroundColor: colors.primary,
                 color: colors.text.inverse,
               }}
             >
-              {processing ? "Processing..." : "Choose File"}
+              {isProcessing ? "Loading..." : "Choose File"}
             </label>
-            {file && (
+            {config.file && (
               <div
                 className="flex items-center gap-3 p-3 mt-4 rounded-lg"
                 style={{ backgroundColor: `${colors.primary}15` }}
@@ -284,7 +443,7 @@ export default function ImportMasterDataModal({
                   className="text-sm font-medium"
                   style={{ color: colors.text.primary }}
                 >
-                  {file.name}
+                  {config.file.name}
                 </span>
               </div>
             )}
@@ -294,12 +453,25 @@ export default function ImportMasterDataModal({
     );
   };
 
-  // --- Step 2: Preview ---
-  const renderStep2 = () => {
-    if (!preview) {
+  // Step 2: Preview
+  const renderPreviewStep = () => {
+    const config = getCurrentStepConfig();
+
+    if (isProcessing) {
       return (
         <div
-          className="py-6 text-sm text-center"
+          className="py-12 text-center"
+          style={{ color: colors.text.secondary }}
+        >
+          Loading preview...
+        </div>
+      );
+    }
+
+    if (!config.preview) {
+      return (
+        <div
+          className="py-12 text-center"
           style={{ color: colors.text.secondary }}
         >
           No preview data available
@@ -307,31 +479,59 @@ export default function ImportMasterDataModal({
       );
     }
 
-    switch (importType) {
-      case "CHEMICAL":
-        return renderChemicalPreview();
-      case "PEMBELIAN":
-        return renderPembelianPreview();
-      case "CK":
-        return renderCkPreview();
-      default:
-        return null;
-    }
-  };
+    // Extract data dari backend response
+    const summary = config.preview.summary || {};
+    const samples = config.preview.samples || {};
 
-  // --- Chemical Preview ---
-  const renderChemicalPreview = () => {
-    const {
-      summary,
-      insert_samples = [],
-      update_samples = [],
-      skipped_samples = [],
-    } = preview;
+    const totalToInsert =
+      (summary.accounts_to_insert || 0) +
+      (summary.products_to_insert || 0) +
+      (summary.suppliers_to_insert || 0);
 
     return (
       <div>
-        {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
+        {/* Summary Cards */}
+        <div
+          className="p-4 mb-4 rounded-lg"
+          style={{
+            backgroundColor: `${colors.primary}15`,
+            borderWidth: "1px",
+            borderColor: colors.primary,
+          }}
+        >
+          <p className="text-sm" style={{ color: colors.text.primary }}>
+            <strong>{totalToInsert}</strong> total record(s) will be imported
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {/* Accounts */}
+          <div
+            className="p-4 rounded-lg"
+            style={{
+              backgroundColor: `${colors.status.success}15`,
+              borderWidth: "1px",
+              borderColor: colors.status.success,
+            }}
+          >
+            <p
+              className="mb-1 text-xs"
+              style={{ color: colors.text.secondary }}
+            >
+              Accounts
+            </p>
+            <p
+              className="text-2xl font-bold"
+              style={{ color: colors.status.success }}
+            >
+              {summary.accounts_to_insert || 0}
+            </p>
+            <p className="text-xs" style={{ color: colors.text.secondary }}>
+              {summary.skipped_accounts || 0} skipped
+            </p>
+          </div>
+
+          {/* Products */}
           <div
             className="p-4 rounded-lg"
             style={{
@@ -344,38 +544,17 @@ export default function ImportMasterDataModal({
               className="mb-1 text-xs"
               style={{ color: colors.text.secondary }}
             >
-              Total Rows
+              Products
             </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.text.primary }}
-            >
-              {summary?.total_rows || 0}
+            <p className="text-2xl font-bold" style={{ color: colors.primary }}>
+              {summary.products_to_insert || 0}
             </p>
-          </div>
-
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.success}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.success,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              To Insert
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.success }}
-            >
-              {summary?.to_insert || 0}
+            <p className="text-xs" style={{ color: colors.text.secondary }}>
+              {summary.skipped_products || 0} skipped
             </p>
           </div>
 
+          {/* Suppliers */}
           <div
             className="p-4 rounded-lg"
             style={{
@@ -388,341 +567,358 @@ export default function ImportMasterDataModal({
               className="mb-1 text-xs"
               style={{ color: colors.text.secondary }}
             >
-              To Update
+              Suppliers
             </p>
             <p
               className="text-2xl font-bold"
               style={{ color: colors.status.info }}
             >
-              {summary?.to_update || 0}
+              {summary.suppliers_to_insert || 0}
+            </p>
+            <p className="text-xs" style={{ color: colors.text.secondary }}>
+              {summary.skipped_suppliers || 0} skipped
             </p>
           </div>
+        </div>
 
+        {/* Warning for missing accounts */}
+        {summary.missing_account_refs > 0 && (
           <div
-            className="p-4 rounded-lg"
+            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
             style={{
               backgroundColor: `${colors.status.warning}15`,
               borderWidth: "1px",
               borderColor: colors.status.warning,
             }}
           >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Skipped
-            </p>
-            <p
-              className="text-2xl font-bold"
+            <AlertCircle
+              className="flex-shrink-0 w-5 h-5"
               style={{ color: colors.status.warning }}
-            >
-              {summary?.skipped || 0}
-            </p>
-          </div>
-        </div>
-
-        {/* Samples Tabs */}
-        <div className="space-y-4">
-          {/* Insert Samples */}
-          {insert_samples.length > 0 && (
+            />
             <div>
-              <h4
-                className="mb-2 text-sm font-semibold"
-                style={{ color: colors.text.primary }}
-              >
-                Products to Insert ({insert_samples.length})
-              </h4>
-              <div
-                className="overflow-hidden border rounded-lg"
-                style={{ borderColor: colors.border.primary }}
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead
-                      style={{
-                        backgroundColor: colors.background.secondary,
-                        borderBottomWidth: "1px",
-                        borderColor: colors.border.primary,
-                      }}
-                    >
-                      <tr>
-                        {["No", "Code", "Name", "Unit", "Account"].map(
-                          (col) => (
-                            <th
-                              key={col}
-                              className="px-3 py-2 font-semibold text-left whitespace-nowrap"
-                              style={{ color: colors.text.secondary }}
-                            >
-                              {col}
-                            </th>
-                          )
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {insert_samples.map((item, i) => (
-                        <tr
-                          key={i}
-                          style={{
-                            borderBottomWidth: "1px",
-                            borderColor: colors.border.primary,
-                          }}
-                        >
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {i + 1}
-                          </td>
-                          <td
-                            className="px-3 py-2 font-mono"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.code}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.name}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.unit || "-"}
-                          </td>
-                          <td
-                            className="px-3 py-2 text-xs"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            ID: {item.account_id}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Update Samples */}
-          {update_samples.length > 0 && (
-            <div>
-              <h4
-                className="mb-2 text-sm font-semibold"
-                style={{ color: colors.text.primary }}
-              >
-                Products to Update ({update_samples.length})
-              </h4>
-              <div
-                className="overflow-hidden border rounded-lg"
-                style={{ borderColor: colors.border.primary }}
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead
-                      style={{
-                        backgroundColor: colors.background.secondary,
-                        borderBottomWidth: "1px",
-                        borderColor: colors.border.primary,
-                      }}
-                    >
-                      <tr>
-                        {[
-                          "No",
-                          "Code",
-                          "Name",
-                          "Current Account",
-                          "New Account",
-                        ].map((col) => (
-                          <th
-                            key={col}
-                            className="px-3 py-2 font-semibold text-left whitespace-nowrap"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {update_samples.map((item, i) => (
-                        <tr
-                          key={i}
-                          style={{
-                            borderBottomWidth: "1px",
-                            borderColor: colors.border.primary,
-                          }}
-                        >
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {i + 1}
-                          </td>
-                          <td
-                            className="px-3 py-2 font-mono"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.code}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.name}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {item.current_account || "None"}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.status.success }}
-                          >
-                            ID: {item.will_set_account}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Skipped Warning */}
-          {skipped_samples.length > 0 && (
-            <div
-              className="flex items-start gap-3 p-4 rounded-lg"
-              style={{
-                backgroundColor: `${colors.status.warning}15`,
-                borderWidth: "1px",
-                borderColor: colors.status.warning,
-              }}
-            >
-              <AlertTriangle
-                className="flex-shrink-0 w-5 h-5 mt-0.5"
+              <p
+                className="text-sm font-medium"
                 style={{ color: colors.status.warning }}
-              />
-              <div className="flex-1">
-                <p
-                  className="mb-2 text-sm font-medium"
-                  style={{ color: colors.text.primary }}
-                >
-                  {skipped_samples.length} code(s) will be skipped (duplicates)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {skipped_samples.slice(0, 15).map((code, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-1 font-mono text-xs rounded"
+              >
+                {summary.missing_account_refs} products have missing account
+                references
+              </p>
+              <p
+                className="mt-1 text-xs"
+                style={{ color: colors.text.secondary }}
+              >
+                These products will be skipped during import
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Sample Tables */}
+        <div className="space-y-4">
+          {/* Products Sample */}
+          {samples.products && samples.products.length > 0 && (
+            <div>
+              <h4
+                className="mb-2 text-sm font-semibold"
+                style={{ color: colors.text.primary }}
+              >
+                Products Preview ({summary.products_to_insert})
+              </h4>
+              <div
+                className="overflow-hidden border rounded-lg"
+                style={{ borderColor: colors.border.primary }}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead
                       style={{
                         backgroundColor: colors.background.secondary,
-                        color: colors.text.secondary,
+                        borderBottomWidth: "1px",
+                        borderColor: colors.border.primary,
                       }}
                     >
-                      {code}
-                    </span>
-                  ))}
-                  {skipped_samples.length > 15 && (
-                    <span
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      +{skipped_samples.length - 15} more
-                    </span>
-                  )}
+                      <tr>
+                        <th className="px-3 py-2 font-semibold text-left">
+                          No
+                        </th>
+                        <th className="px-3 py-2 font-semibold text-left">
+                          Product Name
+                        </th>
+                        <th className="px-3 py-2 font-semibold text-left">
+                          Unit
+                        </th>
+                        <th className="px-3 py-2 font-semibold text-left">
+                          Account
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {samples.products.slice(0, 20).map((prod, idx) => (
+                        <tr
+                          key={idx}
+                          style={{
+                            borderBottomWidth: "1px",
+                            borderColor: colors.border.primary,
+                          }}
+                        >
+                          <td className="px-3 py-2">{idx + 1}</td>
+                          <td className="px-3 py-2 font-medium">{prod.name}</td>
+                          <td className="px-3 py-2">{prod.unit || "-"}</td>
+                          <td className="px-3 py-2 text-xs">
+                            {prod.account_no}: {prod.account_name}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  className="p-2 text-xs text-center"
+                  style={{
+                    backgroundColor: colors.background.secondary,
+                    color: colors.text.secondary,
+                  }}
+                >
+                  Showing {Math.min(20, samples.products.length)} of{" "}
+                  {summary.products_to_insert} products
                 </div>
               </div>
             </div>
           )}
+
+          {/* Accounts & Suppliers in collapsible sections if needed */}
         </div>
       </div>
     );
   };
 
-  // --- Pembelian Preview ---
-  const renderPembelianPreview = () => {
-    const { summary, samples } = preview;
+  // Step 3: Confirm/Result
+  const renderConfirmStep = () => {
+    const config = getCurrentStepConfig();
 
-    return (
-      <div>
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.success}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.success,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Accounts to Insert
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.success }}
-            >
-              {summary?.accounts_to_insert || 0}
-            </p>
-          </div>
+    if (config.result) {
+      // Show result after import
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-full max-w-md">
+            <div className="mb-6 text-center">
+              <CheckCircle
+                className="w-16 h-16 mx-auto mb-4"
+                style={{ color: colors.status.success }}
+              />
+              <h3
+                className="mb-2 text-lg font-semibold"
+                style={{ color: colors.text.primary }}
+              >
+                Import Successful!
+              </h3>
+              <p className="text-sm" style={{ color: colors.text.secondary }}>
+                Data from {steps[currentStep - 1].label} has been imported
+                successfully
+              </p>
+            </div>
 
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.success}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.success,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Products to Insert
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.success }}
-            >
-              {summary?.products_to_insert || 0}
-            </p>
-          </div>
+            <div className="space-y-3">
+              {/* Accounts Result */}
+              {config.result?.accounts && (
+                <div
+                  className="p-4 rounded-lg"
+                  style={{
+                    backgroundColor: `${colors.status.success}15`,
+                    borderWidth: "1px",
+                    borderColor: colors.status.success,
+                  }}
+                >
+                  <p
+                    className="mb-2 text-sm font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    Accounts
+                  </p>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.text.secondary }}>
+                      Inserted:
+                    </span>
+                    <span style={{ color: colors.status.success }}>
+                      {config.result.accounts.inserted}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.text.secondary }}>
+                      Skipped:
+                    </span>
+                    <span>{config.result.accounts.skipped}</span>
+                  </div>
+                </div>
+              )}
 
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.success}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.success,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Suppliers to Insert
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.success }}
-            >
-              {summary?.suppliers_to_insert || 0}
-            </p>
+              {/* Products Result */}
+              {config.result?.products && (
+                <div
+                  className="p-4 rounded-lg"
+                  style={{
+                    backgroundColor: `${colors.primary}15`,
+                    borderWidth: "1px",
+                    borderColor: colors.primary,
+                  }}
+                >
+                  <p
+                    className="mb-2 text-sm font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    Products
+                  </p>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.text.secondary }}>
+                      Inserted:
+                    </span>
+                    <span style={{ color: colors.primary }}>
+                      {config.result.products.inserted}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.text.secondary }}>
+                      Skipped:
+                    </span>
+                    <span>{config.result.products.skipped}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Suppliers Result */}
+              {config.result?.suppliers && (
+                <div
+                  className="p-4 rounded-lg"
+                  style={{
+                    backgroundColor: `${colors.status.info}15`,
+                    borderWidth: "1px",
+                    borderColor: colors.status.info,
+                  }}
+                >
+                  <p
+                    className="mb-2 text-sm font-semibold"
+                    style={{ color: colors.text.primary }}
+                  >
+                    Suppliers
+                  </p>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.text.secondary }}>
+                      Inserted:
+                    </span>
+                    <span style={{ color: colors.status.info }}>
+                      {config.result.suppliers.inserted}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: colors.text.secondary }}>
+                      Skipped:
+                    </span>
+                    <span>{config.result.suppliers.skipped}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Next step hint */}
+            {currentStep < 3 && (
+              <div
+                className="p-4 mt-6 rounded-lg"
+                style={{
+                  backgroundColor: `${colors.primary}15`,
+                  borderWidth: "1px",
+                  borderColor: colors.primary,
+                }}
+              >
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: colors.primary }}
+                >
+                  Click "Next Step" to continue with {steps[currentStep].label}
+                </p>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div
+                className="p-4 mt-6 rounded-lg"
+                style={{
+                  backgroundColor: `${colors.status.success}15`,
+                  borderWidth: "1px",
+                  borderColor: colors.status.success,
+                }}
+              >
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: colors.status.success }}
+                >
+                  ✓ All data master imports completed successfully!
+                </p>
+              </div>
+            )}
           </div>
         </div>
+      );
+    }
 
-        {/* Missing Account Refs Warning */}
-        {summary?.missing_account_refs > 0 && (
+    // Confirm before import
+    const summary = config.preview?.summary || {};
+    const totalToInsert =
+      (summary.accounts_to_insert || 0) +
+      (summary.products_to_insert || 0) +
+      (summary.suppliers_to_insert || 0);
+
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="w-full max-w-md text-center">
+          <AlertCircle
+            className="w-16 h-16 mx-auto mb-4"
+            style={{ color: colors.primary }}
+          />
+          <h3
+            className="mb-2 text-lg font-semibold"
+            style={{ color: colors.text.primary }}
+          >
+            Ready to Import
+          </h3>
+          <p className="mb-6 text-sm" style={{ color: colors.text.secondary }}>
+            {totalToInsert} total record(s) will be imported
+          </p>
+          <div
+            className="p-4 space-y-2 text-left rounded-lg"
+            style={{ backgroundColor: colors.background.secondary }}
+          >
+            <p className="text-sm" style={{ color: colors.text.primary }}>
+              <strong>File:</strong> {config.file?.name}
+            </p>
+            <div className="text-sm" style={{ color: colors.text.primary }}>
+              <strong>Records:</strong>
+              <ul className="mt-1 ml-4 space-y-1">
+                <li>• {summary.accounts_to_insert || 0} Accounts</li>
+                <li>• {summary.products_to_insert || 0} Products</li>
+                <li>• {summary.suppliers_to_insert || 0} Suppliers</li>
+              </ul>
+            </div>
+            {summary.missing_account_refs > 0 && (
+              <p
+                className="pt-2 text-xs"
+                style={{ color: colors.status.warning }}
+              >
+                ⚠️ {summary.missing_account_refs} products will be skipped
+                (missing accounts)
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    const config = getCurrentStepConfig();
+
+    return (
+      <>
+        {config.error && (
           <div
             className="flex items-start gap-3 p-4 mb-4 rounded-lg"
             style={{
@@ -732,721 +928,39 @@ export default function ImportMasterDataModal({
             }}
           >
             <AlertCircle
-              className="flex-shrink-0 w-5 h-5"
+              className="flex-shrink-0 w-5 h-5 mt-0.5"
               style={{ color: colors.status.error }}
             />
-            <div>
-              <p
-                className="text-sm font-medium"
-                style={{ color: colors.status.error }}
-              >
-                {summary.missing_account_refs} product(s) reference missing
-                accounts
-              </p>
-              {samples?.missing_accounts?.length > 0 && (
-                <div className="mt-2 space-y-1 overflow-y-auto max-h-32">
-                  {samples.missing_accounts.map((item, idx) => (
-                    <p
-                      key={idx}
-                      className="text-xs"
-                      style={{ color: colors.text.secondary }}
-                    >
-                      • {item.name} - Account #{item.account_no} not found
-                    </p>
-                  ))}
-                </div>
-              )}
-            </div>
+            <p className="text-sm" style={{ color: colors.status.error }}>
+              {config.error}
+            </p>
           </div>
         )}
-
-        {/* Tabs for different entities */}
-        <div className="space-y-4">
-          {/* Accounts */}
-          {samples?.accounts?.length > 0 && (
-            <div>
-              <h4
-                className="mb-2 text-sm font-semibold"
-                style={{ color: colors.text.primary }}
-              >
-                Accounts ({samples.accounts.length})
-              </h4>
-              <div
-                className="overflow-hidden border rounded-lg"
-                style={{ borderColor: colors.border.primary }}
-              >
-                <div className="overflow-x-auto overflow-y-auto max-h-64">
-                  <table className="w-full text-xs">
-                    <thead
-                      style={{
-                        backgroundColor: colors.background.secondary,
-                        borderBottomWidth: "1px",
-                        borderColor: colors.border.primary,
-                        position: "sticky",
-                        top: 0,
-                      }}
-                    >
-                      <tr>
-                        {["No", "Account No", "Name", "Type"].map((col) => (
-                          <th
-                            key={col}
-                            className="px-3 py-2 font-semibold text-left"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {samples.accounts.map((item, i) => (
-                        <tr
-                          key={i}
-                          style={{
-                            borderBottomWidth: "1px",
-                            borderColor: colors.border.primary,
-                          }}
-                        >
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {i + 1}
-                          </td>
-                          <td
-                            className="px-3 py-2 font-mono font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.account_no}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.name}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {item.account_type}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Products */}
-          {samples?.products?.length > 0 && (
-            <div>
-              <h4
-                className="mb-2 text-sm font-semibold"
-                style={{ color: colors.text.primary }}
-              >
-                Products ({samples.products.length})
-              </h4>
-              <div
-                className="overflow-hidden border rounded-lg"
-                style={{ borderColor: colors.border.primary }}
-              >
-                <div className="overflow-x-auto overflow-y-auto max-h-64">
-                  <table className="w-full text-xs">
-                    <thead
-                      style={{
-                        backgroundColor: colors.background.secondary,
-                        borderBottomWidth: "1px",
-                        borderColor: colors.border.primary,
-                        position: "sticky",
-                        top: 0,
-                      }}
-                    >
-                      <tr>
-                        {["No", "Name", "Unit", "Account", "Status"].map(
-                          (col) => (
-                            <th
-                              key={col}
-                              className="px-3 py-2 font-semibold text-left"
-                              style={{ color: colors.text.secondary }}
-                            >
-                              {col}
-                            </th>
-                          )
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {samples.products.map((item, i) => (
-                        <tr
-                          key={i}
-                          style={{
-                            borderBottomWidth: "1px",
-                            borderColor: colors.border.primary,
-                          }}
-                        >
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {i + 1}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.name}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {item.unit || "-"}
-                          </td>
-                          <td
-                            className="px-3 py-2 text-xs"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {item.account_name ? (
-                              <>
-                                #{item.account_no} {item.account_name}
-                              </>
-                            ) : (
-                              <span style={{ color: colors.status.error }}>
-                                Missing
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            {item.has_missing_account ? (
-                              <span
-                                className="px-2 py-1 text-xs rounded"
-                                style={{
-                                  backgroundColor: `${colors.status.error}20`,
-                                  color: colors.status.error,
-                                }}
-                              >
-                                Missing Acc
-                              </span>
-                            ) : (
-                              <span style={{ color: colors.status.success }}>
-                                ✓
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Suppliers */}
-          {samples?.suppliers?.length > 0 && (
-            <div>
-              <h4
-                className="mb-2 text-sm font-semibold"
-                style={{ color: colors.text.primary }}
-              >
-                Suppliers ({samples.suppliers.length})
-              </h4>
-              <div
-                className="overflow-hidden border rounded-lg"
-                style={{ borderColor: colors.border.primary }}
-              >
-                <div className="overflow-x-auto overflow-y-auto max-h-64">
-                  <table className="w-full text-xs">
-                    <thead
-                      style={{
-                        backgroundColor: colors.background.secondary,
-                        borderBottomWidth: "1px",
-                        borderColor: colors.border.primary,
-                        position: "sticky",
-                        top: 0,
-                      }}
-                    >
-                      <tr>
-                        {["No", "Code", "Name"].map((col) => (
-                          <th
-                            key={col}
-                            className="px-3 py-2 font-semibold text-left"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {samples.suppliers.map((item, i) => (
-                        <tr
-                          key={i}
-                          style={{
-                            borderBottomWidth: "1px",
-                            borderColor: colors.border.primary,
-                          }}
-                        >
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.secondary }}
-                          >
-                            {i + 1}
-                          </td>
-                          <td
-                            className="px-3 py-2 font-mono font-medium"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.code}
-                          </td>
-                          <td
-                            className="px-3 py-2"
-                            style={{ color: colors.text.primary }}
-                          >
-                            {item.name}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+        {subStep === 1 && renderUploadStep()}
+        {subStep === 2 && renderPreviewStep()}
+        {subStep === 3 && renderConfirmStep()}
+      </>
     );
   };
 
-  // --- CK/Design Preview ---
-  const renderCkPreview = () => {
-    const {
-      summary,
-      insert_samples = [],
-      existing_samples = [],
-      skipped_samples = [],
-    } = preview;
-
-    return (
-      <div>
-        {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.primary}15`,
-              borderWidth: "1px",
-              borderColor: colors.primary,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Total Rows
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.text.primary }}
-            >
-              {summary?.total_rows || 0}
-            </p>
-          </div>
-
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.success}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.success,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              To Insert
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.success }}
-            >
-              {summary?.to_insert || 0}
-            </p>
-          </div>
-
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.info}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.info,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Existing
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.info }}
-            >
-              {summary?.existing || 0}
-            </p>
-          </div>
-
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.warning}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.warning,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Skipped
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.warning }}
-            >
-              {summary?.skipped || 0}
-            </p>
-          </div>
-        </div>
-
-        {/* Missing Types Warning */}
-        {summary?.missing_types?.length > 0 && (
-          <div
-            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.info}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.info,
-            }}
-          >
-            <AlertTriangle
-              className="flex-shrink-0 w-5 h-5"
-              style={{ color: colors.status.info }}
-            />
-            <div>
-              <p
-                className="mb-2 text-sm font-medium"
-                style={{ color: colors.text.primary }}
-              >
-                New design types will be created: {summary.missing_types.length}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {summary.missing_types.map((type, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-1 text-xs rounded"
-                    style={{
-                      backgroundColor: colors.background.secondary,
-                      color: colors.text.secondary,
-                    }}
-                  >
-                    {type}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Designs to Insert */}
-        {insert_samples.length > 0 && (
-          <div className="mb-4">
-            <h4
-              className="mb-2 text-sm font-semibold"
-              style={{ color: colors.text.primary }}
-            >
-              Designs to Insert ({insert_samples.length})
-            </h4>
-            <div
-              className="overflow-hidden border rounded-lg"
-              style={{ borderColor: colors.border.primary }}
-            >
-              <div className="overflow-x-auto overflow-y-auto max-h-80">
-                <table className="w-full text-xs">
-                  <thead
-                    style={{
-                      backgroundColor: colors.background.secondary,
-                      borderBottomWidth: "1px",
-                      borderColor: colors.border.primary,
-                      position: "sticky",
-                      top: 0,
-                    }}
-                  >
-                    <tr>
-                      {["No", "Design Code", "Type"].map((col) => (
-                        <th
-                          key={col}
-                          className="px-3 py-2 font-semibold text-left"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {insert_samples.map((item, i) => (
-                      <tr
-                        key={i}
-                        style={{
-                          borderBottomWidth: "1px",
-                          borderColor: colors.border.primary,
-                        }}
-                      >
-                        <td
-                          className="px-3 py-2"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {i + 1}
-                        </td>
-                        <td
-                          className="px-3 py-2 font-medium"
-                          style={{ color: colors.text.primary }}
-                        >
-                          {item.code}
-                        </td>
-                        <td
-                          className="px-3 py-2"
-                          style={{ color: colors.text.secondary }}
-                        >
-                          {item.type}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Existing Designs */}
-        {existing_samples.length > 0 && (
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.info}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.info,
-            }}
-          >
-            <p
-              className="mb-2 text-sm font-medium"
-              style={{ color: colors.text.primary }}
-            >
-              {existing_samples.length} design(s) already exist and will be
-              skipped
-            </p>
-            <div className="flex flex-wrap gap-2 overflow-y-auto max-h-32">
-              {existing_samples.slice(0, 20).map((item, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 text-xs rounded"
-                  style={{
-                    backgroundColor: colors.background.secondary,
-                    color: colors.text.secondary,
-                  }}
-                >
-                  {item.code}
-                </span>
-              ))}
-              {existing_samples.length > 20 && (
-                <span
-                  className="text-xs"
-                  style={{ color: colors.text.secondary }}
-                >
-                  +{existing_samples.length - 20} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // --- Step 3: Confirm/Result ---
-  const renderStep3 = () => {
-    if (!result) {
-      return renderConfirmation();
-    }
-
-    return renderResult();
-  };
-
-  const renderConfirmation = () => {
-    let message = "";
-
-    switch (importType) {
-      case "CHEMICAL":
-        message = `${
-          preview?.summary?.to_insert || 0
-        } products will be inserted, ${
-          preview?.summary?.to_update || 0
-        } will be updated`;
-        break;
-      case "PEMBELIAN":
-        const acc = preview?.summary?.accounts_to_insert || 0;
-        const prod = preview?.summary?.products_to_insert || 0;
-        const supp = preview?.summary?.suppliers_to_insert || 0;
-        message = `${acc} accounts, ${prod} products, ${supp} suppliers will be imported`;
-        break;
-      case "CK":
-        message = `${
-          preview?.summary?.to_insert || 0
-        } designs will be imported`;
-        break;
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle
-          className="w-16 h-16 mx-auto mb-4"
-          style={{ color: colors.primary }}
-        />
-        <h3
-          className="mb-2 text-lg font-semibold"
-          style={{ color: colors.text.primary }}
-        >
-          Ready to Import
-        </h3>
-        <p
-          className="text-sm text-center"
-          style={{ color: colors.text.secondary }}
-        >
-          {message}
-        </p>
-      </div>
-    );
-  };
-
-  const renderResult = () => {
-    let message = "";
-    let details = [];
-
-    switch (importType) {
-      case "CHEMICAL":
-        message = "Import completed successfully!";
-        details = [
-          {
-            label: "Inserted",
-            value: result.inserted || 0,
-            color: colors.status.success,
-          },
-          {
-            label: "Updated",
-            value: result.updated || 0,
-            color: colors.status.info,
-          },
-          {
-            label: "Skipped",
-            value: result.skipped_count || 0,
-            color: colors.status.warning,
-          },
-        ];
-        break;
-      case "PEMBELIAN":
-        message = "Master data imported successfully!";
-        details = [
-          {
-            label: "Accounts",
-            value: result.accounts?.inserted || 0,
-            color: colors.status.success,
-          },
-          {
-            label: "Products",
-            value: result.products?.inserted || 0,
-            color: colors.status.success,
-          },
-          {
-            label: "Suppliers",
-            value: result.suppliers?.inserted || 0,
-            color: colors.status.success,
-          },
-        ];
-        break;
-      case "CK":
-        message = "Designs imported successfully!";
-        details = [
-          {
-            label: "Added",
-            value: result.added || 0,
-            color: colors.status.success,
-          },
-          {
-            label: "Skipped",
-            value: result.skipped || 0,
-            color: colors.status.warning,
-          },
-        ];
-        break;
-    }
-
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <CheckCircle
-          className="w-16 h-16 mx-auto mb-4"
-          style={{ color: colors.status.success }}
-        />
-        <h3
-          className="mb-2 text-lg font-semibold"
-          style={{ color: colors.text.primary }}
-        >
-          {message}
-        </h3>
-        <div className="grid w-full max-w-md grid-cols-3 gap-4 mt-4">
-          {details.map((item, idx) => (
-            <div key={idx} className="text-center">
-              <p
-                className="mb-1 text-xs"
-                style={{ color: colors.text.secondary }}
-              >
-                {item.label}
-              </p>
-              <p className="text-2xl font-bold" style={{ color: item.color }}>
-                {item.value}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // --- Actions ---
-  const actions = (
+  const modalActions = (
     <>
-      {step > 1 && !result && (
+      {subStep > 1 && !getCurrentStepConfig()?.result && (
         <button
-          onClick={back}
-          disabled={processing}
-          className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50"
+          onClick={handleBack}
+          disabled={isProcessing}
+          className="px-4 py-2 text-sm font-medium transition-colors rounded-lg disabled:opacity-50"
           style={{ color: colors.text.primary }}
         >
+          <ChevronLeft className="inline w-4 h-4 mr-1" />
           Back
         </button>
       )}
       <div className="flex gap-3 ml-auto">
         <button
-          onClick={() => {
-            reset();
-            onClose();
-          }}
-          className="px-4 py-2 text-sm font-medium rounded-lg"
+          onClick={handleClose}
+          disabled={isProcessing}
+          className="px-4 py-2 text-sm font-medium transition-colors rounded-lg"
           style={{
             backgroundColor: colors.background.primary,
             color: colors.text.primary,
@@ -1454,32 +968,48 @@ export default function ImportMasterDataModal({
             borderColor: colors.border.primary,
           }}
         >
-          {result ? "Close" : "Cancel"}
+          {currentStep === 3 && getCurrentStepConfig()?.result
+            ? "Finish"
+            : "Cancel"}
         </button>
-        {!result && (
+
+        {!getCurrentStepConfig()?.result && (
           <>
-            {step < 3 && (
+            {subStep < 3 && (
               <Button
                 icon={ChevronRight}
                 label="Next"
-                onClick={next}
-                disabled={!file || (step === 2 && !preview)}
+                onClick={handleNext}
+                disabled={
+                  !getCurrentStepConfig()?.file ||
+                  (subStep === 2 && !getCurrentStepConfig()?.preview) ||
+                  isProcessing
+                }
               />
             )}
-            {step === 3 && (
+
+            {subStep === 3 && (
               <button
                 onClick={doImport}
-                disabled={processing}
-                className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50"
+                disabled={isProcessing}
+                className="px-4 py-2 text-sm font-medium transition-colors rounded-lg disabled:opacity-50"
                 style={{
                   backgroundColor: colors.status.success,
                   color: colors.text.inverse,
                 }}
               >
-                {processing ? "Importing..." : "Import"}
+                {isProcessing ? "Importing..." : "Import"}
               </button>
             )}
           </>
+        )}
+
+        {getCurrentStepConfig()?.result && currentStep < 3 && (
+          <Button
+            icon={ChevronRight}
+            label="Next Step"
+            onClick={handleNextStep}
+          />
         )}
       </div>
     </>
@@ -1488,40 +1018,16 @@ export default function ImportMasterDataModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {
-        reset();
-        onClose();
-      }}
-      title={config.title}
-      subtitle={config.subtitle}
+      onClose={handleClose}
+      title="Import Data Master"
+      subtitle="Import data master from 3 different reports sequentially"
       size="xl"
-      actions={actions}
-      closeOnOverlayClick={!processing}
+      actions={modalActions}
+      closeOnOverlayClick={!isProcessing}
     >
-      {renderIndicator()}
-      <div className="mt-6">
-        {error && (
-          <div
-            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.error}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.error,
-            }}
-          >
-            <AlertCircle
-              className="flex-shrink-0 w-5 h-5"
-              style={{ color: colors.status.error }}
-            />
-            <p className="text-sm" style={{ color: colors.status.error }}>
-              {error}
-            </p>
-          </div>
-        )}
-        {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
-        {step === 3 && renderStep3()}
-      </div>
+      {renderMainStepIndicator()}
+      {renderSubStepIndicator()}
+      <div className="mt-6">{renderContent()}</div>
     </Modal>
   );
 }
