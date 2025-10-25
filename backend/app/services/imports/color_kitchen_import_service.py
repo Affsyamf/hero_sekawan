@@ -409,10 +409,10 @@ class ColorKitchenImportService(BaseImportService):
 
         return APIResponse.ok(
             data=safe_json({
-                "batches": batches,
-                "missing_products": sorted(list(missing_products)),
-                "missing_designs": sorted(list(missing_designs)),
-                "skipped_rows": skipped_rows,
+                "batches": batches[:30],
+                "missing_products": sorted(list(missing_products))[:30],
+                "missing_designs": sorted(list(missing_designs))[:30],
+                "skipped_rows": skipped_rows[:30],
                 "skipped_rows_count": len(skipped_rows),
                 "batch_count": len(batches)
             })

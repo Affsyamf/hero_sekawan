@@ -45,9 +45,10 @@ export default function DashboardColorKitchen() {
   const dateRange = useDateFilterStore((state) => state.dateRange);
 
   // ✅ Fetch data saat mount pertama kali
-  useEffect(() => {
-    fetchCkData();
-  }, []);
+  // useEffect(() => {
+  //   fetchCkData();
+  //   fetchCkTrend();
+  // }, []);
 
   // ✅ Auto refresh when dateRange changes
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function DashboardColorKitchen() {
   }, [dateRange]);
 
   useEffect(() => {
-    if (dateRange?.dateFrom && dateRange?.dateTo && ckData) {
+    if (dateRange?.dateFrom && dateRange?.dateTo) {
       fetchCkTrend();
     }
   }, [dateRange, trendGranularity]);
@@ -94,7 +95,6 @@ export default function DashboardColorKitchen() {
       );
 
       setCkData(transformedData);
-      console.log(transformedData);
     } catch (error) {
       console.error("Error fetching Color Kitchen data:", error);
       setCkData(null);

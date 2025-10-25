@@ -82,8 +82,6 @@ export default function OverviewNew() {
         cost_trend: cost_trend,
       };
 
-      console.log(res);
-
       setDashboardData(res);
     } catch (error) {
       console.error("❌ Error fetching dashboard data:", error);

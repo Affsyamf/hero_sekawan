@@ -44,9 +44,9 @@ export default function DashboardPurchasing() {
   const [productsGranularity, setProductsGranularity] = useState("monthly");
 
   // ✅ Fetch data saat mount pertama kali
-  useEffect(() => {
-    fetchPurchasingData();
-  }, []);
+  // useEffect(() => {
+  //   fetchPurchasingData();
+  // }, []);
 
   // ✅ Auto refresh when dateRange changes
   useEffect(() => {
@@ -202,7 +202,6 @@ export default function DashboardPurchasing() {
   };
 
   const transformPurchasesToBarData = (purchases) => {
-    console.log(purchases);
     return purchases.map((purchase) => ({
       key: purchase.supplier,
       value: purchase.value,
