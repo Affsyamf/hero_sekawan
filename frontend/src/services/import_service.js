@@ -74,22 +74,22 @@ export const importApi = {
     });
   },
 
-  importOpeningBalance: (file) => {
+  async previewOpeningBalance(file) {
     const fd = new FormData();
     fd.append("file", file);
-    return api.post("/import/opening-balance", fd, {
+    const res = await api.post("import/opening-balance/preview", fd, {
       timeout: 60000,
       headers: { "Content-Type": "multipart/form-data" },
     });
+    return res.data;
   },
-
-  previewOpeningBalance: (file) => {
-    console.log("DELETE ME");
+  async importOpeningBalance(file) {
     const fd = new FormData();
     fd.append("file", file);
-    return api.post("/import/opening-balance/preview", fd, {
+    const res = await api.post("import/opening-balance", fd, {
       timeout: 60000,
       headers: { "Content-Type": "multipart/form-data" },
     });
+    return res.data;
   },
 };

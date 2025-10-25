@@ -20,22 +20,17 @@ export default function ImportStockOpnameModal({
   onImportSuccess,
 }) {
   const { colors } = useTheme();
-
   const [step, setStep] = useState(1);
   const [file, setFile] = useState(null);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
-
-  // 🔹 Preview data
   const [preview, setPreview] = useState({
     rows: [],
     summary: null,
     skipped_sample: [],
   });
-
-  // 🔹 Tab view (preview vs skipped)
-  const [tab, setTab] = useState("preview");
+  const [processing, setProcessing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("valid"); // 'valid' or 'skipped'
 
   const steps = [
     { n: 1, l: "Upload" },
@@ -46,14 +41,14 @@ export default function ImportStockOpnameModal({
   const reset = () => {
     setStep(1);
     setFile(null);
-    setResult(null);
     setPreview({ rows: [], summary: null, skipped_sample: [] });
+    setResult(null);
     setError(null);
     setProcessing(false);
-    setTab("preview");
+    setActiveTab("valid");
   };
 
-  // 🔹 Fetch preview from backend
+  // --- Fetch preview from backend
   const fetchPreview = async (f) => {
     setProcessing(true);
     try {
@@ -73,14 +68,7 @@ export default function ImportStockOpnameModal({
     }
   };
 
-  // 🔹 Auto preview when entering Step 2
-  useEffect(() => {
-    if (step === 2 && file && preview.rows.length === 0 && !processing) {
-      fetchPreview(file);
-    }
-  }, [step]);
-
-  const selectFile = (e) => {
+  const selectFile = async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!f.name.toLowerCase().endsWith(".xlsx")) {
@@ -89,6 +77,7 @@ export default function ImportStockOpnameModal({
     }
     setFile(f);
     setError(null);
+    await fetchPreview(f);
   };
 
   const next = () => {
@@ -108,11 +97,11 @@ export default function ImportStockOpnameModal({
     setStep((p) => p - 1);
   };
 
-  // 🔹 Perform actual import
   const doImport = async () => {
     if (!file) return;
     setProcessing(true);
     setError(null);
+
     try {
       const res = await importApi.importStockOpname(file);
       const data = res.data || res;
@@ -125,7 +114,7 @@ export default function ImportStockOpnameModal({
     }
   };
 
-  // --- Step indicator
+  // --- Step Indicator
   const renderIndicator = () => (
     <div
       className="px-6 py-4 border-b"
@@ -201,17 +190,17 @@ export default function ImportStockOpnameModal({
             Upload Excel File
           </h3>
           <p className="mb-4 text-sm" style={{ color: colors.text.secondary }}>
-            Select .xlsx with Stock Opname data
+            Select .xlsx file with Stock Opname data
           </p>
           <input
             type="file"
             accept=".xlsx"
             onChange={selectFile}
             className="hidden"
-            id="file-so"
+            id="file-stock-opname"
           />
           <label
-            htmlFor="file-so"
+            htmlFor="file-stock-opname"
             className="inline-block px-4 py-2 rounded-lg cursor-pointer"
             style={{
               backgroundColor: colors.primary,
@@ -238,102 +227,88 @@ export default function ImportStockOpnameModal({
             </div>
           )}
         </div>
-        <div
-          className="p-4 mt-4 rounded-lg"
-          style={{ backgroundColor: colors.background.secondary }}
-        >
-          <p className="text-xs" style={{ color: colors.text.secondary }}>
-            <strong>Format:</strong> Sheet "GUDANG BESAR" with columns NO, NAMA
-            BARANG, SALDO AWAL, MUTASI MASUK, MUTASI KELUAR, and FISIK.
-          </p>
-        </div>
       </div>
     </div>
   );
 
   // --- Step 2: Preview
   const renderStep2 = () => {
-    if (processing)
-      return (
-        <div
-          className="py-10 text-sm text-center"
-          style={{ color: colors.text.secondary }}
-        >
-          Generating preview...
-        </div>
-      );
+    const { summary, rows, skipped_sample = [] } = preview || {};
+    const validRows = summary?.valid_products || rows?.length || 0;
+    const skippedRows =
+      summary?.skipped_products || skipped_sample?.length || 0;
+    const totalRows = summary?.total_rows || validRows + skippedRows;
 
-    if (!preview.summary)
-      return (
-        <div
-          className="py-10 text-sm text-center"
-          style={{ color: colors.text.secondary }}
-        >
-          No preview data available.
-        </div>
-      );
-
-    const total = preview.summary.total_rows;
-    const valid = preview.summary.valid_products;
-    const skipped = preview.summary.skipped_products;
-    const rows = preview.rows.slice(0, 50);
+    const displayed = rows?.slice(0, 30) || [];
 
     return (
       <div>
-        {/* Summary */}
+        {/* Summary Bar */}
         <div
-          className="p-4 mb-4 rounded-lg"
+          className="p-4 mb-4 rounded-lg flex justify-between items-center"
           style={{
             backgroundColor: `${colors.primary}15`,
             borderWidth: "1px",
             borderColor: colors.primary,
           }}
         >
-          <p className="text-sm" style={{ color: colors.text.primary }}>
-            <strong>{valid}</strong> valid products, <strong>{skipped}</strong>{" "}
-            skipped out of <strong>{total}</strong> rows.
-          </p>
+          <div className="text-sm" style={{ color: colors.text.primary }}>
+            <strong>{totalRows}</strong> total rows —{" "}
+            <span style={{ color: colors.status.success }}>
+              {validRows} valid
+            </span>{" "}
+            &nbsp;/&nbsp;
+            <span style={{ color: colors.status.warning }}>
+              {skippedRows} skipped
+            </span>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === "valid"
+                  ? "text-white"
+                  : "border border-gray-300 bg-transparent"
+              }`}
+              style={{
+                backgroundColor:
+                  activeTab === "valid" ? colors.primary : "transparent",
+                color:
+                  activeTab === "valid"
+                    ? colors.text.inverse
+                    : colors.text.primary,
+              }}
+              onClick={() => setActiveTab("valid")}
+            >
+              <Table className="inline w-3 h-3 mr-1" />
+              Valid ({validRows})
+            </button>
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === "skipped"
+                  ? "text-white"
+                  : "border border-gray-300 bg-transparent"
+              }`}
+              style={{
+                backgroundColor:
+                  activeTab === "skipped"
+                    ? colors.status.warning
+                    : "transparent",
+                color:
+                  activeTab === "skipped"
+                    ? colors.text.inverse
+                    : colors.text.primary,
+              }}
+              onClick={() => setActiveTab("skipped")}
+            >
+              <ListX className="inline w-3 h-3 mr-1" />
+              Skipped ({skippedRows})
+            </button>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div
-          className="flex mb-3 border-b"
-          style={{ borderColor: colors.border.primary }}
-        >
-          <button
-            onClick={() => setTab("preview")}
-            className={cn(
-              "px-4 py-2 text-sm font-medium",
-              tab === "preview" && "border-b-2"
-            )}
-            style={{
-              borderColor: tab === "preview" ? colors.primary : "transparent",
-              color: tab === "preview" ? colors.primary : colors.text.secondary,
-            }}
-          >
-            <Table className="inline w-4 h-4 mr-1" /> Preview
-          </button>
-          <button
-            onClick={() => setTab("skipped")}
-            className={cn(
-              "px-4 py-2 text-sm font-medium",
-              tab === "skipped" && "border-b-2"
-            )}
-            style={{
-              borderColor:
-                tab === "skipped" ? colors.status.warning : "transparent",
-              color:
-                tab === "skipped"
-                  ? colors.status.warning
-                  : colors.text.secondary,
-            }}
-          >
-            <ListX className="inline w-4 h-4 mr-1" /> Skipped
-          </button>
-        </div>
-
-        {/* Tab content */}
-        {tab === "preview" ? (
+        {/* Active Tab */}
+        {activeTab === "valid" ? (
           <div
             className="overflow-hidden border rounded-lg"
             style={{ borderColor: colors.border.primary }}
@@ -367,7 +342,7 @@ export default function ImportStockOpnameModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, i) => (
+                  {displayed.map((r, i) => (
                     <tr
                       key={i}
                       style={{
@@ -405,7 +380,7 @@ export default function ImportStockOpnameModal({
                 color: colors.text.secondary,
               }}
             >
-              Showing {rows.length} of {preview.rows.length} rows
+              Showing {displayed.length} of {validRows} valid rows
             </div>
           </div>
         ) : (
@@ -423,19 +398,28 @@ export default function ImportStockOpnameModal({
                   }}
                 >
                   <tr>
-                    {["No", "Product Name", "Reason"].map((col) => (
-                      <th
-                        key={col}
-                        className="px-2 py-2 font-semibold text-left whitespace-nowrap"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {col}
-                      </th>
-                    ))}
+                    <th
+                      className="px-2 py-2 font-semibold text-left"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      No
+                    </th>
+                    <th
+                      className="px-2 py-2 font-semibold text-left"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Product Name
+                    </th>
+                    <th
+                      className="px-2 py-2 font-semibold text-left"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Reason
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {preview.skipped_sample.slice(0, 30).map((s, i) => (
+                  {skipped_sample.slice(0, 30).map((s, i) => (
                     <tr
                       key={i}
                       style={{
@@ -445,7 +429,12 @@ export default function ImportStockOpnameModal({
                     >
                       <td className="px-2 py-2">{i + 1}</td>
                       <td className="px-2 py-2 font-medium">{s.name}</td>
-                      <td className="px-2 py-2 text-red-500">{s.reason}</td>
+                      <td
+                        className="px-2 py-2"
+                        style={{ color: colors.status.warning }}
+                      >
+                        {s.reason}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -458,7 +447,7 @@ export default function ImportStockOpnameModal({
                 color: colors.text.secondary,
               }}
             >
-              Showing {preview.skipped_sample.length} skipped items
+              Showing {skipped_sample.length} skipped items
             </div>
           </div>
         )}
@@ -466,9 +455,9 @@ export default function ImportStockOpnameModal({
     );
   };
 
-  // --- Step 3
+  // --- Step 3: Confirm/Result
   const renderStep3 = () => {
-    if (!result)
+    if (!result) {
       return (
         <div className="flex flex-col items-center justify-center py-12">
           <AlertCircle
@@ -482,10 +471,11 @@ export default function ImportStockOpnameModal({
             Ready to Import
           </h3>
           <p className="mb-6 text-sm" style={{ color: colors.text.secondary }}>
-            {preview.summary?.valid_products || 0} products will be recorded
+            {preview.summary?.valid_products || 0} products will be imported
           </p>
         </div>
       );
+    }
 
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -500,7 +490,7 @@ export default function ImportStockOpnameModal({
           Import Success!
         </h3>
         <p className="text-sm" style={{ color: colors.text.secondary }}>
-          {result.added} added, {result.skipped} skipped.
+          {result.added || 0} added, {result.skipped || 0} skipped.
         </p>
       </div>
     );
@@ -541,7 +531,7 @@ export default function ImportStockOpnameModal({
             {step < 3 && (
               <Button
                 icon={ChevronRight}
-                label={processing ? "Loading..." : "Next"}
+                label="Next"
                 onClick={next}
                 disabled={
                   processing ||
@@ -577,7 +567,7 @@ export default function ImportStockOpnameModal({
         onClose();
       }}
       title="Import Stock Opname"
-      subtitle="Import and preview stock opname results from Excel"
+      subtitle="Import and preview stock opname data from Excel"
       size="xl"
       actions={actions}
       closeOnOverlayClick={!processing}

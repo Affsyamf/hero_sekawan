@@ -19,13 +19,14 @@ import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
 import useDateFilterStore from "../../stores/useDateFilterStore";
 import { useNavigate } from "react-router-dom";
-import ImportOpeningBalanceModal from "../../components/features/purchasing/ImportOpenBalance";
+import ImportOpeningBalanceModal from "../../components/features/purchasing/ImportOpeningBalance";
 
 export default function PurchasingsPage() {
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportTrxOpen, setIsImportTrxOpen] = useState(false);
+  const [isImportOpenBalOpen, setIsImportOpenBalOpen] = useState(false);
   const [selectedPurchasing, setSelectedPurchasing] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [suppliers, setSuppliers] = useState([]);
@@ -229,14 +230,13 @@ export default function PurchasingsPage() {
               onClick={() => setIsImportTrxOpen(true)}
               className="bg-green-600 hover:bg-green-700"
             />
-          </div>
 
-          <div className="mb-4">
             <Button
               icon={Upload}
               label="Import Opening Balance"
-              onClick={() => setIsModalOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
+              onClick={() => setIsImportOpenBalOpen(true)}
+              className="ml-2"
+              variant="secondary"
             />
           </div>
 
@@ -272,11 +272,10 @@ export default function PurchasingsPage() {
           />
 
           <ImportOpeningBalanceModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            isOpen={isImportOpenBalOpen}
+            onClose={() => setIsImportOpenBalOpen(false)}
             onImportSuccess={() => setRefreshKey((p) => p + 1)}
           />
-
         </div>
       </div>
     </MainLayout>

@@ -7,10 +7,10 @@ export const lightTheme = {
   primaryDark: "#1f5582",
 
   // Secondary Colors
-  secondary: "#2c3e50",
-  secondaryHover: "#1a252f",
-  secondaryLight: "#ecf0f1",
-  secondaryDark: "#1a252f",
+  secondary: "#9b59b6",
+  secondaryHover: "#8e44ad",
+  secondaryLight: "#f5ecfa",
+  secondaryDark: "#5e3370",
 
   // Background Colors
   background: {
@@ -35,6 +35,7 @@ export const lightTheme = {
   // Status Colors
   status: {
     success: "#27ae60",
+    successHover: "#1e874b",
     successLight: "#d5f4e6",
     successDark: "#1e8449",
 

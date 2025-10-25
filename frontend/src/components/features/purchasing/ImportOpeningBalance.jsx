@@ -5,15 +5,15 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronRight,
-  AlertTriangle,
 } from "lucide-react";
 import Modal from "../../ui/modal/Modal";
 import Button from "../../ui/button/Button";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { cn } from "../../../utils/cn";
 import { importApi } from "../../../services/import_service";
+import { formatCurrency } from "../../../utils/helpers";
 
-export default function ImportOpeningBalanceModal({
+export default function ImportOpeningBalance({
   isOpen,
   onClose,
   onImportSuccess,
@@ -21,10 +21,11 @@ export default function ImportOpeningBalanceModal({
   const { colors } = useTheme();
   const [step, setStep] = useState(1);
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("valid"); // 'valid' or 'skipped' for preview tab
 
   const steps = [
     { n: 1, l: "Upload" },
@@ -35,7 +36,7 @@ export default function ImportOpeningBalanceModal({
   const reset = () => {
     setStep(1);
     setFile(null);
-    setPreview(null);
+    setPreview([]);
     setResult(null);
     setError(null);
     setProcessing(false);
@@ -46,14 +47,19 @@ export default function ImportOpeningBalanceModal({
     setProcessing(true);
     try {
       const res = await importApi.previewOpeningBalance(f);
-      const data = res.data?.data;
+      const data = res.data;
 
-      setPreview(data);
+      setPreview({
+        rows: data.preview_rows || [],
+        skipped_rows: data.skipped_sample || [],
+        summary: data.summary || {},
+      });
+
       setError(null);
-      setStep(2);
     } catch (err) {
+      console.log(err);
       setError(err.response?.data?.detail || "Preview failed");
-      setPreview(null);
+      setPreview({ valid_rows: 0, rows: [] });
     } finally {
       setProcessing(false);
     }
@@ -76,8 +82,8 @@ export default function ImportOpeningBalanceModal({
       setError("Select file");
       return;
     }
-    if (step === 2 && !preview?.summary?.valid_products) {
-      setError("No valid data to import");
+    if (step === 2 && !(preview.rows?.length > 0)) {
+      setError("No data");
       return;
     }
     setError(null);
@@ -97,7 +103,7 @@ export default function ImportOpeningBalanceModal({
 
     try {
       const res = await importApi.importOpeningBalance(file);
-      const data = res.data?.data || res.data;
+      const data = res.data;
 
       setResult(data);
       if (onImportSuccess) onImportSuccess(data);
@@ -193,21 +199,17 @@ export default function ImportOpeningBalanceModal({
             accept=".xlsx"
             onChange={selectFile}
             className="hidden"
-            id="file-opening-balance"
-            disabled={processing}
+            id="file-purch-trx"
           />
           <label
-            htmlFor="file-opening-balance"
-            className={cn(
-              "inline-block px-4 py-2 rounded-lg",
-              processing ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-            )}
+            htmlFor="file-purch-trx"
+            className="inline-block px-4 py-2 rounded-lg cursor-pointer"
             style={{
               backgroundColor: colors.primary,
               color: colors.text.inverse,
             }}
           >
-            {processing ? "Processing..." : "Choose File"}
+            Choose File
           </label>
           {file && (
             <div
@@ -232,145 +234,81 @@ export default function ImportOpeningBalanceModal({
   );
 
   // --- Step 2: Preview ---
+  // --- Step 2: Preview ---
   const renderStep2 = () => {
-    if (!preview) {
-      return (
-        <div
-          className="py-6 text-sm text-center"
-          style={{ color: colors.text.secondary }}
-        >
-          No preview data available
-        </div>
-      );
-    }
+    const { summary, rows, skipped_rows = [] } = preview || {};
+    const validRows = summary?.valid_products || rows?.length || 0;
+    const skippedRows = summary?.skipped_products || skipped_rows?.length || 0;
+    const totalRows = summary?.total_rows || validRows + skippedRows;
 
-    const { summary, preview_rows = [], skipped_sample = [] } = preview;
-    const displayed = preview_rows.slice(0, 30);
+    console.log(preview);
+
+    const displayed = rows?.slice(0, 30) || [];
 
     return (
       <div>
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.primary}15`,
-              borderWidth: "1px",
-              borderColor: colors.primary,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Total Rows
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.text.primary }}
-            >
-              {summary?.total_rows || 0}
-            </p>
+        {/* Summary Bar */}
+        <div
+          className="p-4 mb-4 rounded-lg flex justify-between items-center"
+          style={{
+            backgroundColor: `${colors.primary}15`,
+            borderWidth: "1px",
+            borderColor: colors.primary,
+          }}
+        >
+          <div className="text-sm" style={{ color: colors.text.primary }}>
+            <strong>{totalRows}</strong> total rows —{" "}
+            <span style={{ color: colors.status.success }}>
+              {validRows} valid
+            </span>{" "}
+            &nbsp;/&nbsp;
+            <span style={{ color: colors.status.warning }}>
+              {skippedRows} skipped
+            </span>
           </div>
 
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.success}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.success,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
+          <div className="flex gap-2">
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === "valid"
+                  ? "text-white"
+                  : "border border-gray-300 bg-transparent"
+              }`}
+              style={{
+                backgroundColor:
+                  activeTab === "valid" ? colors.primary : "transparent",
+                color:
+                  activeTab === "valid"
+                    ? colors.text.inverse
+                    : colors.text.primary,
+              }}
+              onClick={() => setActiveTab("valid")}
             >
-              Valid Products
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.success }}
+              Valid ({validRows})
+            </button>
+            <button
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === "skipped"
+                  ? "text-white"
+                  : "border border-gray-300 bg-transparent"
+              }`}
+              style={{
+                backgroundColor:
+                  activeTab === "skipped" ? colors.primary : "transparent",
+                color:
+                  activeTab === "skipped"
+                    ? colors.text.inverse
+                    : colors.text.primary,
+              }}
+              onClick={() => setActiveTab("skipped")}
             >
-              {summary?.valid_products || 0}
-            </p>
-          </div>
-
-          <div
-            className="p-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.warning}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.warning,
-            }}
-          >
-            <p
-              className="mb-1 text-xs"
-              style={{ color: colors.text.secondary }}
-            >
-              Skipped
-            </p>
-            <p
-              className="text-2xl font-bold"
-              style={{ color: colors.status.warning }}
-            >
-              {summary?.skipped_products || 0}
-            </p>
+              Skipped ({skippedRows})
+            </button>
           </div>
         </div>
 
-        {/* Skipped Products Warning */}
-        {skipped_sample.length > 0 && (
-          <div
-            className="flex items-start gap-3 p-4 mb-4 rounded-lg"
-            style={{
-              backgroundColor: `${colors.status.warning}15`,
-              borderWidth: "1px",
-              borderColor: colors.status.warning,
-            }}
-          >
-            <AlertTriangle
-              className="flex-shrink-0 w-5 h-5 mt-0.5"
-              style={{ color: colors.status.warning }}
-            />
-            <div className="flex-1">
-              <p
-                className="mb-2 text-sm font-medium"
-                style={{ color: colors.text.primary }}
-              >
-                {skipped_sample.length} product(s) will be skipped:
-              </p>
-              <div className="space-y-1 overflow-y-auto max-h-32">
-                {skipped_sample.slice(0, 10).map((item, idx) => (
-                  <p
-                    key={idx}
-                    className="text-xs"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    • {item.name} - {item.reason}
-                  </p>
-                ))}
-                {skipped_sample.length > 10 && (
-                  <p
-                    className="text-xs italic"
-                    style={{ color: colors.text.secondary }}
-                  >
-                    ... and {skipped_sample.length - 10} more
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Preview Table */}
-        {processing ? (
-          <div
-            className="py-6 text-sm text-center"
-            style={{ color: colors.text.secondary }}
-          >
-            Loading preview...
-          </div>
-        ) : (
+        {/* Active Tab Content */}
+        {activeTab === "valid" ? (
           <div
             className="overflow-hidden border rounded-lg"
             style={{ borderColor: colors.border.primary }}
@@ -387,16 +325,16 @@ export default function ImportOpeningBalanceModal({
                   <tr>
                     {[
                       "No",
-                      "Product",
-                      "Quantity",
-                      "Unit Price",
+                      "Nama Barang",
+                      "Qty",
+                      "Harga Per Unit",
                       "DPP",
-                      "PPN (11%)",
+                      "PPN",
                       "Total",
                     ].map((col) => (
                       <th
                         key={col}
-                        className="px-3 py-2 font-semibold text-left whitespace-nowrap"
+                        className="px-2 py-2 font-semibold text-left whitespace-nowrap"
                         style={{ color: colors.text.secondary }}
                       >
                         {col}
@@ -413,47 +351,20 @@ export default function ImportOpeningBalanceModal({
                         borderColor: colors.border.primary,
                       }}
                     >
-                      <td
-                        className="px-3 py-2"
-                        style={{ color: colors.text.secondary }}
-                      >
-                        {i + 1}
+                      <td className="px-2 py-2">{i + 1}</td>
+                      <td className="px-2 py-2">{r.product}</td>
+                      <td className="px-2 py-2">{r.quantity}</td>
+                      <td className="px-2 py-2 text-right">
+                        {formatCurrency(r.unit_price || 0)}
                       </td>
-                      <td
-                        className="px-3 py-2 font-medium"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.product}
+                      <td className="px-2 py-2 text-right">
+                        {formatCurrency(r.dpp)}
                       </td>
-                      <td
-                        className="px-3 py-2 text-right"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.quantity?.toLocaleString() || 0}
+                      <td className="px-2 py-2 text-right">
+                        {formatCurrency(r.ppn)}
                       </td>
-                      <td
-                        className="px-3 py-2 text-right"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.unit_price?.toLocaleString() || 0}
-                      </td>
-                      <td
-                        className="px-3 py-2 text-right"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.dpp?.toLocaleString() || 0}
-                      </td>
-                      <td
-                        className="px-3 py-2 text-right"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.ppn?.toLocaleString() || 0}
-                      </td>
-                      <td
-                        className="px-3 py-2 font-medium text-right"
-                        style={{ color: colors.text.primary }}
-                      >
-                        {r.total?.toLocaleString() || 0}
+                      <td className="px-2 py-2 text-right">
+                        {formatCurrency(r.total || 0)}
                       </td>
                     </tr>
                   ))}
@@ -467,8 +378,74 @@ export default function ImportOpeningBalanceModal({
                 color: colors.text.secondary,
               }}
             >
-              Showing {displayed.length} of {summary?.valid_products || 0} valid
-              products
+              Showing {displayed.length} of {validRows} valid rows
+            </div>
+          </div>
+        ) : (
+          <div
+            className="overflow-hidden border rounded-lg"
+            style={{ borderColor: colors.border.primary }}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead
+                  style={{
+                    backgroundColor: colors.background.secondary,
+                    borderBottomWidth: "1px",
+                    borderColor: colors.border.primary,
+                  }}
+                >
+                  <tr>
+                    <th
+                      className="px-2 py-2 font-semibold text-left"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      No
+                    </th>
+                    <th
+                      className="px-2 py-2 font-semibold text-left"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Product Name
+                    </th>
+                    <th
+                      className="px-2 py-2 font-semibold text-left"
+                      style={{ color: colors.text.secondary }}
+                    >
+                      Reason
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {skipped_rows.slice(0, 30).map((item, i) => (
+                    <tr
+                      key={i}
+                      style={{
+                        borderBottomWidth: "1px",
+                        borderColor: colors.border.primary,
+                      }}
+                    >
+                      <td className="px-2 py-2">{i + 1}</td>
+                      <td className="px-2 py-2">{item.name}</td>
+                      <td
+                        className="px-2 py-2"
+                        style={{ color: colors.status.warning }}
+                      >
+                        {item.reason}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div
+              className="p-3 text-sm text-center"
+              style={{
+                backgroundColor: colors.background.secondary,
+                color: colors.text.secondary,
+              }}
+            >
+              Showing {skipped_rows.length} skipped products
             </div>
           </div>
         )}
@@ -479,9 +456,6 @@ export default function ImportOpeningBalanceModal({
   // --- Step 3: Confirm/Result ---
   const renderStep3 = () => {
     if (!result) {
-      const validProducts = preview?.summary?.valid_products || 0;
-      const skippedProducts = preview?.summary?.skipped_products || 0;
-
       return (
         <div className="flex flex-col items-center justify-center py-12">
           <AlertCircle
@@ -494,22 +468,9 @@ export default function ImportOpeningBalanceModal({
           >
             Ready to Import
           </h3>
-          <div className="space-y-2 text-center">
-            <p className="text-sm" style={{ color: colors.text.secondary }}>
-              <strong style={{ color: colors.status.success }}>
-                {validProducts}
-              </strong>{" "}
-              products will be imported
-            </p>
-            {skippedProducts > 0 && (
-              <p className="text-sm" style={{ color: colors.text.secondary }}>
-                <strong style={{ color: colors.status.warning }}>
-                  {skippedProducts}
-                </strong>{" "}
-                products will be skipped
-              </p>
-            )}
-          </div>
+          <p className="mb-6 text-sm" style={{ color: colors.text.secondary }}>
+            {preview.length} detail(s) will be imported
+          </p>
         </div>
       );
     }
@@ -526,22 +487,9 @@ export default function ImportOpeningBalanceModal({
         >
           Import Success!
         </h3>
-        <div className="mt-4 space-y-2 text-center">
-          <p className="text-sm" style={{ color: colors.text.secondary }}>
-            <strong style={{ color: colors.status.success }}>
-              {result.added || 0}
-            </strong>{" "}
-            products imported successfully
-          </p>
-          {result.skipped > 0 && (
-            <p className="text-sm" style={{ color: colors.text.secondary }}>
-              <strong style={{ color: colors.status.warning }}>
-                {result.skipped}
-              </strong>{" "}
-              products were skipped
-            </p>
-          )}
-        </div>
+        <p className="text-sm" style={{ color: colors.text.secondary }}>
+          Data imported successfully.
+        </p>
       </div>
     );
   };
@@ -553,7 +501,7 @@ export default function ImportOpeningBalanceModal({
         <button
           onClick={back}
           disabled={processing}
-          className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium rounded-lg"
           style={{ color: colors.text.primary }}
         >
           Back
@@ -582,16 +530,14 @@ export default function ImportOpeningBalanceModal({
                 icon={ChevronRight}
                 label="Next"
                 onClick={next}
-                disabled={
-                  !file || (step === 2 && !preview?.summary?.valid_products)
-                }
+                disabled={!file || (step === 2 && !(preview.rows?.length > 0))}
               />
             )}
             {step === 3 && (
               <button
                 onClick={doImport}
                 disabled={processing}
-                className="px-4 py-2 text-sm font-medium rounded-lg disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium rounded-lg"
                 style={{
                   backgroundColor: colors.status.success,
                   color: colors.text.inverse,
@@ -613,7 +559,7 @@ export default function ImportOpeningBalanceModal({
         reset();
         onClose();
       }}
-      title="Import Opening Balance"
+      title="Import Oepening Balance"
       subtitle="Import opening balance from Excel (Sheet: GUDANG BESAR)"
       size="xl"
       actions={actions}
