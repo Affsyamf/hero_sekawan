@@ -13,6 +13,8 @@ import {
   Package2,
   DollarSign,
   TrendingUp,
+  Building2,
+  X,
 } from "lucide-react";
 import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
@@ -311,6 +313,13 @@ export default function DashboardColorKitchen() {
     );
   }
 
+  const transformDataToBar = (data) => {
+    return data.map((x) => ({
+      ...x,
+      key: x.label,
+    }));
+  };
+
   const {
     metrics,
     top_dyes,
@@ -549,7 +558,9 @@ export default function DashboardColorKitchen() {
                 // }}
                 title="Chemical Cost Breakdown"
                 subtitle="Dyes vs Auxiliaries"
-                onDrilldown={onDrilldown}
+                onDrilldownRequest={async ({ _, context, depth }) => {
+                  return onDrilldown(context, depth);
+                }}
                 showSummary={true}
               />
             </Card>
@@ -558,148 +569,60 @@ export default function DashboardColorKitchen() {
 
         {/* Top Products */}
         <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
-          {/* Top Dyes */}
+          {/* Top 5 Suppliers */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-                <Droplets className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+                <Building2 className="w-4 h-4 text-purple-600" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 md:text-base">
                   Top 5 Dyes
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Dyes dengan nilai tertinggi
+                  Dyes dengan total pemakaian tertinggi
                 </p>
               </div>
             </div>
-            <div className="space-y-3">
-              {top_dyes.length > 0 ? (
-                top_dyes.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-3 transition-all border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-blue-600 bg-blue-100 rounded-lg">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 truncate">
-                          {item.label}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-gray-600">Quantity</span>
-                        <span className="text-xs font-bold text-gray-900">
-                          {formatNumber(item.quantity)} kg
-                        </span>
-                      </div>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-gray-600">Value</span>
-                        <span className="text-xs font-semibold text-gray-900">
-                          {formatCompactCurrency(item.value)}
-                        </span>
-                      </div>
-                      <Highchart.HighchartsProgress
-                        label=""
-                        value={item.quantity}
-                        maxValue={item.maxValue}
-                        color={
-                          index === 0
-                            ? "error"
-                            : index === 1
-                            ? "primary"
-                            : index === 2
-                            ? "warning"
-                            : index === 3
-                            ? "success"
-                            : "info"
-                        }
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-center text-gray-500">
-                  No dye data available
-                </p>
-              )}
-            </div>
+
+            <Highchart.HighchartsBar
+              initialData={transformDataToBar(top_dyes)}
+              title=""
+              subtitle=""
+              datasets={[
+                { key: "value", label: "Total Purchases", color: "primary" },
+              ]}
+              periods={[]}
+              showSummary={false}
+            />
           </Card>
 
           {/* Top Auxiliaries */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
-                <Palette className="w-4 h-4 text-purple-600" />
+                <Building2 className="w-4 h-4 text-purple-600" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Auxiliaries
+                  Top 5 Aux
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Auxiliaries dengan nilai tertinggi
+                  Aux dengan total pemakaian tertinggi
                 </p>
               </div>
             </div>
-            <div className="space-y-3">
-              {top_aux.length > 0 ? (
-                top_aux.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-3 transition-all border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-xs font-bold text-purple-600 bg-purple-100 rounded-lg">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-900 truncate">
-                          {item.label}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-gray-600">Quantity</span>
-                        <span className="text-xs font-bold text-gray-900">
-                          {formatNumber(item.quantity)} kg
-                        </span>
-                      </div>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-gray-600">Value</span>
-                        <span className="text-xs font-semibold text-gray-900">
-                          {formatCompactCurrency(item.value)}
-                        </span>
-                      </div>
-                      <Highchart.HighchartsProgress
-                        label=""
-                        value={item.quantity}
-                        maxValue={item.maxValue}
-                        color={
-                          index === 0
-                            ? "error"
-                            : index === 1
-                            ? "primary"
-                            : index === 2
-                            ? "warning"
-                            : index === 3
-                            ? "success"
-                            : "info"
-                        }
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-center text-gray-500">
-                  No auxiliary data available
-                </p>
-              )}
-            </div>
+
+            <Highchart.HighchartsBar
+              initialData={transformDataToBar(top_aux)}
+              title=""
+              subtitle=""
+              datasets={[
+                { key: "value", label: "Total Purchases", color: "primary" },
+              ]}
+              periods={[]}
+              showSummary={false}
+            />
           </Card>
         </div>
       </div>
