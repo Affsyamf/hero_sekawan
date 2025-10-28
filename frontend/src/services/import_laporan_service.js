@@ -6,7 +6,7 @@ export const importLapChemical = async (data) => {
 };
 
 export const importLapChemicalPreview = async (data) => {
-  const response = await api.post("/import/lap-chemical", data);
+  const response = await api.post("/import/lap-chemical/preview", data);
   return response;
 };
 
@@ -16,7 +16,7 @@ export const importLapPembelian = async (data) => {
 };
 
 export const importLapPembelianPreview = async (data) => {
-  const response = await api.post("/import/lap-pembelian", data);
+  const response = await api.post("/import/lap-pembelian/preview", data);
   return response;
 };
 
@@ -26,6 +26,6 @@ export const importLapCk = async (data) => {
 };
 
 export const importLapCkPreview = async (data) => {
-  const response = await api.post("/import/lap-ck", data);
+  const response = await api.post("/import/lap-ck/preview", data);
   return response;
 };

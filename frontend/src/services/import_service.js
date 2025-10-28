@@ -33,7 +33,7 @@ export const importApi = {
     const fd = new FormData();
     fd.append("file", file);
     return api.post("/import/lap-ck", fd, {
-      timeout: 60000,
+      timeout: 5000000,
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
