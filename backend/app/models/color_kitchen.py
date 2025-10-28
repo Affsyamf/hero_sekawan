@@ -28,11 +28,11 @@ class ColorKitchenBatchDetail(Base):
         Computed("quantity * unit_cost_used")
     )
 
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="RESTRICT"), nullable=False)
     product = relationship("Product")
 
     batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id", ondelete="CASCADE"), nullable=False)
-    batch = relationship("ColorKitchenBatch", back_populates="details", lazy='selectin', cascade="all, delete-orphan")
+    batch = relationship("ColorKitchenBatch", back_populates="details", lazy='selectin')
     
 class ColorKitchenEntry(Base):
     __tablename__ = "color_kitchen_entries"
@@ -43,12 +43,12 @@ class ColorKitchenEntry(Base):
     rolls = Column(Integer)
     paste_quantity = Column(Numeric(18, 2), nullable=False)
 
-    design_id = Column(Integer, ForeignKey("designs.id"), nullable=False)
-    design = relationship("Design", back_populates="color_kitchen_entries", lazy='selectin', cascade="all, delete-orphan")
+    design_id = Column(Integer, ForeignKey("designs.id", ondelete="RESTRICT"), nullable=False)
+    design = relationship("Design", back_populates="color_kitchen_entries", lazy='selectin')
 
     # link to batch (shared dyestuff)
     batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id", ondelete="CASCADE"))
-    batch = relationship("ColorKitchenBatch", back_populates="entries", lazy='selectin', cascade="all, delete-orphan")
+    batch = relationship("ColorKitchenBatch", back_populates="entries", lazy='selectin')
 
     # auxiliaries (per OPJ)
     details = relationship("ColorKitchenEntryDetail", back_populates="color_kitchen_entry", lazy='selectin', cascade="all, delete-orphan")
@@ -65,8 +65,8 @@ class ColorKitchenEntryDetail(Base):
         Computed("quantity * unit_cost_used")
     )
 
-    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="color_kitchen_entry_details", lazy='selectin', cascade="all, delete-orphan")
+    product_id = Column(Integer, ForeignKey('products.id', ondelete="RESTRICT"), nullable=False)
+    product = relationship("Product", back_populates="color_kitchen_entry_details", lazy='selectin')
 
     color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id', ondelete="CASCADE"), nullable=False)
-    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details", lazy='selectin', cascade="all, delete-orphan")
+    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details", lazy='selectin')

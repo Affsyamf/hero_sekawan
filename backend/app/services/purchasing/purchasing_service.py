@@ -199,9 +199,9 @@ class PurchasingService:
                 return APIResponse.not_found(message=f"Purchasing ID '{purchasing_id}' not found.")
 
             # Delete details first (foreign key)
-            self.db.query(PurchasingDetail).filter(
-                PurchasingDetail.purchasing_id == purchasing_id
-            ).delete(synchronize_session=False)
+            # self.db.query(PurchasingDetail).filter(
+            #     PurchasingDetail.purchasing_id == purchasing_id
+            # ).delete(synchronize_session=False)
 
             # Delete purchasing
             self.db.delete(purchasing)
