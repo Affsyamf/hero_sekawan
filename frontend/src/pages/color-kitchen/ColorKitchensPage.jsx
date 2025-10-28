@@ -3,7 +3,7 @@ import Table from "../../components/ui/table/Table";
 import ColorKitchenForm from "../../components/features/color-kitchen/ColorKitchenForm";
 import ImportColorKitchenModal from "../../components/features/color-kitchen/ImportColorKitchenModal";
 import { useState, useEffect } from "react";
-import { Edit2, Trash2, Eye, Upload } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload, BookOpen } from "lucide-react";
 import { formatDate } from "../../utils/helpers";
 import {
   createColorKitchen,
@@ -15,10 +15,12 @@ import { useFilteredFetch } from "../../hooks/useFilteredFetch";
 import { useGlobalFilter } from "../../contexts/GlobalFilterContext";
 import Button from "../../components/ui/button/Button";
 import useDateFilterStore from "../../stores/useDateFilterStore";
+import GuideImportColorKitchenModal from "../../components/features/color-kitchen/GuideImportColorKitchenModal";
 
 export default function ColorKitchensPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [designs, setDesigns] = useState([]);
@@ -225,13 +227,30 @@ export default function ColorKitchensPage() {
             </div>
           )}
 
-          <div className="mb-4">
-            <Button
-              icon={Upload}
-              label="Import from Excel"
-              onClick={() => setIsImportOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Button
+                icon={Upload}
+                label="Import from Excel"
+                onClick={() => setIsImportOpen(true)}
+                className="bg-green-600 hover:bg-green-700"
+              />
+            </div>
+
+            {/* Import Guide Button */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+              style={{
+                borderColor: "#e5e7eb",
+                backgroundColor: "white",
+                color: "#6b7280",
+              }}
+              title="Panduan Import Data"
+            >
+              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+              <span className="hidden sm:inline">Import Guide</span>
+            </button>
           </div>
 
           <Table
@@ -260,6 +279,11 @@ export default function ColorKitchensPage() {
             isOpen={isImportOpen}
             onClose={() => setIsImportOpen(false)}
             onImportSuccess={() => setRefresh((p) => p + 1)}
+          />
+
+          <GuideImportColorKitchenModal
+            isOpen={isGuideOpen}
+            onClose={() => setIsGuideOpen(false)}
           />
         </div>
       </div>

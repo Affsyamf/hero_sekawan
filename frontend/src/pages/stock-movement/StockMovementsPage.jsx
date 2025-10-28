@@ -1,4 +1,4 @@
-import { Edit2, Eye, Trash2, Upload } from "lucide-react";
+import { BookOpen, Edit2, Eye, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import ImportStockMovementModal from "../../components/features/stock-movement/ImportStockMovementModal";
 import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
@@ -12,9 +12,11 @@ import {
 } from "../../services/stock_movement_service";
 import useDateFilterStore from "../../stores/useDateFilterStore";
 import { formatDate } from "../../utils/helpers";
+import GuideImportStockMovementModal from "../../components/features/stock-movement/GuideImportStockMovementModal";
 
 export default function StockMovementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
@@ -187,13 +189,30 @@ export default function StockMovementsPage() {
             </div>
           )}
 
-          <div className="mb-4">
-            <Button
-              icon={Upload}
-              label="Import from Excel"
-              onClick={() => setIsImportOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Button
+                icon={Upload}
+                label="Import from Excel"
+                onClick={() => setIsImportOpen(true)}
+                className="bg-green-600 hover:bg-green-700"
+              />
+            </div>
+
+            {/* Import Guide Button */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+              style={{
+                borderColor: "#e5e7eb",
+                backgroundColor: "white",
+                color: "#6b7280",
+              }}
+              title="Panduan Import Data"
+            >
+              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+              <span className="hidden sm:inline">Import Guide</span>
+            </button>
           </div>
 
           <Table
@@ -222,6 +241,11 @@ export default function StockMovementsPage() {
             isOpen={isImportOpen}
             onClose={() => setIsImportOpen(false)}
             onImportSuccess={() => setRefresh((p) => p + 1)}
+          />
+
+          <GuideImportStockMovementModal
+            isOpen={isGuideOpen}
+            onClose={() => setIsGuideOpen(false)}
           />
         </div>
       </div>

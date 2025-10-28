@@ -4,8 +4,9 @@ import Table from "../../components/ui/table/Table";
 import PurchasingForm from "../../components/features/purchasing/PurchasingForm";
 import ImportPurchasingModal from "../../components/features/purchasing/ImportPurchasingModal";
 import ImportPurchasingTransactionModal from "../../components/features/purchasing/ImportPurchasingTransactionModal";
+import GuideImportPurchasingModal from "../../components/features/purchasing/GuideImportPurchasingModal";
 import { useState, useEffect } from "react";
-import { Edit2, Trash2, Eye, Upload, Database } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload, Database, BookOpen } from "lucide-react";
 import { formatCurrency, formatDate } from "../../utils/helpers";
 import {
   createPurchasing,
@@ -27,6 +28,7 @@ export default function PurchasingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportTrxOpen, setIsImportTrxOpen] = useState(false);
   const [isImportOpenBalOpen, setIsImportOpenBalOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [selectedPurchasing, setSelectedPurchasing] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [suppliers, setSuppliers] = useState([]);
@@ -223,21 +225,37 @@ export default function PurchasingsPage() {
             </div>
           )}
 
-          <div className="mb-4">
-            <Button
-              icon={Upload}
-              label="Import from Excel"
-              onClick={() => setIsImportTrxOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Button
+                icon={Upload}
+                label="Import from Excel"
+                onClick={() => setIsImportTrxOpen(true)}
+                className="bg-green-600 hover:bg-green-700"
+              />
 
-            <Button
-              icon={Upload}
-              label="Import Opening Balance"
-              onClick={() => setIsImportOpenBalOpen(true)}
-              className="ml-2"
-              variant="secondary"
-            />
+              <Button
+                icon={Upload}
+                label="Import Opening Balance"
+                onClick={() => setIsImportOpenBalOpen(true)}
+                variant="secondary"
+              />
+            </div>
+
+            {/* Import Guide Button */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+              style={{
+                borderColor: "#e5e7eb",
+                backgroundColor: "white",
+                color: "#6b7280",
+              }}
+              title="Panduan Import Data"
+            >
+              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+              <span className="hidden sm:inline">Import Guide</span>
+            </button>
           </div>
 
           {/* ✅ Pass filtered fetch function */}
@@ -275,6 +293,11 @@ export default function PurchasingsPage() {
             isOpen={isImportOpenBalOpen}
             onClose={() => setIsImportOpenBalOpen(false)}
             onImportSuccess={() => setRefreshKey((p) => p + 1)}
+          />
+
+          <GuideImportPurchasingModal
+            isOpen={isGuideOpen}
+            onClose={() => setIsGuideOpen(false)}
           />
         </div>
       </div>

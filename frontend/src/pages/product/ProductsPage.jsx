@@ -4,7 +4,7 @@ import Button from "../../components/ui/button/Button";
 import ProductForm from "../../components/features/product/ProductForm";
 import ImportProductModal from "../../components/features/product/ImportProductModal";
 import { useState, useEffect } from "react";
-import { Edit2, Trash2, Eye, Upload } from "lucide-react";
+import { Edit2, Trash2, Eye, Upload, BookOpen } from "lucide-react";
 import {
   createProduct,
   deleteProduct,
@@ -13,12 +13,14 @@ import {
 } from "../../services/product_service";
 import { searchAccount } from "../../services/account_service";
 import ImportDataMasterModal from "../../components/features/import/ImportDataMasterModal";
+import GuideImportMasterDataModal from "../../components/features/product/GuideImportMasterDataModal";
 
 // const SAMPLE_PRODUCTS = [];
 
 export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -155,13 +157,30 @@ export default function ProductsPage() {
           </p>
 
           {/* Import Button */}
-          <div className="mb-4">
-            <Button
-              icon={Upload}
-              label="Import from Excel"
-              onClick={handleImport}
-              className="bg-green-600 hover:bg-green-700"
-            />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Button
+                icon={Upload}
+                label="Import from Excel"
+                onClick={handleImport}
+                className="bg-green-600 hover:bg-green-700"
+              />
+            </div>
+
+            {/* Import Guide Button */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+              style={{
+                borderColor: "#e5e7eb",
+                backgroundColor: "white",
+                color: "#6b7280",
+              }}
+              title="Panduan Import Data"
+            >
+              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+              <span className="hidden sm:inline">Import Guide</span>
+            </button>
           </div>
 
           <Table
@@ -194,6 +213,11 @@ export default function ProductsPage() {
             isOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onImportSuccess={handleImportSuccess}
+          />
+
+          <GuideImportMasterDataModal
+            isOpen={isGuideOpen}
+            onClose={() => setIsGuideOpen(false)}
           />
         </div>
       </div>
