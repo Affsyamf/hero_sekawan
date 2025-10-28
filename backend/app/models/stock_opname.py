@@ -12,7 +12,7 @@ class StockOpname(Base):
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)
 
-    details = relationship("StockOpnameDetail", back_populates="stock_opname", lazy='subquery')
+    details = relationship("StockOpnameDetail", back_populates="stock_opname", lazy='selectin', cascade="all, delete-orphan")
     
 class StockOpnameDetail(Base):
     __tablename__ = 'stock_opname_details'
@@ -25,8 +25,8 @@ class StockOpnameDetail(Base):
         Computed("system_quantity - physical_quantity")
     )
 
-    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="stock_opname_details", lazy='subquery')
+    product_id = Column(Integer, ForeignKey('products.id', ondelete="RESTRICT"), nullable=False)
+    product = relationship("Product", back_populates="stock_opname_details", lazy='selectin')
 
-    stock_opname_id = Column(Integer, ForeignKey('stock_opnames.id'), nullable=False)
-    stock_opname = relationship("StockOpname", back_populates="details", lazy='subquery')
+    stock_opname_id = Column(Integer, ForeignKey('stock_opnames.id', ondelete="CASCADE"), nullable=False)
+    stock_opname = relationship("StockOpname", back_populates="details", lazy='selectin')

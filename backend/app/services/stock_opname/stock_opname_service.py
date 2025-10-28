@@ -169,9 +169,9 @@ class StockOpnameService:
         #     if not key.startswith("_")
         # }
 
-        self.db.query(StockOpnameDetail).filter(
-            StockOpnameDetail.stock_opname_id == stock_opname_id
-        ).delete(synchronize_session=False)
+        # self.db.query(StockOpnameDetail).filter(
+        #     StockOpnameDetail.stock_opname_id == stock_opname_id
+        # ).delete(synchronize_session=False)
 
         # AuditLoggerService(self.db).log_delete(
         #     table_name=StockOpname.__tablename__,
