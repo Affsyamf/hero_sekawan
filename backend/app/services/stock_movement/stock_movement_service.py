@@ -139,9 +139,9 @@ class StockMovementService:
         if not stock_movement:
             return APIResponse.not_found(message=f"Stock Movement ID '{stock_movement_id}' not found.")
 
-        self.db.query(StockMovementDetail).filter(
-            StockMovementDetail.stock_movement_id == stock_movement_id
-        ).delete(synchronize_session=False)
+        # self.db.query(StockMovementDetail).filter(
+        #     StockMovementDetail.stock_movement_id == stock_movement_id
+        # ).delete(synchronize_session=False)
 
         self.db.delete(stock_movement)
 

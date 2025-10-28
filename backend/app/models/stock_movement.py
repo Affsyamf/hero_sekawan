@@ -11,7 +11,7 @@ class StockMovement(Base):
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)
 
-    details = relationship("StockMovementDetail", back_populates="stock_movement", lazy='subquery')
+    details = relationship("StockMovementDetail", back_populates="stock_movement", lazy='selectin', cascade="all, delete-orphan")
 
 class StockMovementDetail(Base):
     __tablename__ = 'stock_movement_details'
@@ -25,8 +25,8 @@ class StockMovementDetail(Base):
         Computed("quantity * unit_cost_used")
     )
 
-    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="stock_movement_details", lazy='subquery')
+    product_id = Column(Integer, ForeignKey('products.id', ondelete="RESTRICT"), nullable=False)
+    product = relationship("Product", back_populates="stock_movement_details", lazy='selectin')
 
-    stock_movement_id = Column(Integer, ForeignKey('stock_movements.id'), nullable=False)
-    stock_movement = relationship("StockMovement", back_populates="details", lazy='subquery')
+    stock_movement_id = Column(Integer, ForeignKey('stock_movements.id', ondelete="CASCADE"), nullable=False)
+    stock_movement = relationship("StockMovement", back_populates="details", lazy='selectin')
