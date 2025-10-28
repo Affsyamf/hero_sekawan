@@ -8,24 +8,24 @@ from app.utils.response import APIResponse
 from app.core import events
 from app.models import *
 
-from app.api.dashboard.routes import dashboard_router as dashboard_router
-from app.api.product.routes import product_router
-from app.api.account.routes import account_router
-from app.api.supplier.routes import supplier_router
-from app.api.design_type.routes import design_type_router
-from app.api.design.routes import design_router
-from app.api.purchasing.routes import purchasing_router
-from app.api.color_kitchen_batch.routes import color_kitchen_batch_router
-from app.api.color_kitchen_entry.routes import color_kitchen_entry_router
-from app.api.stock_movement.routes import stock_movement_router
-from app.api.stock_opname.routes import stock_opname_router
-from app.api.ledger.routes import ledger_router
+from app.routers.dashboard.routes import dashboard_router as dashboard_router
+from app.routers.product.routes import product_router
+from app.routers.account.routes import account_router
+from app.routers.supplier.routes import supplier_router
+from app.routers.design_type.routes import design_type_router
+from app.routers.design.routes import design_router
+from app.routers.purchasing.routes import purchasing_router
+from app.routers.color_kitchen_batch.routes import color_kitchen_batch_router
+from app.routers.color_kitchen_entry.routes import color_kitchen_entry_router
+from app.routers.stock_movement.routes import stock_movement_router
+from app.routers.stock_opname.routes import stock_opname_router
+from app.routers.ledger.routes import ledger_router
 
-from app.api.imports.routes import excel_import_router
-from app.api.import_lap_pembelian.routes import import_lap_pembelian_router
+from app.routers.imports.routes import excel_import_router
+from app.routers.import_lap_pembelian.routes import import_lap_pembelian_router
 
-from app.api.reporting.purchasing_report import router as purchasing_report_router
-from app.api.reporting.color_kitchen_report import router as color_kitchen_report_router
+from app.routers.reporting.purchasing_report import router as purchasing_report_router
+from app.routers.reporting.color_kitchen_report import router as color_kitchen_report_router
 
 load_dotenv()
 
