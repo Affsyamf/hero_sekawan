@@ -216,10 +216,6 @@ class ColorKitchenEntryService:
             if not key.startswith("_")
         }
 
-        self.db.query(ColorKitchenEntryDetail).filter(
-            ColorKitchenEntryDetail.color_kitchen_entry_id == entry_id
-        ).delete(synchronize_session=False)
-
         AuditLoggerService(self.db).log_delete(
             table_name=ColorKitchenEntry.__tablename__,
             record_id=entry_id,

@@ -4,19 +4,26 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from app.models import Base
-from app.models.enum.account_enum import AccountType
 from app.models.enum.registry import enum_column
+
+class AccountParent(Base):
+    __tablename__ = 'account_parents'
+    
+    id = Column(Integer, primary_key=True)
+    account_no = Column(Numeric, nullable=False, unique=True, index=True)
+
+    accounts = relationship("Account", back_populates="parent", lazy='selectin')
 
 class Account(Base):
     __tablename__ = 'accounts'
     
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    account_no = Column(Numeric, nullable=False, unique=True, index=True)
-    account_type = Column(enum_column(AccountType, name='account_type_enum'), nullable=False)
-    alias = Column(String, nullable=True)
+
+    parent_id = Column(Integer, ForeignKey('account_parents.id'))
+    parent = relationship("AccountParent", back_populates="accounts", lazy='selectin')
     
-    products = relationship("Product", back_populates="account", lazy='subquery')
+    products = relationship("Product", back_populates="account", lazy='selectin')
     
 class DesignType(Base):
     __tablename__ = "design_types"
@@ -24,4 +31,4 @@ class DesignType(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     
-    designs = relationship("Design", back_populates="type", lazy='subquery')
+    designs = relationship("Design", back_populates="type", lazy='selectin')

@@ -12,8 +12,8 @@ class ColorKitchenBatch(Base):
     date = Column(DateTime, default=datetime.utcnow)
     code = Column(String, nullable=False)  # Generated group code
     
-    entries = relationship("ColorKitchenEntry", back_populates="batch", lazy='subquery')
-    details = relationship("ColorKitchenBatchDetail", back_populates="batch", lazy='subquery')
+    entries = relationship("ColorKitchenEntry", back_populates="batch", lazy='selectin', cascade="all, delete-orphan")
+    details = relationship("ColorKitchenBatchDetail", back_populates="batch", lazy='selectin', cascade="all, delete-orphan")
 
 
 class ColorKitchenBatchDetail(Base):
@@ -31,8 +31,8 @@ class ColorKitchenBatchDetail(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     product = relationship("Product")
 
-    batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"), nullable=False)
-    batch = relationship("ColorKitchenBatch", back_populates="details", lazy='subquery')
+    batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id", ondelete="CASCADE"), nullable=False)
+    batch = relationship("ColorKitchenBatch", back_populates="details", lazy='selectin', cascade="all, delete-orphan")
     
 class ColorKitchenEntry(Base):
     __tablename__ = "color_kitchen_entries"
@@ -44,14 +44,14 @@ class ColorKitchenEntry(Base):
     paste_quantity = Column(Numeric(18, 2), nullable=False)
 
     design_id = Column(Integer, ForeignKey("designs.id"), nullable=False)
-    design = relationship("Design", back_populates="color_kitchen_entries", lazy='subquery')
+    design = relationship("Design", back_populates="color_kitchen_entries", lazy='selectin', cascade="all, delete-orphan")
 
     # link to batch (shared dyestuff)
-    batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id"))
-    batch = relationship("ColorKitchenBatch", back_populates="entries", lazy='subquery')
+    batch_id = Column(Integer, ForeignKey("color_kitchen_batches.id", ondelete="CASCADE"))
+    batch = relationship("ColorKitchenBatch", back_populates="entries", lazy='selectin', cascade="all, delete-orphan")
 
     # auxiliaries (per OPJ)
-    details = relationship("ColorKitchenEntryDetail", back_populates="color_kitchen_entry", lazy='subquery')
+    details = relationship("ColorKitchenEntryDetail", back_populates="color_kitchen_entry", lazy='selectin', cascade="all, delete-orphan")
 
 class ColorKitchenEntryDetail(Base):
     __tablename__ = 'color_kitchen_entry_details'
@@ -66,7 +66,7 @@ class ColorKitchenEntryDetail(Base):
     )
 
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    product = relationship("Product", back_populates="color_kitchen_entry_details", lazy='subquery')
+    product = relationship("Product", back_populates="color_kitchen_entry_details", lazy='selectin', cascade="all, delete-orphan")
 
-    color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id'), nullable=False)
-    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details", lazy='subquery')
+    color_kitchen_entry_id = Column(Integer, ForeignKey('color_kitchen_entries.id', ondelete="CASCADE"), nullable=False)
+    color_kitchen_entry = relationship("ColorKitchenEntry", back_populates="details", lazy='selectin', cascade="all, delete-orphan")

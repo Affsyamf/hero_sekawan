@@ -160,10 +160,6 @@ class ColorKitchenBatchService:
             if not key.startswith("_")
         }
 
-        self.db.query(ColorKitchenBatchDetail).filter(
-            ColorKitchenBatchDetail.batch_id == batch_id
-        ).delete(synchronize_session=False)
-
         AuditLoggerService(self.db).log_delete(
             table_name=ColorKitchenBatch.__tablename__,
             record_id=batch_id,
