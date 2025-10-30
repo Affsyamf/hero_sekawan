@@ -23,9 +23,9 @@ class MasterDataLapChemicalImportService(BaseImportService):
         df = pd.read_excel(xls, sheet_name="CHEMICAL", header=4)
 
         # Lookup target account
-        account = self.db.query(Account).filter(Account.name == "PERSEDIAAN_OBAT").first()
-        if not account:
-            raise ValueError("Account 'PERSEDIAAN_OBAT' not found in accounts table.")
+        # account = self.db.query(Account).filter(Account.name == "PERSEDIAAN_OBAT").first()
+        # if not account:
+        #     raise ValueError("Account 'PERSEDIAAN_OBAT' not found in accounts table.")
 
         updated, inserted, skipped = 0, 0, []
         seen_codes = set()  # prevent duplicates within this run
@@ -58,8 +58,8 @@ class MasterDataLapChemicalImportService(BaseImportService):
                 # Update existing product’s code/name/account if needed
                 if not product.code:
                     product.code = code
-                if not product.account_id:
-                    product.account_id = account.id
+                # if not product.account_id:
+                #     product.account_id = account.id
                 updated += 1
             else:
                 # Create new product
@@ -67,7 +67,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
                     code=code,
                     name=name,
                     unit=unit,
-                    account_id=account.id,
+                    # account_id=account.id,
                 )
                 self.db.add(new_product)
                 inserted += 1
@@ -79,7 +79,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
             "inserted": inserted,
             "skipped_count": len(skipped),
             "skipped_samples": skipped[:10],
-            "account_id_used": account.id,
+            # "account_id_used": account.id,
         }
     
     def preview(self, file: UploadFile):
@@ -87,9 +87,9 @@ class MasterDataLapChemicalImportService(BaseImportService):
         xls = pd.ExcelFile(BytesIO(contents))
         df = pd.read_excel(xls, sheet_name="CHEMICAL", header=4)
 
-        account = self.db.query(Account).filter(Account.name == "PERSEDIAAN_OBAT").first()
-        if not account:
-            raise ValueError("Account 'PERSEDIAAN_OBAT' not found in accounts table.")
+        # account = self.db.query(Account).filter(Account.name == "PERSEDIAAN_OBAT").first()
+        # if not account:
+        #     raise ValueError("Account 'PERSEDIAAN_OBAT' not found in accounts table.")
 
         seen_codes = set()
         to_insert, to_update, skipped = [], [], []
@@ -123,8 +123,8 @@ class MasterDataLapChemicalImportService(BaseImportService):
                         "code": code,
                         "name": name,
                         "unit": unit,
-                        "current_account": product.account_id,
-                        "will_set_account": account.id,
+                        # "current_account": product.account_id,
+                        # "will_set_account": account.id,
                     })
                 else:
                     skipped.append(code)
@@ -133,7 +133,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
                     "code": code,
                     "name": name,
                     "unit": unit,
-                    "account_id": account.id,
+                    # "account_id": account.id,
                 })
 
         return APIResponse.ok(
@@ -143,7 +143,7 @@ class MasterDataLapChemicalImportService(BaseImportService):
                     "to_insert": len(to_insert),
                     "to_update": len(to_update),
                     "skipped": len(skipped),
-                    "account_id_used": account.id,
+                    # "account_id_used": account.id,
                 },
                 "insert_samples": to_insert[:30],
                 "update_samples": to_update[:30],

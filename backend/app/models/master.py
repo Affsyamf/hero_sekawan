@@ -23,7 +23,7 @@ class Product(Base):
     name = Column(String, nullable=False, unique=True)
     unit = Column(String, nullable=True)
 
-    account_id = Column(Integer, ForeignKey('accounts.id'))
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
     account = relationship("Account", back_populates="products", lazy='joined')
 
     purchasing_details = relationship("PurchasingDetail", back_populates="product", lazy='select')
