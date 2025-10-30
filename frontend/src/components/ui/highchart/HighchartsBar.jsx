@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import { formatCompactCurrency } from "../../../utils/helpers";
+import { chartColors } from "../../../utils/chartColors";
 
 const HighchartsBar = ({
   initialData,
@@ -31,19 +32,21 @@ const HighchartsBar = ({
   const categories = data?.map((item) => item.key) || [];
 
   const series =
-    datasets?.map((dataset) => ({
-      name: dataset.label ?? dataset.key,
-      data: data?.map((item) => item[dataset.key]) || [],
-      color:
-        dataset.color === "primary"
-          ? "#3b82f6"
-          : dataset.color === "warning"
-          ? "#f59e0b"
-          : "#6b7280",
-      type: dataset.type || "column",
-      stacking:
-        dataset.type === "column" && dataset.stacked ? "normal" : undefined,
-    })) || [];
+    datasets?.map((dataset, index) => {
+      const assignedColor =
+        dataset.color && dataset.color.startsWith("#")
+          ? dataset.color // use raw hex if provided
+          : chartColors[index % chartColors.length]; // fallback cycle
+
+      return {
+        name: dataset.label ?? dataset.key,
+        data: data?.map((item) => item[dataset.key]) || [],
+        color: assignedColor,
+        type: dataset.type || "column",
+        stacking:
+          dataset.type === "column" && dataset.stacked ? "normal" : undefined,
+      };
+    }) || [];
 
   const summary =
     datasets?.map((dataset) => {
@@ -103,6 +106,23 @@ const HighchartsBar = ({
       borderColor: "#e5e7eb",
       borderRadius: 6,
       padding: 10,
+      outside: true,
+      zIndex: 999999,
+      positioner: function (labelWidth, labelHeight, point) {
+        const chart = this.chart;
+        const chartWidth = chart.chartWidth;
+
+        // base x = point position + chart offset
+        let x = point.plotX + chart.plotLeft + 20; // prefer right
+        const y = point.plotY + chart.plotTop - labelHeight / 2;
+
+        // if tooltip would overflow right edge → flip to left side
+        if (x + labelWidth > chartWidth) {
+          x = point.plotX + chart.plotLeft - labelWidth - 20;
+        }
+
+        return { x, y };
+      },
       formatter: function () {
         const header =
           (this.points &&

@@ -28,7 +28,7 @@ class PurchasingTrendService(BaseReportService):
         db: Session = self.db
         start_date = filters.get("start_date")
         end_date = filters.get("end_date")
-        account_type = filters.get("account_type")
+        account_name = filters.get("account_name")
         granularity = (filters.get("granularity") or "monthly").lower()
 
         # Determine SQL trunc unit & date format
@@ -48,30 +48,20 @@ class PurchasingTrendService(BaseReportService):
         period_expr = func.date_trunc(trunc_unit, Purchasing.date).label("period")
 
         # Compute category-based sums
-        goods_sum = func.sum(
-            case(
-                (Account.account_type == "goods", PurchasingDetail.quantity * PurchasingDetail.price),
-                else_=0
-            )
-        ).label("goods_value")
+        period_expr = func.date_trunc(trunc_unit, Purchasing.date).label("period")
 
-        service_sum = func.sum(
-            case(
-                (Account.account_type == "service", PurchasingDetail.quantity * PurchasingDetail.price),
-                else_=0
-            )
-        ).label("service_value")
-
-        total_sum = func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value")
-
-        # Base query
+        # Base query: sum by period + account name
         q = (
-            db.query(period_expr, goods_sum, service_sum, total_sum)
+            db.query(
+                period_expr.label("period"),
+                Account.name.label("account_name"),
+                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
+            )
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
-            .group_by(period_expr)
-            .order_by(period_expr)
+            .group_by(period_expr, Account.name)
+            .order_by(period_expr, Account.name)
         )
 
         # Filters
@@ -79,29 +69,36 @@ class PurchasingTrendService(BaseReportService):
             q = q.filter(Purchasing.date >= start_date)
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
-        if account_type:
-            q = q.filter(Account.account_type == account_type)
+        if account_name:
+            q = q.filter(Account.name == account_name)
 
         rows = q.all()
 
         # Transform results
-        data = []
+        grouped = {}
         for r in rows:
             period_dt = r.period
             period_label = period_dt.strftime(fmt)
-
             week_start = week_end = None
             if granularity == "weekly":
                 week_start = period_dt.date()
                 week_end = week_start + timedelta(days=6)
 
-            data.append({
-                "period": period_label,
-                "week_start": week_start.isoformat() if week_start else None,
-                "week_end": week_end.isoformat() if week_end else None,
-                "goods": float(r.goods_value or 0),
-                "service": float(r.service_value or 0),
-                "total": float(r.total_value or 0),
-            })
+            if period_label not in grouped:
+                grouped[period_label] = {
+                    "period": period_label,
+                    "week_start": week_start.isoformat() if week_start else None,
+                    "week_end": week_end.isoformat() if week_end else None,
+                    # "accounts": {},
+                    "total": 0.0,
+                }
+
+            val = float(r.total_value or 0)
+            # grouped[period_label]["accounts"][r.account_name] = val
+            grouped[period_label][r.account_name] = val
+            grouped[period_label]["total"] += val
+
+        # Convert to list
+        data = list(grouped.values())
 
         return data

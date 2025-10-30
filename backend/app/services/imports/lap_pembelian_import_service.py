@@ -151,7 +151,7 @@ class LapPembelianImportService(BaseImportService):
         if affected_product_ids:
             update_avg_cost_for_products(self.db.connection(), list(affected_product_ids))
 
-        refresh_product_avg_cost(self.db)
+        # refresh_product_avg_cost(self.db)
 
         def sanitize(obj):
             if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):

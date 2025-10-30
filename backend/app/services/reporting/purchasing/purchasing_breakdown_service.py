@@ -34,15 +34,15 @@ class PurchasingBreakdownService(BaseReportService):
 
         q = (
             db.query(
-                Account.account_type.label("type"),
+                Account.name.label("type"),
                 func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
             )
             .select_from(PurchasingDetail)
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            .group_by(Account.account_type)
-            .order_by(Account.account_type)
+            .group_by(Account.name)
+            .order_by(Account.name)
         )
 
         if start_date:

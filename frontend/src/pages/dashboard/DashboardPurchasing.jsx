@@ -29,6 +29,10 @@ import {
   formatNumber,
 } from "../../utils/helpers";
 import useDateFilterStore from "../../stores/useDateFilterStore";
+import {
+  buildDatasetsFromData,
+  hydrateDataForChart,
+} from "../../utils/chartHelper";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -119,7 +123,7 @@ export default function DashboardPurchasing() {
 
       setPurchasingData((prev) => ({
         ...prev,
-        purchase_trend: transformTrendData(trend.data),
+        trendData: transformTrendData(trend.data),
       }));
     } catch (error) {
       console.error("Error fetching trend data:", error);
@@ -170,11 +174,11 @@ export default function DashboardPurchasing() {
         displayPeriod = formatPeriod(item.period);
       }
 
+      console.log(item);
+
       return {
         key: displayPeriod,
-        goods: item.goods || 0,
-        service: item.service || 0,
-        total: item.total || 0,
+        ...item,
       };
     });
   };
@@ -208,6 +212,8 @@ export default function DashboardPurchasing() {
     }));
   };
 
+  const getTrendDatasets = (data) => {};
+
   const transformApiData = (summary, trend, breakdown, suppliers, products) => {
     const metrics = {
       total_purchases: {
@@ -224,9 +230,9 @@ export default function DashboardPurchasing() {
       },
     };
 
-    const purchase_trend = transformTrendData(trend);
+    const trendData = transformTrendData(trend);
 
-    const goods_vs_jasa = (breakdown || []).map((item) => ({
+    const donutData = (breakdown || []).map((item) => ({
       key: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
       value: item.value || 0,
       drilldown: true,
@@ -252,8 +258,8 @@ export default function DashboardPurchasing() {
 
     return {
       metrics,
-      purchase_trend,
-      goods_vs_jasa,
+      trendData,
+      donutData,
       top_suppliers,
       top_purchases,
       most_purchased,
@@ -369,8 +375,8 @@ export default function DashboardPurchasing() {
 
   const {
     metrics,
-    purchase_trend,
-    goods_vs_jasa,
+    trendData,
+    donutData,
     top_suppliers,
     top_purchases,
     most_purchased,
@@ -496,33 +502,20 @@ export default function DashboardPurchasing() {
                 </select>
               </div>
               <Highchart.HighchartsBar
-                initialData={purchase_trend}
+                initialData={hydrateDataForChart(trendData, [
+                  "period",
+                  "week_start",
+                  "week_end",
+                ])}
                 title=""
                 subtitle=""
-                datasets={[
-                  {
-                    key: "goods",
-                    label: "Goods",
-                    color: "primary",
-                    type: "column",
-                    stacked: true,
-                  },
-                  {
-                    key: "service",
-                    label: "Jasa",
-                    color: "warning",
-                    type: "column",
-                    stacked: true,
-                  },
-                  {
-                    key: "total",
-                    label: "Total",
-                    color: "neutral",
-                    type: "spline",
-                  },
-                ]}
-                onFetchData={() => purchase_trend}
-                showSummary={true}
+                datasets={buildDatasetsFromData(trendData, [
+                  "period",
+                  "week_start",
+                  "week_end",
+                ])}
+                onFetchData={() => trendData}
+                showSummary={false}
               />
             </Card>
           </div>
@@ -530,7 +523,7 @@ export default function DashboardPurchasing() {
           <div className="lg:col-span-1">
             <Card className="h-full ">
               <Highchart.HighchartsDonut
-                data={goods_vs_jasa}
+                data={donutData}
                 // centerText={{
                 //   value: formatCompactCurrency(metrics.total_purchases.value),
                 //   label: "Total",

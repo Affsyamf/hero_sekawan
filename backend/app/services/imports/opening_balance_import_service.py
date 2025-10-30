@@ -107,7 +107,7 @@ class OpeningBalanceImportService(BaseImportService):
         if affected_products:
             update_avg_cost_for_products(self.db.connection(), list(affected_products))
 
-        refresh_product_avg_cost(self.db)
+        # refresh_product_avg_cost(self.db)
         
 
         return APIResponse.ok(
