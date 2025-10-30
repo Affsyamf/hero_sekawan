@@ -26,13 +26,20 @@ const menuItems = [
     icon: FileBarChart2,
     children: [
       { label: "Dashboard", path: "/" },
-      { label: "Purchasing", icon: FileBarChart2, path: "/dashboard/purchasings" },
-      { label: "Color Kitchen", icon: FileBarChart2, path: "/dashboard/color-kitchens" },
+      {
+        label: "Purchasing",
+        icon: FileBarChart2,
+        path: "/dashboard/purchasings",
+      },
+      {
+        label: "Color Kitchen",
+        icon: FileBarChart2,
+        path: "/dashboard/color-kitchens",
+      },
     ],
   },
-  
+
   // { label: "Overview", icon: Home, path: "/" },
-  
 
   { isHeader: true, text: "Master Data" },
   {
@@ -42,7 +49,7 @@ const menuItems = [
       { label: "Products", path: "/products" },
       { label: "Suppliers", path: "/suppliers" },
       { label: "Accounts", path: "/accounts" },
-      { label: "Design Type", path: "/design-types" },
+      // { label: "Design Type", path: "/design-types" },
       { label: "Design", path: "/designs" },
     ],
   },

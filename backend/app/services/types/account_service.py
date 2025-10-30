@@ -17,23 +17,20 @@ class AccountService:
         self.db = db
 
     def list_account(self, request: ListRequest):
-        account = self.db.query(Account)
+        account = self.db.query(Account).join(Account.parent)
 
         if request.q:
             like = f"%{request.q}%"
             account = account.filter(
                 or_(
                     Account.name.ilike(like),
-                    Account.alias.ilike(like),
                 )
             ).order_by(Account.id)
 
         return APIResponse.paginated(account, request, lambda account: {
                 "id": account.id,
                 "name": account.name,
-                "account_no": str(account.account_no) if account.account_no else None,
-                "account_type": account.account_type.value if account.account_type else None,
-                "alias": account.alias,
+                "account_no": str(account.parent.account_no) if account.parent.account_no else None,
                 # "products": [{
                 #     "id": product.id,
                 #     "code": product.code,
@@ -44,7 +41,7 @@ class AccountService:
         )
 
     def get_account(self, account_id: int):
-        account = self.db.query(Account).filter(Account.id == account_id).first()
+        account = self.db.query(Account).join(Account.parent).filter(Account.id == account_id).first()
 
         if not account:
             return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
@@ -52,7 +49,7 @@ class AccountService:
         response = {
             "id": account.id,
             "name": account.name,
-            "account_no": str(account.account_no) if account.account_no else None,
+            "account_no": str(account.parent.account_no) if account.parent.account_no else None,
             "account_type": account.account_type.value if account.account_type else None,
             "alias": account.alias,
             "products": [{

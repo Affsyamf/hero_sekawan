@@ -3,8 +3,12 @@ import { useState } from "react";
 import AccountForm from "../../components/features/account/AccountForm";
 import Table from "../../components/ui/table/Table";
 import MainLayout from "../../layouts/MainLayout/MainLayout";
-import { createAccount, deleteAccount, searchAccount, updateAccount } from "../../services/account_service";
-
+import {
+  createAccount,
+  deleteAccount,
+  searchAccount,
+  updateAccount,
+} from "../../services/account_service";
 
 export default function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,14 +75,6 @@ export default function AccountsPage() {
         <span className="font-medium text-primary-text">{value}</span>
       ),
     },
-    {
-      key: "alias",
-      label: "Alias",
-      sortable: true,
-      render: (value) => (
-        <span className="text-secondary-text">{value || "-"}</span>
-      ),
-    },
   ];
 
   const handleAdd = () => {
@@ -121,7 +117,7 @@ export default function AccountsPage() {
           ([_, value]) => value != null && value !== ""
         )
       );
-      
+
       if (payload.id) {
         await updateAccount(payload.id, payload);
       } else {
@@ -167,9 +163,7 @@ export default function AccountsPage() {
           <h1 className="mb-1 text-2xl font-bold text-primary-text">
             Account Management
           </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage chart of accounts with account numbers and aliases.
-          </p>
+          <p className="mb-6 text-secondary-text">Manage accounts</p>
 
           <Table
             key={refreshKey}
@@ -181,12 +175,12 @@ export default function AccountsPage() {
             showDateRangeFilter={false}
           />
 
-          <AccountForm
+          {/* <AccountForm
             account={selectedAccount}
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
-          />
+          /> */}
         </div>
       </div>
     </MainLayout>
