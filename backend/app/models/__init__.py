@@ -29,7 +29,7 @@ __all__ = [
     # stock_opname.py
     "StockOpname", "StockOpnameDetail",
     # types.py
-    "Account", "DesignType",
+    "Account", "DesignType", "AccountParent",
     # audit.py
     "AuditColumnLog",
     # product_avg_cost.py

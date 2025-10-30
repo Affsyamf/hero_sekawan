@@ -3,7 +3,6 @@ from sqlalchemy import Enum as SQLAlchemyEnum
 
 # Central registry
 ENUM_NAMES = {
-    "accounttype": "account_type_enum",
     "ledgerref": "ledger_ref_enum",
     "ledgerlocation": "ledger_location_enum",
     # add more here

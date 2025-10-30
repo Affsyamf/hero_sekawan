@@ -11,8 +11,9 @@ class AccountParent(Base):
     
     id = Column(Integer, primary_key=True)
     account_no = Column(Numeric, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=True)
 
-    accounts = relationship("Account", back_populates="parent", lazy='selectin')
+    accounts = relationship("Account", back_populates="parent", lazy='selectin', cascade="all, delete-orphan")
 
 class Account(Base):
     __tablename__ = 'accounts'
@@ -20,7 +21,7 @@ class Account(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
 
-    parent_id = Column(Integer, ForeignKey('account_parents.id'))
+    parent_id = Column(Integer, ForeignKey('account_parents.id', ondelete="CASCADE"))
     parent = relationship("AccountParent", back_populates="accounts", lazy='selectin')
     
     products = relationship("Product", back_populates="account", lazy='selectin')

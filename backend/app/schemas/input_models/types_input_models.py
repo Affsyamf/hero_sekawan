@@ -1,7 +1,6 @@
 from typing import Optional
 from decimal import Decimal
 from pydantic import BaseModel
-from app.models.enum.account_enum import AccountType
 
 
 # ===============================
@@ -10,14 +9,14 @@ from app.models.enum.account_enum import AccountType
 class AccountCreate(BaseModel):
     name: str
     account_no: Decimal
-    account_type: AccountType
+    # account_type: AccountType
     alias: Optional[str] = None
 
 
 class AccountUpdate(BaseModel):
     name: Optional[str] = None
     account_no: Optional[Decimal] = None
-    account_type: Optional[AccountType] = None
+    # account_type: Optional[AccountType] = None
     alias: Optional[str] = None
 
 

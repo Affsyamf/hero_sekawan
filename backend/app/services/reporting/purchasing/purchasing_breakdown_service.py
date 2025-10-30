@@ -5,7 +5,6 @@ from sqlalchemy import func
 from app.utils.response import APIResponse
 
 from app.models import Purchasing, PurchasingDetail, Product, Account
-from app.models.enum.account_enum import AccountType
 from app.services.reporting.base_reporting_service import BaseReportService
 
 

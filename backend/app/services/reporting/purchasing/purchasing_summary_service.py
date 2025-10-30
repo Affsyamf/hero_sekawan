@@ -2,7 +2,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models import Product, Account, Purchasing, PurchasingDetail, ProductAvgCostCache
-from app.models.enum.account_enum import AccountType
 from app.services.reporting.base_reporting_service import BaseReportService
 
 from app.utils.response import APIResponse
@@ -45,8 +44,8 @@ class PurchasingSummaryService(BaseReportService):
             q = q.filter(Purchasing.date >= start_date)
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
-        if account_type and isinstance(account_type, AccountType):
-            q = q.filter(Account.account_type == account_type.value)
+        # if account_type and isinstance(account_type, AccountType):
+        #     q = q.filter(Account.account_type == account_type.value)
 
         total_row = q.one_or_none()
         total_value = float(total_row.total_value or 0) if total_row else 0
@@ -61,14 +60,14 @@ class PurchasingSummaryService(BaseReportService):
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            .filter(Account.account_type == AccountType.Goods.value)
+            # .filter(Account.account_type == AccountType.Goods.value)
         )
         jasa_total = (
             db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            .filter(Account.account_type == AccountType.Service.value)
+            # .filter(Account.account_type == AccountType.Service.value)
         )
         if start_date:
             goods_total = goods_total.filter(Purchasing.date >= start_date)
