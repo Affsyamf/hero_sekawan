@@ -21,29 +21,45 @@ def refresh_product_avg_cost(db: Session):
 def get_avg_cost_for_product(db: Session, product_id: int) -> float | None:
     """Return the precomputed average cost for a product from the materialized view."""
     result = (
-        db.query(ProductAvgCost)
-        .filter(ProductAvgCost.product_id == product_id)
+        db.query(ProductAvgCostCache)
+        .filter(ProductAvgCostCache.product_id == product_id)
         .first()
     )
     return result.avg_cost if result else None
 
 def update_avg_cost_for_products(conn_or_engine, product_ids: list[int]):
     """
-    Recompute avg cost for one or many products using a single raw SQL upsert.
-    Works with both a Connection or Engine.
+    Recompute avg cost for products (with and without tax).
+    - avg_cost       = pure base price per unit
+    - avg_cost_ppn   = base price + ppn - pph (net cost)
     """
     if not product_ids:
         return
 
     sql = text("""
-        INSERT INTO product_avg_cost_cache (product_id, total_qty_in, total_value_in, avg_cost, last_updated)
+        INSERT INTO product_avg_cost_cache (
+            product_id,
+            total_qty_in,
+            total_value_in,
+            avg_cost,
+            avg_cost_ppn,
+            last_updated
+        )
         SELECT
             pd.product_id,
             SUM(pd.quantity) AS total_qty_in,
             SUM(pd.quantity * pd.price) AS total_value_in,
+
+            -- Pure average cost (no tax)
             CASE WHEN SUM(pd.quantity) > 0 THEN
                 SUM(pd.quantity * pd.price) / SUM(pd.quantity)
             ELSE 0 END AS avg_cost,
+
+            -- Average cost with tax: (price + ppn - pph)
+            CASE WHEN SUM(pd.quantity) > 0 THEN
+                SUM(pd.quantity * (pd.price + COALESCE(pd.ppn, 0) - COALESCE(pd.pph, 0))) / SUM(pd.quantity)
+            ELSE 0 END AS avg_cost_ppn,
+
             NOW()
         FROM purchasing_details pd
         WHERE pd.product_id = ANY(:pids)
@@ -53,10 +69,10 @@ def update_avg_cost_for_products(conn_or_engine, product_ids: list[int]):
             total_qty_in = EXCLUDED.total_qty_in,
             total_value_in = EXCLUDED.total_value_in,
             avg_cost = EXCLUDED.avg_cost,
+            avg_cost_ppn = EXCLUDED.avg_cost_ppn,
             last_updated = NOW();
     """)
 
-    # Accept both Connection and Engine
     if isinstance(conn_or_engine, Engine):
         with conn_or_engine.begin() as conn:
             conn.execute(sql, {"pids": product_ids})

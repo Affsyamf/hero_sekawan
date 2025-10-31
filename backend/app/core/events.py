@@ -17,8 +17,8 @@ def _get_purchasing(connection, purchasing_id):
 
 @event.listens_for(PurchasingDetail, "after_insert")
 def create_ledger_entry(mapper, connection, target):
-    if not should_skip_cost_cache_updates():
-        update_avg_cost_for_products(connection, [target.product_id])
+    # if not should_skip_cost_cache_updates():
+    update_avg_cost_for_products(connection, [target.product_id])
     
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
@@ -40,8 +40,8 @@ def create_ledger_entry(mapper, connection, target):
 
 @event.listens_for(PurchasingDetail, "after_update")
 def update_ledger_entry(mapper, connection, target):
-    if not should_skip_cost_cache_updates():
-        update_avg_cost_for_products(connection, [target.product_id])
+    # if not should_skip_cost_cache_updates():
+    update_avg_cost_for_products(connection, [target.product_id])
     
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
@@ -61,8 +61,8 @@ def update_ledger_entry(mapper, connection, target):
 
 @event.listens_for(PurchasingDetail, "after_delete")
 def delete_ledger_entry(mapper, connection, target):
-    if not should_skip_cost_cache_updates():
-        update_avg_cost_for_products(connection, [target.product_id])
+    # if not should_skip_cost_cache_updates():
+    update_avg_cost_for_products(connection, [target.product_id])
 
     purchasing = _get_purchasing(connection, target.purchasing_id)
     if not purchasing:
