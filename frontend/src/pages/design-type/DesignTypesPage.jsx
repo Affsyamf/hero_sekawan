@@ -2,7 +2,6 @@ import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import DesignTypeForm from "../../components/features/design-type/DesignTypeForm";
 import Table from "../../components/ui/table/Table";
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createDesignType,
   deleteDesignType,
@@ -106,34 +105,32 @@ export default function DesignTypesPage() {
   );
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Design Type Management
-          </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage design type categories for your designs.
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Design Type Management
+        </h1>
+        <p className="mb-6 text-secondary-text">
+          Manage design type categories for your designs.
+        </p>
 
-          <Table
-            key={refreshKey}
-            columns={columns}
-            fetchData={searchDesignType}
-            actions={renderActions}
-            onCreate={handleAdd}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
+        <Table
+          key={refreshKey}
+          columns={columns}
+          fetchData={searchDesignType}
+          actions={renderActions}
+          onCreate={handleAdd}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
 
-          <DesignTypeForm
-            designType={selectedDesignType}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            onSave={handleSave}
-          />
-        </div>
+        <DesignTypeForm
+          designType={selectedDesignType}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

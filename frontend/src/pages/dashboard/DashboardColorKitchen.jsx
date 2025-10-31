@@ -16,7 +16,6 @@ import {
   Building2,
   X,
 } from "lucide-react";
-import { MainLayout } from "../../layouts";
 import { useEffect, useState } from "react";
 import {
   formatNumber,
@@ -269,47 +268,39 @@ export default function DashboardColorKitchen() {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-300 rounded-full border-t-primary animate-spin"></div>
-            <p className="text-sm text-gray-600">
-              Loading color kitchen data...
-            </p>
-          </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-300 rounded-full border-t-primary animate-spin"></div>
+          <p className="text-sm text-gray-600">Loading color kitchen data...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (!dateRange?.dateFrom || !dateRange?.dateTo) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="mb-2 text-gray-600">No date range selected</p>
-            <p className="text-sm text-gray-500">
-              Please select a date range from the global filter to view color
-              kitchen data
-            </p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="mb-2 text-gray-600">No date range selected</p>
+          <p className="text-sm text-gray-500">
+            Please select a date range from the global filter to view color
+            kitchen data
+          </p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (!ckData) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <p className="mb-2 text-gray-600">No data available</p>
-            <p className="text-sm text-gray-500">
-              Please check your date range or try again later
-            </p>
-          </div>
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="mb-2 text-gray-600">No data available</p>
+          <p className="text-sm text-gray-500">
+            Please check your date range or try again later
+          </p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -330,302 +321,300 @@ export default function DashboardColorKitchen() {
   } = ckData;
 
   return (
-    <MainLayout>
-      <div className="max-w-full space-y-4 p-0.5 md:p-1">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">
-              Color Kitchen Dashboard
-            </h1>
-            <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
-              Monitor chemical usage, cost analysis, dan trend color kitchen
-            </p>
-          </div>
-          <div>
-            <Button
-              onClick={handleExport}
-              disabled={exporting}
-              label={exporting ? "Exporting..." : "Export Report"}
-              icon={Download}
-              className="text-white bg-green-600 hover:bg-green-700"
-            />
-          </div>
+    <div className="max-w-full space-y-4 p-0.5 md:p-1">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">
+            Color Kitchen Dashboard
+          </h1>
+          <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
+            Monitor chemical usage, cost analysis, dan trend color kitchen
+          </p>
         </div>
-
-        {/* Active Filter Display */}
-        {dateRange && (
-          <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
-            <p className="text-sm text-blue-800">
-              <span className="font-semibold">📅 Active Filter:</span>{" "}
-              {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
-              {dateRange.mode === "year" && `Year ${dateRange.year}`}
-              {dateRange.mode === "month-year" && (
-                <>
-                  {new Date(
-                    dateRange.year,
-                    dateRange.month - 1
-                  ).toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </>
-              )}
-              {(dateRange.mode === "days" || !dateRange.mode) && (
-                <>
-                  {formatDate(dateRange.dateFrom)} to{" "}
-                  {formatDate(dateRange.dateTo)}
-                  {dateRange.days !== undefined && (
-                    <span className="ml-2 text-xs">
-                      (
-                      {dateRange.days === 0
-                        ? "Today"
-                        : `Last ${dateRange.days} days`}
-                      )
-                    </span>
-                  )}
-                </>
-              )}
-            </p>
-          </div>
-        )}
-
-        {/* KPI Cards - Row 1 */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-          <Card className="relative overflow-hidden border-l-4 border-l-primary">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-lg md:w-12 md:h-12 bg-primary/10">
-                <Layers className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-600 truncate md:text-sm">
-                  Total Batch
-                </p>
-                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                  {formatNumber(metrics.total_batch.value)}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg md:w-12 md:h-12">
-                <FileText className="w-5 h-5 text-blue-600 md:w-6 md:h-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-600 truncate md:text-sm">
-                  Total Entries
-                </p>
-                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                  {formatNumber(metrics.total_entries.value)}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg md:w-12 md:h-12">
-                <Package2 className="w-5 h-5 text-purple-600 md:w-6 md:h-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-600 truncate md:text-sm">
-                  Total Rolls
-                </p>
-                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                  {formatNumber(metrics.total_rolls.value)}
-                </p>
-              </div>
-            </div>
-          </Card>
+        <div>
+          <Button
+            onClick={handleExport}
+            disabled={exporting}
+            label={exporting ? "Exporting..." : "Export Report"}
+            icon={Download}
+            className="text-white bg-green-600 hover:bg-green-700"
+          />
         </div>
+      </div>
 
-        {/* KPI Cards - Row 2 */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-          <Card className="relative overflow-hidden border-l-4 border-l-green-500">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg md:w-12 md:h-12">
-                <DollarSign className="w-5 h-5 text-green-600 md:w-6 md:h-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-600 truncate md:text-sm">
-                  Avg Cost/Batch
-                </p>
-                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                  {formatCompactCurrency(metrics.avg_cost_per_batch.value)}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg md:w-12 md:h-12">
-                <TrendingUp className="w-5 h-5 text-orange-600 md:w-6 md:h-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-600 truncate md:text-sm">
-                  Avg Cost/Entry
-                </p>
-                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                  {formatCompactCurrency(metrics.avg_cost_per_entry.value)}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="relative overflow-hidden border-l-4 border-l-red-500">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg md:w-12 md:h-12">
-                <DollarSign className="w-5 h-5 text-red-600 md:w-6 md:h-6" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-600 truncate md:text-sm">
-                  Total Cost
-                </p>
-                <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                  {formatCompactCurrency(metrics.total_cost.value)}
-                </p>
-              </div>
-            </div>
-          </Card>
+      {/* Active Filter Display */}
+      {dateRange && (
+        <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+          <p className="text-sm text-blue-800">
+            <span className="font-semibold">📅 Active Filter:</span>{" "}
+            {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+            {dateRange.mode === "year" && `Year ${dateRange.year}`}
+            {dateRange.mode === "month-year" && (
+              <>
+                {new Date(
+                  dateRange.year,
+                  dateRange.month - 1
+                ).toLocaleDateString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </>
+            )}
+            {(dateRange.mode === "days" || !dateRange.mode) && (
+              <>
+                {formatDate(dateRange.dateFrom)} to{" "}
+                {formatDate(dateRange.dateTo)}
+                {dateRange.days !== undefined && (
+                  <span className="ml-2 text-xs">
+                    (
+                    {dateRange.days === 0
+                      ? "Today"
+                      : `Last ${dateRange.days} days`}
+                    )
+                  </span>
+                )}
+              </>
+            )}
+          </p>
         </div>
+      )}
 
-        {/* Main Charts Row */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Card className="w-full h-full">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                    Chemical Usage Trend
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    Trend penggunaan dyes dan auxiliaries
-                  </p>
-                </div>
-                <select
-                  value={trendGranularity}
-                  onChange={(e) => setTrendGranularity(e.target.value)}
-                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
-                >
-                  <option value="daily">Perhari</option>
-                  <option value="weekly">Perminggu</option>
-                  <option value="monthly">Perbulan</option>
-                  <option value="yearly">Pertahun</option>
-                </select>
-              </div>
-              <Highchart.HighchartsBar
-                initialData={trendData}
-                title=""
-                subtitle=""
-                datasets={[
-                  {
-                    key: "dyes",
-                    label: "Dyes",
-                    color: "primary",
-                    type: "column",
-                    stacked: true,
-                  },
-                  {
-                    key: "auxiliaries",
-                    label: "Auxiliaries",
-                    color: "warning",
-                    type: "column",
-                    stacked: true,
-                  },
-                  {
-                    key: "total",
-                    label: "Total",
-                    color: "neutral",
-                    type: "spline",
-                  },
-                ]}
-                onFetchData={() => trendData}
-                showSummary={true}
-              />
-            </Card>
+      {/* KPI Cards - Row 1 */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+        <Card className="relative overflow-hidden border-l-4 border-l-primary">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-lg md:w-12 md:h-12 bg-primary/10">
+              <Layers className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-600 truncate md:text-sm">
+                Total Batch
+              </p>
+              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                {formatNumber(metrics.total_batch.value)}
+              </p>
+            </div>
           </div>
+        </Card>
 
-          <div className="lg:col-span-1">
-            <Card className="h-full ">
-              <Highchart.HighchartsDonut
-                data={chemicalSummaryTransformed}
-                // centerText={{
-                //   value: formatCompactCurrency(metrics.total_cost.value),
-                //   label: "Total Cost",
-                // }}
-                title="Chemical Cost Breakdown"
-                subtitle="Dyes vs Auxiliaries"
-                onDrilldownRequest={async ({ _, context, depth }) => {
-                  return onDrilldown(context, depth);
-                }}
-                showSummary={true}
-              />
-            </Card>
+        <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg md:w-12 md:h-12">
+              <FileText className="w-5 h-5 text-blue-600 md:w-6 md:h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-600 truncate md:text-sm">
+                Total Entries
+              </p>
+              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                {formatNumber(metrics.total_entries.value)}
+              </p>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Top Products */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
-          {/* Top 5 Suppliers */}
-          <Card>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
-                <Building2 className="w-4 h-4 text-purple-600" />
-              </div>
+        <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg md:w-12 md:h-12">
+              <Package2 className="w-5 h-5 text-purple-600 md:w-6 md:h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-600 truncate md:text-sm">
+                Total Rolls
+              </p>
+              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                {formatNumber(metrics.total_rolls.value)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* KPI Cards - Row 2 */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+        <Card className="relative overflow-hidden border-l-4 border-l-green-500">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg md:w-12 md:h-12">
+              <DollarSign className="w-5 h-5 text-green-600 md:w-6 md:h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-600 truncate md:text-sm">
+                Avg Cost/Batch
+              </p>
+              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                {formatCompactCurrency(metrics.avg_cost_per_batch.value)}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg md:w-12 md:h-12">
+              <TrendingUp className="w-5 h-5 text-orange-600 md:w-6 md:h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-600 truncate md:text-sm">
+                Avg Cost/Entry
+              </p>
+              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                {formatCompactCurrency(metrics.avg_cost_per_entry.value)}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="relative overflow-hidden border-l-4 border-l-red-500">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg md:w-12 md:h-12">
+              <DollarSign className="w-5 h-5 text-red-600 md:w-6 md:h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-600 truncate md:text-sm">
+                Total Cost
+              </p>
+              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
+                {formatCompactCurrency(metrics.total_cost.value)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Main Charts Row */}
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card className="w-full h-full">
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Dyes
+                  Chemical Usage Trend
                 </h3>
                 <p className="text-xs text-gray-600">
-                  Dyes dengan total pemakaian tertinggi
+                  Trend penggunaan dyes dan auxiliaries
                 </p>
               </div>
+              <select
+                value={trendGranularity}
+                onChange={(e) => setTrendGranularity(e.target.value)}
+                className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
+              >
+                <option value="daily">Perhari</option>
+                <option value="weekly">Perminggu</option>
+                <option value="monthly">Perbulan</option>
+                <option value="yearly">Pertahun</option>
+              </select>
             </div>
-
             <Highchart.HighchartsBar
-              initialData={transformDataToBar(top_dyes)}
+              initialData={trendData}
               title=""
               subtitle=""
               datasets={[
-                { key: "value", label: "Total Purchases", color: "primary" },
+                {
+                  key: "dyes",
+                  label: "Dyes",
+                  color: "primary",
+                  type: "column",
+                  stacked: true,
+                },
+                {
+                  key: "auxiliaries",
+                  label: "Auxiliaries",
+                  color: "warning",
+                  type: "column",
+                  stacked: true,
+                },
+                {
+                  key: "total",
+                  label: "Total",
+                  color: "neutral",
+                  type: "spline",
+                },
               ]}
-              periods={[]}
-              showSummary={false}
+              onFetchData={() => trendData}
+              showSummary={true}
             />
           </Card>
+        </div>
 
-          {/* Top Auxiliaries */}
-          <Card>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
-                <Building2 className="w-4 h-4 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Aux
-                </h3>
-                <p className="text-xs text-gray-600">
-                  Aux dengan total pemakaian tertinggi
-                </p>
-              </div>
-            </div>
-
-            <Highchart.HighchartsBar
-              initialData={transformDataToBar(top_aux)}
-              title=""
-              subtitle=""
-              datasets={[
-                { key: "value", label: "Total Purchases", color: "primary" },
-              ]}
-              periods={[]}
-              showSummary={false}
+        <div className="lg:col-span-1">
+          <Card className="h-full ">
+            <Highchart.HighchartsDonut
+              data={chemicalSummaryTransformed}
+              // centerText={{
+              //   value: formatCompactCurrency(metrics.total_cost.value),
+              //   label: "Total Cost",
+              // }}
+              title="Chemical Cost Breakdown"
+              subtitle="Dyes vs Auxiliaries"
+              onDrilldownRequest={async ({ _, context, depth }) => {
+                return onDrilldown(context, depth);
+              }}
+              showSummary={true}
             />
           </Card>
         </div>
       </div>
-    </MainLayout>
+
+      {/* Top Products */}
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
+        {/* Top 5 Suppliers */}
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+              <Building2 className="w-4 h-4 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                Top 5 Dyes
+              </h3>
+              <p className="text-xs text-gray-600">
+                Dyes dengan total pemakaian tertinggi
+              </p>
+            </div>
+          </div>
+
+          <Highchart.HighchartsBar
+            initialData={transformDataToBar(top_dyes)}
+            title=""
+            subtitle=""
+            datasets={[
+              { key: "value", label: "Total Purchases", color: "primary" },
+            ]}
+            periods={[]}
+            showSummary={false}
+          />
+        </Card>
+
+        {/* Top Auxiliaries */}
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+              <Building2 className="w-4 h-4 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                Top 5 Aux
+              </h3>
+              <p className="text-xs text-gray-600">
+                Aux dengan total pemakaian tertinggi
+              </p>
+            </div>
+          </div>
+
+          <Highchart.HighchartsBar
+            initialData={transformDataToBar(top_aux)}
+            title=""
+            subtitle=""
+            datasets={[
+              { key: "value", label: "Total Purchases", color: "primary" },
+            ]}
+            periods={[]}
+            showSummary={false}
+          />
+        </Card>
+      </div>
+    </div>
   );
 }

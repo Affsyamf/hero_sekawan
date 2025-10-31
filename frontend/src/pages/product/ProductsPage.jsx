@@ -1,4 +1,3 @@
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import Table from "../../components/ui/table/Table";
 import Button from "../../components/ui/button/Button";
 import ProductForm from "../../components/features/product/ProductForm";
@@ -146,81 +145,79 @@ export default function ProductsPage() {
   );
 
   return (
-    <MainLayout>
-      <div className="min-h-screena bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Product Management
-          </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage your products with codes, units, and account associations.
-          </p>
+    <div className="min-h-screena bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Product Management
+        </h1>
+        <p className="mb-6 text-secondary-text">
+          Manage your products with codes, units, and account associations.
+        </p>
 
-          {/* Import Button */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Button
-                icon={Upload}
-                label="Import from Excel"
-                onClick={handleImport}
-                className="bg-green-600 hover:bg-green-700"
-              />
-            </div>
-
-            {/* Import Guide Button */}
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
-              style={{
-                borderColor: "#e5e7eb",
-                backgroundColor: "white",
-                color: "#6b7280",
-              }}
-              title="Panduan Import Data"
-            >
-              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="hidden sm:inline">Import Guide</span>
-            </button>
+        {/* Import Button */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Button
+              icon={Upload}
+              label="Import from Excel"
+              onClick={handleImport}
+              className="bg-green-600 hover:bg-green-700"
+            />
           </div>
 
-          <Table
-            key={refreshKey}
-            columns={columns}
-            fetchData={searchProduct}
-            actions={renderActions}
-            onCreate={() => {
-              setSelectedProduct(null);
-              setIsModalOpen(true);
+          {/* Import Guide Button */}
+          <button
+            onClick={() => setIsGuideOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+            style={{
+              borderColor: "#e5e7eb",
+              backgroundColor: "white",
+              color: "#6b7280",
             }}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
+            title="Panduan Import Data"
+          >
+            <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+            <span className="hidden sm:inline">Import Guide</span>
+          </button>
+        </div>
 
-          <ProductForm
-            product={selectedProduct}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            onSave={handleSave}
-          />
+        <Table
+          key={refreshKey}
+          columns={columns}
+          fetchData={searchProduct}
+          actions={renderActions}
+          onCreate={() => {
+            setSelectedProduct(null);
+            setIsModalOpen(true);
+          }}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
 
-          {/* <ImportProductModal
+        <ProductForm
+          product={selectedProduct}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+        />
+
+        {/* <ImportProductModal
             isOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onImportSuccess={handleImportSuccess}
           /> */}
 
-          <ImportDataMasterModal
-            isOpen={isImportModalOpen}
-            onClose={() => setIsImportModalOpen(false)}
-            onImportSuccess={handleImportSuccess}
-          />
+        <ImportDataMasterModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImportSuccess={handleImportSuccess}
+        />
 
-          <GuideImportMasterDataModal
-            isOpen={isGuideOpen}
-            onClose={() => setIsGuideOpen(false)}
-          />
-        </div>
+        <GuideImportMasterDataModal
+          isOpen={isGuideOpen}
+          onClose={() => setIsGuideOpen(false)}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

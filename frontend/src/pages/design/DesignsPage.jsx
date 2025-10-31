@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import DesignForm from "../../components/features/design/DesignForm";
 import ImportDesignModal from "../../components/features/design/ImportDesignModal";
 import Table from "../../components/ui/table/Table";
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createDesign,
   deleteDesign,
@@ -149,34 +148,32 @@ export default function DesignsPage() {
   );
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Design Management
-          </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage designs with codes and type classifications.
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Design Management
+        </h1>
+        <p className="mb-6 text-secondary-text">
+          Manage designs with codes and type classifications.
+        </p>
 
-          <Table
-            key={refreshKey}
-            columns={columns}
-            fetchData={searchDesign}
-            actions={renderActions}
-            onCreate={handleAdd}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
+        <Table
+          key={refreshKey}
+          columns={columns}
+          fetchData={searchDesign}
+          actions={renderActions}
+          onCreate={handleAdd}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
 
-          <DesignForm
-            design={selectedDesign}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            onSave={handleSave}
-          />
-        </div>
+        <DesignForm
+          design={selectedDesign}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

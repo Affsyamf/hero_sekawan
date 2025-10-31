@@ -1,5 +1,4 @@
 // pages/purchasing/PurchasingsPage.jsx
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import Table from "../../components/ui/table/Table";
 import PurchasingForm from "../../components/features/purchasing/PurchasingForm";
 import ImportPurchasingModal from "../../components/features/purchasing/ImportPurchasingModal";
@@ -180,127 +179,125 @@ export default function PurchasingsPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Purchasing Management
-          </h1>
-          <p className="mb-2 text-secondary-text">
-            Manage product purchases with global date filter
-          </p>
-          {dateRange && (
-            <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
-              <p className="text-sm text-blue-800">
-                <span className="font-semibold">📅 Active Filter:</span>{" "}
-                {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
-                {dateRange.mode === "year" && `Year ${dateRange.year}`}
-                {dateRange.mode === "month-year" && (
-                  <>
-                    {new Date(
-                      dateRange.year,
-                      dateRange.month - 1
-                    ).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </>
-                )}
-                {(dateRange.mode === "days" || !dateRange.mode) && (
-                  <>
-                    {formatDate(dateRange.dateFrom)} to{" "}
-                    {formatDate(dateRange.dateTo)}
-                    {dateRange.days !== undefined && (
-                      <span className="ml-2 text-xs">
-                        (
-                        {dateRange.days === 0
-                          ? "Today"
-                          : `Last ${dateRange.days} days`}
-                        )
-                      </span>
-                    )}
-                  </>
-                )}
-              </p>
-            </div>
-          )}
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Purchasing Management
+        </h1>
+        <p className="mb-2 text-secondary-text">
+          Manage product purchases with global date filter
+        </p>
+        {dateRange && (
+          <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">📅 Active Filter:</span>{" "}
+              {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+              {dateRange.mode === "year" && `Year ${dateRange.year}`}
+              {dateRange.mode === "month-year" && (
+                <>
+                  {new Date(
+                    dateRange.year,
+                    dateRange.month - 1
+                  ).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </>
+              )}
+              {(dateRange.mode === "days" || !dateRange.mode) && (
+                <>
+                  {formatDate(dateRange.dateFrom)} to{" "}
+                  {formatDate(dateRange.dateTo)}
+                  {dateRange.days !== undefined && (
+                    <span className="ml-2 text-xs">
+                      (
+                      {dateRange.days === 0
+                        ? "Today"
+                        : `Last ${dateRange.days} days`}
+                      )
+                    </span>
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Button
-                icon={Upload}
-                label="Import from Excel"
-                onClick={() => setIsImportTrxOpen(true)}
-                className="bg-green-600 hover:bg-green-700"
-              />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Button
+              icon={Upload}
+              label="Import from Excel"
+              onClick={() => setIsImportTrxOpen(true)}
+              className="bg-green-600 hover:bg-green-700"
+            />
 
-              <Button
-                icon={Upload}
-                label="Import Opening Balance"
-                onClick={() => setIsImportOpenBalOpen(true)}
-                variant="secondary"
-              />
-            </div>
-
-            {/* Import Guide Button */}
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
-              style={{
-                borderColor: "#e5e7eb",
-                backgroundColor: "white",
-                color: "#6b7280",
-              }}
-              title="Panduan Import Data"
-            >
-              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="hidden sm:inline">Import Guide</span>
-            </button>
+            <Button
+              icon={Upload}
+              label="Import Opening Balance"
+              onClick={() => setIsImportOpenBalOpen(true)}
+              variant="secondary"
+            />
           </div>
 
-          {/* ✅ Pass filtered fetch function */}
-          <Table
-            key={refreshKey}
-            columns={columns}
-            fetchData={fetchDataWithDateFilter}
-            actions={renderActions}
-            onCreate={() => {
-              setSelectedPurchasing(null);
-              setIsModalOpen(true);
+          {/* Import Guide Button */}
+          <button
+            onClick={() => setIsGuideOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+            style={{
+              borderColor: "#e5e7eb",
+              backgroundColor: "white",
+              color: "#6b7280",
             }}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showNumbering={true}
-            showDateRangeFilter={false}
-          />
-
-          <PurchasingForm
-            purchasing={selectedPurchasing}
-            isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setSelectedPurchasing(null);
-            }}
-            onSave={handleSave}
-          />
-
-          <ImportPurchasingTransactionModal
-            isOpen={isImportTrxOpen}
-            onClose={() => setIsImportTrxOpen(false)}
-            onImportSuccess={() => setRefreshKey((p) => p + 1)}
-          />
-
-          <ImportOpeningBalanceModal
-            isOpen={isImportOpenBalOpen}
-            onClose={() => setIsImportOpenBalOpen(false)}
-            onImportSuccess={() => setRefreshKey((p) => p + 1)}
-          />
-
-          <GuideImportPurchasingModal
-            isOpen={isGuideOpen}
-            onClose={() => setIsGuideOpen(false)}
-          />
+            title="Panduan Import Data"
+          >
+            <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+            <span className="hidden sm:inline">Import Guide</span>
+          </button>
         </div>
+
+        {/* ✅ Pass filtered fetch function */}
+        <Table
+          key={refreshKey}
+          columns={columns}
+          fetchData={fetchDataWithDateFilter}
+          actions={renderActions}
+          onCreate={() => {
+            setSelectedPurchasing(null);
+            setIsModalOpen(true);
+          }}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showNumbering={true}
+          showDateRangeFilter={false}
+        />
+
+        <PurchasingForm
+          purchasing={selectedPurchasing}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedPurchasing(null);
+          }}
+          onSave={handleSave}
+        />
+
+        <ImportPurchasingTransactionModal
+          isOpen={isImportTrxOpen}
+          onClose={() => setIsImportTrxOpen(false)}
+          onImportSuccess={() => setRefreshKey((p) => p + 1)}
+        />
+
+        <ImportOpeningBalanceModal
+          isOpen={isImportOpenBalOpen}
+          onClose={() => setIsImportOpenBalOpen(false)}
+          onImportSuccess={() => setRefreshKey((p) => p + 1)}
+        />
+
+        <GuideImportPurchasingModal
+          isOpen={isGuideOpen}
+          onClose={() => setIsGuideOpen(false)}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

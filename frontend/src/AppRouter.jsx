@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GlobalFilterProvider } from "./contexts/GlobalFilterContext.jsx";
 import "./assets/styles/tailwind.css";
 import {
@@ -20,51 +20,57 @@ import {
   PurchasingDetailPage,
 } from "./pages";
 import GlobalFilterDrawer from "./components/common/GlobalFilterDrawer.jsx";
+import AccountCategoryBoard from "./pages/account/AccountCategoryBoard.jsx";
+import { MainLayout } from "./layouts/index.js";
 
 export default function AppRouter() {
   return (
-    <Router>
-      <GlobalFilterProvider>
-        <GlobalFilterDrawer />
-        <Routes>
-          <Route path="/" element={<OverviewNew />} />
-          <Route
-            path="/dashboard/purchasings"
-            element={<DashboardPurchasing />}
-          />
-          <Route
-            path="/dashboard/color-kitchens"
-            element={<DashboardColorKitchen />}
-          />
+    <BrowserRouter>
+      <MainLayout>
+        <GlobalFilterProvider>
+          <GlobalFilterDrawer />
+          <Routes>
+            <Route path="/dashboard/overview" element={<OverviewNew />} />
+            <Route
+              path="/dashboard/purchasings"
+              element={<DashboardPurchasing />}
+            />
+            <Route
+              path="/dashboard/color-kitchens"
+              element={<DashboardColorKitchen />}
+            />
 
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/suppliers" element={<SuppliersPage />} />
-          <Route path="/accounts" element={<AccountsPage />} />
-          <Route path="/designs" element={<DesignsPage />} />
-          <Route path="/design-types" element={<DesignTypesPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
 
-          <Route path="/purchasings" element={<PurchasingsPage />} />
-          <Route
-            path="/purchasings/detail/:id"
-            element={<PurchasingDetailPage />}
-          />
+            <Route path="/accounts" element={<AccountsPage />} />
 
-          <Route path="/stock-movements" element={<StockMovementsPage />} />
+            <Route path="/designs" element={<DesignsPage />} />
+            <Route path="/design-types" element={<DesignTypesPage />} />
 
-          <Route path="/color-kitchens" element={<ColorKitchensPage />} />
-          <Route
-            path="/color-kitchens/detail/:id"
-            element={<ColorKitchenDetailPage />}
-          />
+            <Route path="/purchasings" element={<PurchasingsPage />} />
+            <Route
+              path="/purchasings/detail/:id"
+              element={<PurchasingDetailPage />}
+            />
 
-          <Route path="/stock-opnames" element={<StockOpnamePage />} />
+            <Route path="/stock-movements" element={<StockMovementsPage />} />
 
-          <Route
-            path="/reports/purchasings"
-            element={<PurchasingReportsPage />}
-          />
-        </Routes>
-      </GlobalFilterProvider>
-    </Router>
+            <Route path="/color-kitchens" element={<ColorKitchensPage />} />
+            <Route
+              path="/color-kitchens/detail/:id"
+              element={<ColorKitchenDetailPage />}
+            />
+
+            <Route path="/stock-opnames" element={<StockOpnamePage />} />
+
+            <Route
+              path="/reports/purchasings"
+              element={<PurchasingReportsPage />}
+            />
+          </Routes>
+        </GlobalFilterProvider>
+      </MainLayout>
+    </BrowserRouter>
   );
 }

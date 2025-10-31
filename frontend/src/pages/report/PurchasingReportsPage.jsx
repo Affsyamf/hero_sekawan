@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Download, FileText, Package } from "lucide-react";
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import { useTheme } from "../../contexts/ThemeContext";
 import Table from "../../components/ui/table/Table";
 import Card from "../../components/ui/card/Card";
@@ -56,7 +55,8 @@ export default function PurchasingReport() {
       key: "quantity",
       label: "Qty",
       sortable: true,
-      render: (val, row) => `${parseFloat(val).toLocaleString("id-ID")} ${row.unit || ""}`,
+      render: (val, row) =>
+        `${parseFloat(val).toLocaleString("id-ID")} ${row.unit || ""}`,
     },
     {
       key: "price",
@@ -87,7 +87,10 @@ export default function PurchasingReport() {
       label: "Total",
       sortable: true,
       render: (val, row) => {
-        const total = (parseFloat(row.quantity) * parseFloat(row.price)) - parseFloat(row.discount) + parseFloat(row.ppn);
+        const total =
+          parseFloat(row.quantity) * parseFloat(row.price) -
+          parseFloat(row.discount) +
+          parseFloat(row.ppn);
         return (
           <span className="font-semibold" style={{ color: colors.primary }}>
             Rp {total.toLocaleString("id-ID")}
@@ -102,7 +105,7 @@ export default function PurchasingReport() {
       // TODO: Replace with actual API call
       // const response = await fetch(`/api/reports/purchasing?${new URLSearchParams(params)}`);
       // const data = await response.json();
-      
+
       const { page, pageSize, search, sortBy, sortDir, dateRange } = params;
 
       // Simulate API response
@@ -232,7 +235,7 @@ export default function PurchasingReport() {
         mockRows.sort((a, b) => {
           let aVal = a[sortBy] || "";
           let bVal = b[sortBy] || "";
-          
+
           if (sortBy === "date") {
             aVal = new Date(aVal);
             bVal = new Date(bVal);
@@ -251,12 +254,18 @@ export default function PurchasingReport() {
       // Calculate summary
       const summaryData = {
         totalPurchases: mockRows.length,
-        totalItems: mockRows.reduce((sum, row) => sum + parseFloat(row.quantity), 0),
+        totalItems: mockRows.reduce(
+          (sum, row) => sum + parseFloat(row.quantity),
+          0
+        ),
         totalValue: mockRows.reduce((sum, row) => {
-          const total = (parseFloat(row.quantity) * parseFloat(row.price)) - parseFloat(row.discount) + parseFloat(row.ppn);
+          const total =
+            parseFloat(row.quantity) * parseFloat(row.price) -
+            parseFloat(row.discount) +
+            parseFloat(row.ppn);
           return sum + total;
         }, 0),
-        totalSuppliers: new Set(mockRows.map(row => row.supplier_name)).size,
+        totalSuppliers: new Set(mockRows.map((row) => row.supplier_name)).size,
       };
 
       setSummary(summaryData);
@@ -274,114 +283,130 @@ export default function PurchasingReport() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen" style={{ background: colors.background.primary }}>
-        <div className="mx-auto max-w-7xl">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="mb-1 text-2xl font-bold" style={{ color: colors.text.primary }}>
-                Purchasing Report
-              </h1>
-              <p className="text-sm" style={{ color: colors.text.secondary }}>
-                Laporan pembelian bahan baku dan material
-              </p>
-            </div>
-            <Button 
-              icon={Download} 
-              label="Export Excel" 
-              onClick={handleExportExcel}
-            />
+    <div
+      className="min-h-screen"
+      style={{ background: colors.background.primary }}
+    >
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1
+              className="mb-1 text-2xl font-bold"
+              style={{ color: colors.text.primary }}
+            >
+              Purchasing Report
+            </h1>
+            <p className="text-sm" style={{ color: colors.text.secondary }}>
+              Laporan pembelian bahan baku dan material
+            </p>
           </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm" style={{ color: colors.text.secondary }}>
-                    Total Purchases
-                  </p>
-                  <p className="mt-1 text-2xl font-bold" style={{ color: colors.text.primary }}>
-                    {summary.totalPurchases}
-                  </p>
-                </div>
-                <div 
-                  className="flex items-center justify-center w-12 h-12 rounded-full"
-                  style={{ background: colors.primary + "20" }}
-                >
-                  <FileText size={24} style={{ color: colors.primary }} />
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm" style={{ color: colors.text.secondary }}>
-                    Total Items
-                  </p>
-                  <p className="mt-1 text-2xl font-bold" style={{ color: colors.text.primary }}>
-                    {summary.totalItems.toLocaleString("id-ID")}
-                  </p>
-                </div>
-                <div 
-                  className="flex items-center justify-center w-12 h-12 rounded-full"
-                  style={{ background: "#10b981" + "20" }}
-                >
-                  <Package size={24} style={{ color: "#10b981" }} />
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm" style={{ color: colors.text.secondary }}>
-                    Total Value
-                  </p>
-                  <p className="mt-1 text-2xl font-bold" style={{ color: colors.text.primary }}>
-                    Rp {summary.totalValue.toLocaleString("id-ID")}
-                  </p>
-                </div>
-                <div 
-                  className="flex items-center justify-center w-12 h-12 rounded-full"
-                  style={{ background: "#f59e0b" + "20" }}
-                >
-                  <FileText size={24} style={{ color: "#f59e0b" }} />
-                </div>
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm" style={{ color: colors.text.secondary }}>
-                    Total Suppliers
-                  </p>
-                  <p className="mt-1 text-2xl font-bold" style={{ color: colors.text.primary }}>
-                    {summary.totalSuppliers}
-                  </p>
-                </div>
-                <div 
-                  className="flex items-center justify-center w-12 h-12 rounded-full"
-                  style={{ background: "#8b5cf6" + "20" }}
-                >
-                  <FileText size={24} style={{ color: "#8b5cf6" }} />
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Table */}
-          <Table
-            columns={columns}
-            fetchData={fetchData}
-            dateFilterKey="date"
-            pageSizeOptions={[10, 20, 50, 100]}
+          <Button
+            icon={Download}
+            label="Export Excel"
+            onClick={handleExportExcel}
           />
         </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
+          <Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm" style={{ color: colors.text.secondary }}>
+                  Total Purchases
+                </p>
+                <p
+                  className="mt-1 text-2xl font-bold"
+                  style={{ color: colors.text.primary }}
+                >
+                  {summary.totalPurchases}
+                </p>
+              </div>
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-full"
+                style={{ background: colors.primary + "20" }}
+              >
+                <FileText size={24} style={{ color: colors.primary }} />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm" style={{ color: colors.text.secondary }}>
+                  Total Items
+                </p>
+                <p
+                  className="mt-1 text-2xl font-bold"
+                  style={{ color: colors.text.primary }}
+                >
+                  {summary.totalItems.toLocaleString("id-ID")}
+                </p>
+              </div>
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-full"
+                style={{ background: "#10b981" + "20" }}
+              >
+                <Package size={24} style={{ color: "#10b981" }} />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm" style={{ color: colors.text.secondary }}>
+                  Total Value
+                </p>
+                <p
+                  className="mt-1 text-2xl font-bold"
+                  style={{ color: colors.text.primary }}
+                >
+                  Rp {summary.totalValue.toLocaleString("id-ID")}
+                </p>
+              </div>
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-full"
+                style={{ background: "#f59e0b" + "20" }}
+              >
+                <FileText size={24} style={{ color: "#f59e0b" }} />
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm" style={{ color: colors.text.secondary }}>
+                  Total Suppliers
+                </p>
+                <p
+                  className="mt-1 text-2xl font-bold"
+                  style={{ color: colors.text.primary }}
+                >
+                  {summary.totalSuppliers}
+                </p>
+              </div>
+              <div
+                className="flex items-center justify-center w-12 h-12 rounded-full"
+                style={{ background: "#8b5cf6" + "20" }}
+              >
+                <FileText size={24} style={{ color: "#8b5cf6" }} />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Table */}
+        <Table
+          columns={columns}
+          fetchData={fetchData}
+          dateFilterKey="date"
+          pageSizeOptions={[10, 20, 50, 100]}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

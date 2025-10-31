@@ -10,7 +10,6 @@ import {
   updateSupplier,
 } from "../../services/supplier_service";
 
-
 export default function SuppliersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -162,34 +161,32 @@ export default function SuppliersPage() {
   );
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Supplier Management
-          </h1>
-          <p className="mb-6 text-secondary-text">
-            Manage your suppliers with contact information and details.
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Supplier Management
+        </h1>
+        <p className="mb-6 text-secondary-text">
+          Manage your suppliers with contact information and details.
+        </p>
 
-          <Table
-            key={refreshKey}
-            columns={columns}
-            fetchData={searchSupplier}
-            actions={renderActions}
-            onCreate={handleAdd}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
+        <Table
+          key={refreshKey}
+          columns={columns}
+          fetchData={searchSupplier}
+          actions={renderActions}
+          onCreate={handleAdd}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
 
-          <SupplierForm
-            supplier={selectedSupplier}
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            onSave={handleSave}
-          />
-        </div>
+        <SupplierForm
+          supplier={selectedSupplier}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

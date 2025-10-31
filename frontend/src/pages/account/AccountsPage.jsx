@@ -2,7 +2,6 @@ import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import AccountForm from "../../components/features/account/AccountForm";
 import Table from "../../components/ui/table/Table";
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createAccount,
   deleteAccount,
@@ -157,32 +156,30 @@ export default function AccountsPage() {
   );
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Account Management
-          </h1>
-          <p className="mb-6 text-secondary-text">Manage accounts</p>
+    <div className="bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Account Management
+        </h1>
+        <p className="mb-6 text-secondary-text">Manage accounts</p>
 
-          <Table
-            key={refreshKey}
-            columns={columns}
-            fetchData={searchAccount}
-            actions={renderActions}
-            onCreate={handleAdd}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
+        <Table
+          key={refreshKey}
+          columns={columns}
+          fetchData={searchAccount}
+          actions={renderActions}
+          onCreate={handleAdd}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
 
-          {/* <AccountForm
+        {/* <AccountForm
             account={selectedAccount}
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
           /> */}
-        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

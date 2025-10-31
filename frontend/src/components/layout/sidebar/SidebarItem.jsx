@@ -7,10 +7,14 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // active child detection
   const isActive = location.pathname === item.path;
-  const isParentActive =
+  const hasActiveChild =
     item.children &&
-    item.children.some((c) => location.pathname.startsWith(c.path));
+    item.children.some((child) => location.pathname.startsWith(child.path));
+
+  // highlight parent if any child is active
+  const activeOrChild = isActive || hasActiveChild;
 
   return (
     <div>
@@ -23,21 +27,21 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
         }
         className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group"
         style={{
-          backgroundColor: isActive ? colors.primaryLight : "transparent",
-          borderWidth: isActive ? "1px" : "0",
-          borderStyle: isActive ? "solid" : "none",
-          borderColor: isActive ? colors.primary : "transparent",
-          color: isActive ? colors.primary : colors.text.secondary,
+          backgroundColor: activeOrChild ? colors.primaryLight : "transparent",
+          borderWidth: activeOrChild ? "1px" : "0",
+          borderStyle: activeOrChild ? "solid" : "none",
+          borderColor: activeOrChild ? colors.primary : "transparent",
+          color: activeOrChild ? colors.primary : colors.text.secondary,
         }}
         onMouseEnter={(e) => {
-          if (!isActive) {
+          if (!activeOrChild) {
             e.currentTarget.style.backgroundColor = colors.background.tertiary;
             e.currentTarget.style.color = colors.primary;
             e.currentTarget.style.transform = "translateX(2px)";
           }
         }}
         onMouseLeave={(e) => {
-          if (!isActive) {
+          if (!activeOrChild) {
             e.currentTarget.style.backgroundColor = "transparent";
             e.currentTarget.style.color = colors.text.secondary;
             e.currentTarget.style.transform = "translateX(0)";
@@ -48,10 +52,7 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
           <item.icon
             size={18}
             style={{
-              color:
-                isActive || isParentActive
-                  ? colors.primary
-                  : colors.text.secondary,
+              color: activeOrChild ? colors.primary : colors.text.secondary,
             }}
             className="group-hover:transition-colors"
           />
@@ -65,49 +66,47 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
           ))}
       </button>
 
-      {item.children && open && (
-        <div
-          className="mt-1 ml-2 space-y-1 border-l"
-          style={{ borderColor: colors.border.primary }}
-        >
-          {item.children.map((sub, i) => {
-            const isSubActive = location.pathname === sub.path;
-            return (
-              <button
-                key={i}
-                onClick={() => !isSubActive && navigate(sub.path)}
-                className="w-full pl-8 py-2.5 text-sm rounded-md transition-all duration-200"
-                style={{
-                  backgroundColor: isSubActive
-                    ? colors.primaryLight
-                    : "transparent",
-                  borderWidth: isSubActive ? "1px" : "0",
-                  borderStyle: isSubActive ? "solid" : "none",
-                  borderColor: isSubActive ? colors.primary : "transparent",
-                  color: isSubActive ? colors.primary : colors.text.secondary,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSubActive) {
-                    e.currentTarget.style.backgroundColor =
-                      colors.background.tertiary;
-                    e.currentTarget.style.color = colors.primary;
-                    e.currentTarget.style.transform = "translateX(2px)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSubActive) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                    e.currentTarget.style.color = colors.text.secondary;
-                    e.currentTarget.style.transform = "translateX(0)";
-                  }
-                }}
-              >
-                {sub.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* Child items */}
+      <div
+        className={`mt-1 ml-2 space-y-1 border-l transition-all duration-300  ${
+          open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+        style={{ borderColor: colors.border.primary }}
+      >
+        {item.children?.map((sub, i) => {
+          const isSubActive = location.pathname.startsWith(sub.path);
+          return (
+            <button
+              key={i}
+              onClick={() => !isSubActive && navigate(sub.path)}
+              className="w-full pl-8 py-2.5 text-sm rounded-md transition-all duration-200"
+              style={{
+                backgroundColor: isSubActive
+                  ? colors.primaryLight
+                  : "transparent",
+                color: isSubActive ? colors.primary : colors.text.secondary,
+              }}
+              onMouseEnter={(e) => {
+                if (!isSubActive) {
+                  e.currentTarget.style.backgroundColor =
+                    colors.background.tertiary;
+                  e.currentTarget.style.color = colors.primary;
+                  e.currentTarget.style.transform = "translateX(2px)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSubActive) {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = colors.text.secondary;
+                  e.currentTarget.style.transform = "translateX(0)";
+                }
+              }}
+            >
+              {sub.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

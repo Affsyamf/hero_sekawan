@@ -4,7 +4,6 @@ import ImportStockMovementModal from "../../components/features/stock-movement/I
 import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
 import Button from "../../components/ui/button/Button";
 import Table from "../../components/ui/table/Table";
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createStockMovement,
   searchStockMovement,
@@ -142,113 +141,111 @@ export default function StockMovementsPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl">
-          <h1 className="mb-1 text-2xl font-bold text-primary-text">
-            Stock Movement Management
-          </h1>
-          <p className="mb-2 text-secondary-text">
-            Track stock movements with detailed product quantities.
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="mb-1 text-2xl font-bold text-primary-text">
+          Stock Movement Management
+        </h1>
+        <p className="mb-2 text-secondary-text">
+          Track stock movements with detailed product quantities.
+        </p>
 
-          {/* Display active filter info */}
-          {dateRange && (
-            <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
-              <p className="text-sm text-blue-800">
-                <span className="font-semibold">📅 Active Filter:</span>{" "}
-                {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
-                {dateRange.mode === "year" && `Year ${dateRange.year}`}
-                {dateRange.mode === "month-year" && (
-                  <>
-                    {new Date(
-                      dateRange.year,
-                      dateRange.month - 1
-                    ).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </>
-                )}
-                {(dateRange.mode === "days" || !dateRange.mode) && (
-                  <>
-                    {formatDate(dateRange.dateFrom)} to{" "}
-                    {formatDate(dateRange.dateTo)}
-                    {dateRange.days !== undefined && (
-                      <span className="ml-2 text-xs">
-                        (
-                        {dateRange.days === 0
-                          ? "Today"
-                          : `Last ${dateRange.days} days`}
-                        )
-                      </span>
-                    )}
-                  </>
-                )}
-              </p>
-            </div>
-          )}
+        {/* Display active filter info */}
+        {dateRange && (
+          <div className="p-3 mb-4 border border-blue-200 rounded-lg bg-blue-50">
+            <p className="text-sm text-blue-800">
+              <span className="font-semibold">📅 Active Filter:</span>{" "}
+              {dateRange.mode === "ytd" && `YTD ${new Date().getFullYear()}`}
+              {dateRange.mode === "year" && `Year ${dateRange.year}`}
+              {dateRange.mode === "month-year" && (
+                <>
+                  {new Date(
+                    dateRange.year,
+                    dateRange.month - 1
+                  ).toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </>
+              )}
+              {(dateRange.mode === "days" || !dateRange.mode) && (
+                <>
+                  {formatDate(dateRange.dateFrom)} to{" "}
+                  {formatDate(dateRange.dateTo)}
+                  {dateRange.days !== undefined && (
+                    <span className="ml-2 text-xs">
+                      (
+                      {dateRange.days === 0
+                        ? "Today"
+                        : `Last ${dateRange.days} days`}
+                      )
+                    </span>
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Button
-                icon={Upload}
-                label="Import from Excel"
-                onClick={() => setIsImportOpen(true)}
-                className="bg-green-600 hover:bg-green-700"
-              />
-            </div>
-
-            {/* Import Guide Button */}
-            <button
-              onClick={() => setIsGuideOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
-              style={{
-                borderColor: "#e5e7eb",
-                backgroundColor: "white",
-                color: "#6b7280",
-              }}
-              title="Panduan Import Data"
-            >
-              <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
-              <span className="hidden sm:inline">Import Guide</span>
-            </button>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Button
+              icon={Upload}
+              label="Import from Excel"
+              onClick={() => setIsImportOpen(true)}
+              className="bg-green-600 hover:bg-green-700"
+            />
           </div>
 
-          <Table
-            key={refresh}
-            columns={columns}
-            fetchData={fetchDataWithDateFilter}
-            actions={renderActions}
-            onCreate={() => {
-              setSelected(null);
-              setIsModalOpen(true);
+          {/* Import Guide Button */}
+          <button
+            onClick={() => setIsGuideOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
+            style={{
+              borderColor: "#e5e7eb",
+              backgroundColor: "white",
+              color: "#6b7280",
             }}
-            pageSizeOptions={[10, 20, 50, 100]}
-            showDateRangeFilter={false}
-          />
-
-          <StockMovementForm
-            stockMovement={selected}
-            isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setSelected(null);
-            }}
-            onSave={handleSave}
-          />
-          <ImportStockMovementModal
-            isOpen={isImportOpen}
-            onClose={() => setIsImportOpen(false)}
-            onImportSuccess={() => setRefresh((p) => p + 1)}
-          />
-
-          <GuideImportStockMovementModal
-            isOpen={isGuideOpen}
-            onClose={() => setIsGuideOpen(false)}
-          />
+            title="Panduan Import Data"
+          >
+            <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
+            <span className="hidden sm:inline">Import Guide</span>
+          </button>
         </div>
+
+        <Table
+          key={refresh}
+          columns={columns}
+          fetchData={fetchDataWithDateFilter}
+          actions={renderActions}
+          onCreate={() => {
+            setSelected(null);
+            setIsModalOpen(true);
+          }}
+          pageSizeOptions={[10, 20, 50, 100]}
+          showDateRangeFilter={false}
+        />
+
+        <StockMovementForm
+          stockMovement={selected}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelected(null);
+          }}
+          onSave={handleSave}
+        />
+        <ImportStockMovementModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onImportSuccess={() => setRefresh((p) => p + 1)}
+        />
+
+        <GuideImportStockMovementModal
+          isOpen={isGuideOpen}
+          onClose={() => setIsGuideOpen(false)}
+        />
       </div>
-    </MainLayout>
+    </div>
   );
 }

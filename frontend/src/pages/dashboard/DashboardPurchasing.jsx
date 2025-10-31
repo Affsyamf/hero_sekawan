@@ -14,7 +14,6 @@ import Chart from "../../components/ui/chart/Chart";
 import { MetricGrid } from "../../components/ui/chart/MetricCard";
 import { Highchart } from "../../components/ui/highchart";
 import { useTheme } from "../../contexts/ThemeContext";
-import { MainLayout } from "../../layouts";
 import {
   reportsPurchasingBreakdown,
   reportsPurchasingBreakdownSummary,
@@ -331,45 +330,39 @@ export default function DashboardPurchasing() {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-300 rounded-full border-t-primary animate-spin"></div>
-            <p className="text-sm text-gray-600">Loading purchasing data...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-gray-300 rounded-full border-t-primary animate-spin"></div>
+          <p className="text-sm text-gray-600">Loading purchasing data...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (!dateRange?.dateFrom || !dateRange?.dateTo) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="mb-2 text-gray-600">No date range selected</p>
-            <p className="text-sm text-gray-500">
-              Please select a date range from the global filter to view
-              purchasing data
-            </p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="mb-2 text-gray-600">No date range selected</p>
+          <p className="text-sm text-gray-500">
+            Please select a date range from the global filter to view purchasing
+            data
+          </p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (!purchasingData) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="mb-2 text-gray-600">No data available</p>
-            <p className="text-sm text-gray-500">
-              Please check your date range or try again later
-            </p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="mb-2 text-gray-600">No data available</p>
+          <p className="text-sm text-gray-500">
+            Please check your date range or try again later
+          </p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -422,231 +415,227 @@ export default function DashboardPurchasing() {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-full space-y-4 p-0.5 md:p-1">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">
-              Purchasing Overview
-            </h1>
-            <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
-              Monitor pembelian, supplier, dan trend purchasing
+    <div className="max-w-full space-y-4 p-0.5 md:p-1">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">
+            Purchasing Overview
+          </h1>
+          <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
+            Monitor pembelian, supplier, dan trend purchasing
+          </p>
+          {/* ✅ Show active filter info */}
+          {dateRange.startDate && dateRange.endDate && (
+            <p className="mt-1 text-xs text-blue-600">
+              📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
+              {formatDate(dateRange.endDate)}
             </p>
-            {/* ✅ Show active filter info */}
-            {dateRange.startDate && dateRange.endDate && (
-              <p className="mt-1 text-xs text-blue-600">
-                📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
-                {formatDate(dateRange.endDate)}
+          )}
+        </div>
+        <div>
+          <Button
+            icon={Download}
+            label={exporting ? "Exporting..." : "Export Data"}
+            variant="primary"
+            onClick={handleExport}
+            disabled={exporting}
+          />
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <MetricGrid>
+        <Chart.Metric
+          title="Total Purchases"
+          value={formatCompactCurrency(metrics.total_purchases.value)}
+          trend={metrics.total_purchases.trend}
+          icon={ShoppingCart}
+          color="primary"
+        />
+        <Chart.Metric
+          title="Total Goods"
+          value={formatCompactCurrency(metrics.total_goods.value)}
+          trend={metrics.total_goods.trend}
+          icon={Package}
+          color="success"
+        />
+        <Chart.Metric
+          title="Total Jasa"
+          value={formatCompactCurrency(metrics.total_jasa.value)}
+          trend={metrics.total_jasa.trend}
+          icon={Wrench}
+          color="warning"
+        />
+      </MetricGrid>
+
+      {/* Main Charts Row */}
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card className="w-full h-full">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                  Trend Purchasing
+                </h3>
+                <p className="text-xs text-gray-600">
+                  Perbandingan pembelian goods dan jasa
+                </p>
+              </div>
+              <select
+                value={trendGranularity}
+                onChange={(e) => setTrendGranularity(e.target.value)}
+                className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
+              >
+                <option value="daily">Perhari</option>
+                <option value="weekly">Perminggu</option>
+                <option value="monthly">Perbulan</option>
+                <option value="yearly">Pertahun</option>
+              </select>
+            </div>
+            <Highchart.HighchartsBar
+              initialData={hydrateDataForChart(trendData, [
+                "period",
+                "week_start",
+                "week_end",
+              ])}
+              title=""
+              subtitle=""
+              datasets={buildDatasetsFromData(trendData, [
+                "period",
+                "week_start",
+                "week_end",
+              ])}
+              onFetchData={() => trendData}
+              showSummary={false}
+            />
+          </Card>
+        </div>
+
+        <div className="lg:col-span-1">
+          <Card className="h-full ">
+            <Highchart.HighchartsDonut
+              data={donutData}
+              // centerText={{
+              //   value: formatCompactCurrency(metrics.total_purchases.value),
+              //   label: "Total",
+              // }}
+              title="Breakdown Purchasing"
+              subtitle="Goods vs Jasa"
+              className="w-full h-full"
+              showSummary={true}
+              onDrilldownRequest={async ({ _, context, depth }) => {
+                return onDrilldown(context, depth);
+              }}
+            />
+          </Card>
+        </div>
+      </div>
+
+      {/* Top Suppliers & Top Purchases */}
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
+        {/* Top 5 Suppliers */}
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
+              <Building2 className="w-4 h-4 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                Top 5 Suppliers
+              </h3>
+              <p className="text-xs text-gray-600">
+                Supplier dengan total pembelian tertinggi
               </p>
-            )}
+            </div>
           </div>
-          <div>
-            <Button
-              icon={Download}
-              label={exporting ? "Exporting..." : "Export Data"}
-              variant="primary"
-              onClick={handleExport}
-              disabled={exporting}
-            />
-          </div>
-        </div>
 
-        {/* KPI Cards */}
-        <MetricGrid>
-          <Chart.Metric
-            title="Total Purchases"
-            value={formatCompactCurrency(metrics.total_purchases.value)}
-            trend={metrics.total_purchases.trend}
-            icon={ShoppingCart}
-            color="primary"
+          <Highchart.HighchartsBar
+            initialData={transformSuppliersToBarData(top_suppliers)}
+            title=""
+            subtitle=""
+            datasets={[
+              { key: "value", label: "Total Purchases", color: "primary" },
+            ]}
+            periods={[]}
+            showSummary={false}
           />
-          <Chart.Metric
-            title="Total Goods"
-            value={formatCompactCurrency(metrics.total_goods.value)}
-            trend={metrics.total_goods.trend}
-            icon={Package}
-            color="success"
-          />
-          <Chart.Metric
-            title="Total Jasa"
-            value={formatCompactCurrency(metrics.total_jasa.value)}
-            trend={metrics.total_jasa.trend}
-            icon={Wrench}
-            color="warning"
-          />
-        </MetricGrid>
 
-        {/* Main Charts Row */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Card className="w-full h-full">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                    Trend Purchasing
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    Perbandingan pembelian goods dan jasa
-                  </p>
-                </div>
-                <select
-                  value={trendGranularity}
-                  onChange={(e) => setTrendGranularity(e.target.value)}
-                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg"
-                >
-                  <option value="daily">Perhari</option>
-                  <option value="weekly">Perminggu</option>
-                  <option value="monthly">Perbulan</option>
-                  <option value="yearly">Pertahun</option>
-                </select>
+          {top_suppliers.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
+              <div className="p-2 rounded-lg bg-purple-50">
+                <p className="text-xs text-purple-600">Total dari Top 5</p>
+                <p className="text-sm font-bold text-purple-900">
+                  {formatCompactCurrency(
+                    top_suppliers.reduce((sum, s) => sum + s.total_purchases, 0)
+                  )}
+                </p>
               </div>
-              <Highchart.HighchartsBar
-                initialData={hydrateDataForChart(trendData, [
-                  "period",
-                  "week_start",
-                  "week_end",
-                ])}
-                title=""
-                subtitle=""
-                datasets={buildDatasetsFromData(trendData, [
-                  "period",
-                  "week_start",
-                  "week_end",
-                ])}
-                onFetchData={() => trendData}
-                showSummary={false}
-              />
-            </Card>
-          </div>
-
-          <div className="lg:col-span-1">
-            <Card className="h-full ">
-              <Highchart.HighchartsDonut
-                data={donutData}
-                // centerText={{
-                //   value: formatCompactCurrency(metrics.total_purchases.value),
-                //   label: "Total",
-                // }}
-                title="Breakdown Purchasing"
-                subtitle="Goods vs Jasa"
-                className="w-full h-full"
-                showSummary={true}
-                onDrilldownRequest={async ({ _, context, depth }) => {
-                  return onDrilldown(context, depth);
-                }}
-              />
-            </Card>
-          </div>
-        </div>
-
-        {/* Top Suppliers & Top Purchases */}
-        <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-2">
-          {/* Top 5 Suppliers */}
-          <Card>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg">
-                <Building2 className="w-4 h-4 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Suppliers
-                </h3>
-                <p className="text-xs text-gray-600">
-                  Supplier dengan total pembelian tertinggi
+              <div className="p-2 rounded-lg bg-purple-50">
+                <p className="text-xs text-purple-600">Share dari Total</p>
+                <p className="text-sm font-bold text-purple-900">
+                  {top_suppliers
+                    .reduce((sum, s) => sum + s.percentage, 0)
+                    .toFixed(1)}
+                  %
                 </p>
               </div>
             </div>
+          )}
+        </Card>
 
-            <Highchart.HighchartsBar
-              initialData={transformSuppliersToBarData(top_suppliers)}
-              title=""
-              subtitle=""
-              datasets={[
-                { key: "value", label: "Total Purchases", color: "primary" },
-              ]}
-              periods={[]}
-              showSummary={false}
-            />
+        {/* Top 5 Product Values */}
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
+              <TrendingUp className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 md:text-base">
+                Top 5 Product Values
+              </h3>
+              <p className="text-xs text-gray-600">
+                Produk dengan nilai pembelian tertinggi
+              </p>
+            </div>
+          </div>
 
-            {top_suppliers.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
-                <div className="p-2 rounded-lg bg-purple-50">
-                  <p className="text-xs text-purple-600">Total dari Top 5</p>
-                  <p className="text-sm font-bold text-purple-900">
-                    {formatCompactCurrency(
-                      top_suppliers.reduce(
-                        (sum, s) => sum + s.total_purchases,
-                        0
-                      )
-                    )}
-                  </p>
-                </div>
-                <div className="p-2 rounded-lg bg-purple-50">
-                  <p className="text-xs text-purple-600">Share dari Total</p>
-                  <p className="text-sm font-bold text-purple-900">
-                    {top_suppliers
-                      .reduce((sum, s) => sum + s.percentage, 0)
-                      .toFixed(1)}
-                    %
-                  </p>
-                </div>
+          <Highchart.HighchartsBar
+            initialData={transformPurchasesToBarData(top_purchases)}
+            title=""
+            subtitle=""
+            datasets={[
+              { key: "value", label: "Total Value", color: "primary" },
+            ]}
+            periods={[]}
+            showSummary={false}
+          />
+
+          {top_purchases.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
+              <div className="p-2 rounded-lg bg-green-50">
+                <p className="text-xs text-green-600">Total dari Top 5</p>
+                <p className="text-sm font-bold text-green-900">
+                  {formatCompactCurrency(
+                    top_purchases.reduce((sum, p) => sum + p.value, 0)
+                  )}
+                </p>
               </div>
-            )}
-          </Card>
-
-          {/* Top 5 Product Values */}
-          <Card>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 md:text-base">
-                  Top 5 Product Values
-                </h3>
-                <p className="text-xs text-gray-600">
-                  Produk dengan nilai pembelian tertinggi
+              <div className="p-2 rounded-lg bg-green-50">
+                <p className="text-xs text-green-600">Highest Value</p>
+                <p className="text-sm font-bold text-green-900">
+                  {formatCompactCurrency(
+                    Math.max(...top_purchases.map((p) => p.value))
+                  )}
                 </p>
               </div>
             </div>
+          )}
+        </Card>
+      </div>
 
-            <Highchart.HighchartsBar
-              initialData={transformPurchasesToBarData(top_purchases)}
-              title=""
-              subtitle=""
-              datasets={[
-                { key: "value", label: "Total Value", color: "primary" },
-              ]}
-              periods={[]}
-              showSummary={false}
-            />
-
-            {top_purchases.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
-                <div className="p-2 rounded-lg bg-green-50">
-                  <p className="text-xs text-green-600">Total dari Top 5</p>
-                  <p className="text-sm font-bold text-green-900">
-                    {formatCompactCurrency(
-                      top_purchases.reduce((sum, p) => sum + p.value, 0)
-                    )}
-                  </p>
-                </div>
-                <div className="p-2 rounded-lg bg-green-50">
-                  <p className="text-xs text-green-600">Highest Value</p>
-                  <p className="text-sm font-bold text-green-900">
-                    {formatCompactCurrency(
-                      Math.max(...top_purchases.map((p) => p.value))
-                    )}
-                  </p>
-                </div>
-              </div>
-            )}
-          </Card>
-        </div>
-
-        {/* Most Purchased Products */}
-        {/* <Card>
+      {/* Most Purchased Products */}
+      {/* <Card>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
@@ -741,7 +730,6 @@ export default function DashboardPurchasing() {
             )}
           </div>
         </Card> */}
-      </div>
-    </MainLayout>
+    </div>
   );
 }
