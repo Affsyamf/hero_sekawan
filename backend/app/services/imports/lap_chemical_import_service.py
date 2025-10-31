@@ -12,7 +12,8 @@ from openpyxl import load_workbook
 from app.models import (
     Product,
     StockMovement, 
-    StockMovementDetail
+    StockMovementDetail,
+    ProductAvgCostCache
 )
 
 from app.utils.safe_parse import safe_str, safe_date, safe_number

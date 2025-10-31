@@ -13,7 +13,9 @@ from app.models import (
     Product,
     Supplier, 
     Purchasing,
-    PurchasingDetail
+    PurchasingDetail,
+    StockMovement,
+    StockMovementDetail,
 )
 
 from app.utils.normalise import normalise_product_name
@@ -63,28 +65,32 @@ class OpeningBalanceImportService(BaseImportService):
             prod_name = safe_str(normalise_product_name(row.get("NAMA BARANG")))
             if prod_name is None:
                 continue
-            
-            end_qty = safe_number(row.get("FISIK"))
 
-            if end_qty == None or end_qty == 0:
-                skipped += 1
-                skipped_products.append({ "name": prod_name, "reason": "Saldo akhir 0"})
-                continue
-
-            price = safe_number(row.get("JUMLAH FISIK"))
-
-            init_qty = safe_number(row.get("SALDO AWAL"))
-
-            unit_price = price / end_qty
-            dpp = unit_price * init_qty
-            ppn = dpp * 0.11
-            
             product = self.db.query(Product).filter_by(name=prod_name).first()
             if not product:
                 print(f"⚠️ Product not found: {prod_name}, skipping")
                 skipped += 1
                 skipped_products.append({"name": prod_name, "reason": "Product not found"})
                 continue
+
+            init_qty = safe_number(row.get("SALDO AWAL"))
+
+            price = safe_number(row.get("JUMLAH SALDO AWAL + PPN"))
+            if price is None or price == 0:
+                tmp_price = safe_number(row.get("JUMLAH FISIK"))
+                end_qty = safe_number(row.get("FISIK"))
+                unit_price = tmp_price / end_qty if end_qty != 0 else 0
+            else:
+                price = price / init_qty
+                unit_price = price / 1.11  # remove PPN
+
+            if init_qty is None or init_qty == 0:
+                skipped += 1
+                skipped_products.append({ "name": prod_name, "reason": "Saldo awal kosong"})
+                continue
+
+            dpp = unit_price * init_qty
+            ppn = unit_price * 0.11
             
             detail = PurchasingDetail(
                 product=product,
@@ -135,26 +141,30 @@ class OpeningBalanceImportService(BaseImportService):
             if not prod_name:
                 continue
 
-            end_qty = safe_number(row.get("FISIK"))
-            if end_qty is None or end_qty == 0:
-                skipped_products.append({"name": prod_name, "reason": "Saldo akhir 0"})
-                continue
-
-            price = safe_number(row.get("JUMLAH FISIK"))
-            init_qty = safe_number(row.get("SALDO AWAL"))
-
-            if price is None or end_qty == 0:
-                skipped_products.append({"name": prod_name, "reason": "Invalid price or quantity"})
-                continue
-
-            unit_price = price / end_qty
-            dpp = unit_price * init_qty
-            ppn = dpp * 0.11
-
+            
             product = self.db.query(Product).filter_by(name=prod_name).first()
             if not product:
+                print(f"⚠️ Product not found: {prod_name}, skipping")
                 skipped_products.append({"name": prod_name, "reason": "Product not found"})
                 continue
+
+            init_qty = safe_number(row.get("SALDO AWAL"))
+
+            price = safe_number(row.get("JUMLAH SALDO AWAL + PPN"))
+            if price is None or price == 0:
+                tmp_price = safe_number(row.get("JUMLAH FISIK"))
+                end_qty = safe_number(row.get("FISIK"))
+                unit_price = tmp_price / end_qty if end_qty != 0 else 0
+            else:
+                price = price / init_qty
+                unit_price = price / 1.11  # remove PPN
+
+            if init_qty is None or init_qty == 0:
+                skipped_products.append({ "name": prod_name, "reason": "Saldo awal kosong"})
+                continue
+
+            dpp = unit_price * init_qty
+            ppn = unit_price * 0.11
 
             added += 1
             preview_rows.append({
