@@ -59,6 +59,5 @@ export function hydrateDataForChart(dataArray, ignoredKeys) {
     return filled;
   });
 
-  console.log(ret);
   return ret;
 }

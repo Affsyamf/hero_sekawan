@@ -87,21 +87,13 @@ export default function ColorKitchensPage() {
       ),
     },
     {
-      key: "design_id",
+      key: "design_name",
       label: "Design",
       sortable: true,
-      render: (value) => {
-        const design = (designs || []).find((a) => a.id === value);
-        return (
-          <span className="text-primary-text">
-            {design ? `${design.code}` : "-"}
-          </span>
-        );
-      },
     },
     {
-      key: "quantity",
-      label: "Quantity",
+      key: "rolls",
+      label: "Roll",
       sortable: true,
       render: (v) => <span className="text-secondary-text">{v}</span>,
     },
