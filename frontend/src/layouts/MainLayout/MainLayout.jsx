@@ -18,7 +18,7 @@ export default function MainLayout({ children }) {
       {/* Main content area - dengan margin untuk sidebar */}
       <div className="flex flex-col flex-1 min-h-screen lg:ml-64">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-auto mt-20">{children}</main>
         <Footer />
       </div>
     </div>

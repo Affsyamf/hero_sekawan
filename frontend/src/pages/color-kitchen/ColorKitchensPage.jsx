@@ -123,10 +123,10 @@ export default function ColorKitchensPage() {
         <Edit2 className="w-4 h-4" />
       </button>
       <button
-        onClick={() => {
-          if (confirm(`Delete ${row.code}?`))
-            setEntries((p) => p.filter((e) => e.id !== row.id));
-        }}
+        // onClick={() => {
+        //   if (confirm(`Delete ${row.code}?`))
+        //     setEntries((p) => p.filter((e) => e.id !== row.id));
+        // }}
         className="p-1.5 text-red-600 hover:bg-red-50 rounded"
         title="Delete"
       >
@@ -161,7 +161,7 @@ export default function ColorKitchensPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" bg-background">
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-1 text-2xl font-bold text-primary-text">
           Color Kitchen Management

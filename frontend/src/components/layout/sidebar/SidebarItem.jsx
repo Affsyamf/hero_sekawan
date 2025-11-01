@@ -21,9 +21,7 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
       <button
         aria-expanded={item.children ? open : undefined}
         onClick={() =>
-          item.children
-            ? toggleDropdown(item.label)
-            : !isActive && navigate(item.path)
+          item.children ? toggleDropdown() : !isActive && navigate(item.path)
         }
         className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group cursor-pointer"
         style={{

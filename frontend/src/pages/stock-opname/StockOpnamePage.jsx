@@ -162,7 +162,7 @@ export default function StockOpnamePage() {
       >
         <Edit2 className="w-4 h-4" />
       </button>
-      <button
+      {/* <button
         onClick={() => {
           if (confirm(`Delete stock opname ${row.code}?`))
             setEntries((p) => p.filter((e) => e.id !== row.id));
@@ -171,7 +171,7 @@ export default function StockOpnamePage() {
         title="Delete"
       >
         <Trash2 className="w-4 h-4" />
-      </button>
+      </button> */}
     </div>
   );
 
@@ -201,7 +201,7 @@ export default function StockOpnamePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" bg-background">
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-1 text-2xl font-bold text-primary-text">
           Stock Opname Management

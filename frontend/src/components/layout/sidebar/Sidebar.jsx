@@ -1,18 +1,17 @@
 import {
   ShoppingBag,
-  ShoppingBag as Bag,
   ShoppingCart,
   FileBarChart2,
   Package,
   FlaskConical,
   ClipboardCheck,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "../../../contexts/ThemeContext";
 import SidebarItem from "./SidebarItem";
 import SidebarFooter from "./SidebarFooter";
 
-// 👉 Config menu
+// 👉 Config menu (unchanged)
 const menuItems = [
   { isHeader: true, text: "Main" },
   {
@@ -28,7 +27,7 @@ const menuItems = [
   { isHeader: true, text: "Master Data" },
   {
     label: "Master Data",
-    icon: Bag,
+    icon: ShoppingBag,
     children: [
       { label: "Products", path: "/products" },
       { label: "Suppliers", path: "/suppliers" },
@@ -46,18 +45,32 @@ const menuItems = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const { colors } = useTheme();
+
+  // ✅ Default all dropdowns open
   const [openDropdowns, setOpenDropdowns] = useState({});
 
+  useEffect(() => {
+    const initial = {};
+    menuItems.forEach((item) => {
+      if (item.children) initial[item.label] = true;
+    });
+    setOpenDropdowns(initial);
+  }, []);
+
+  // ✅ Independent toggles — multiple open at once
   const toggleDropdown = (label) => {
-    setOpenDropdowns((prev) => ({ ...prev, [label]: !prev[label] }));
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [label]: !prev[label],
+    }));
   };
 
   return (
     <>
-      {/* Overlay mobile */}
+      {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-50 lg:hidden transition-opacity duration-300"
           style={{ backgroundColor: colors.background.overlay }}
           onClick={onClose}
         />
@@ -109,7 +122,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   key={idx}
                   item={item}
                   open={!!openDropdowns[item.label]}
-                  toggleDropdown={toggleDropdown}
+                  toggleDropdown={() => toggleDropdown(item.label)}
                 />
               )
             )}

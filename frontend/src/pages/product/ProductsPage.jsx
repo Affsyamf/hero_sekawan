@@ -145,7 +145,7 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="min-h-screena bg-background">
+    <div className="bg-background">
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-1 text-2xl font-bold text-primary-text">
           Product Management

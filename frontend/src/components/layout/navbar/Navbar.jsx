@@ -5,7 +5,7 @@ import { DateRangeFilter } from "../../ui";
 
 export default function Navbar({ onMenuClick }) {
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
+    <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
       <button
         onClick={onMenuClick}
         className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"

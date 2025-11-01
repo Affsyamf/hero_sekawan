@@ -169,7 +169,7 @@ export default function PurchasingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-1 text-2xl font-bold text-primary-text">
           Purchasing Management
