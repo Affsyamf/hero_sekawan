@@ -231,19 +231,12 @@ export default function PurchasingsPage() {
           </div>
 
           {/* Import Guide Button */}
-          <button
+          <Button
+            icon={BookOpen}
+            label="Import Guide"
             onClick={() => setIsGuideOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all border rounded-lg hover:shadow-md group"
-            style={{
-              borderColor: "#e5e7eb",
-              backgroundColor: "white",
-              color: "#6b7280",
-            }}
-            title="Panduan Import Data"
-          >
-            <BookOpen className="w-4 h-4 transition-transform group-hover:scale-110" />
-            <span className="hidden sm:inline">Import Guide</span>
-          </button>
+            variant="neutral"
+          ></Button>
         </div>
 
         {/* ✅ Pass filtered fetch function */}

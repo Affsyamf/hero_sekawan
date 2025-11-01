@@ -27,6 +27,11 @@ export default function Button({
       hover: colors.status.successHover,
       color: colors.text?.inverse || "#fff",
     },
+    neutral: {
+      background: colors.neutral.base,
+      hover: colors.neutral.hover,
+      color: colors.text?.default || "#000",
+    },
   };
 
   const { background, hover, color } = variants[variant] || variants.primary;

@@ -12,6 +12,18 @@ export const lightTheme = {
   secondaryLight: "#f5ecfa",
   secondaryDark: "#5e3370",
 
+  // Neutral Colors
+  neutral: {
+    base: "#e9ecef", // balanced mid-gray for icons or placeholders
+    light: "#f8f9fa", // card / background subtle
+    lighter: "#f1f3f5", // background faint / hover
+    dark: "#6c757d", // secondary text
+    darker: "#343a40", // headings / emphasis
+    border: "#dee2e6", // borders and dividers
+    hover: "#adb5bd", // hover backgrounds
+    disabled: "#ced4da", // disabled inputs or buttons
+  },
+
   // Background Colors
   background: {
     primary: "#ffffff",

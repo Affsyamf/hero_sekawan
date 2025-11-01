@@ -25,7 +25,7 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
             ? toggleDropdown(item.label)
             : !isActive && navigate(item.path)
         }
-        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group"
+        className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group cursor-pointer"
         style={{
           backgroundColor: activeOrChild ? colors.primaryLight : "transparent",
           borderWidth: activeOrChild ? "1px" : "0",
@@ -68,7 +68,7 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
 
       {/* Child items */}
       <div
-        className={`mt-1 ml-2 space-y-1 border-l transition-all duration-300  ${
+        className={`mt-1 ml-2 space-y-1 border-l transition-all duration-300 ${
           open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
         style={{ borderColor: colors.border.primary }}
@@ -79,7 +79,7 @@ export default function SidebarItem({ item, open, toggleDropdown }) {
             <button
               key={i}
               onClick={() => !isSubActive && navigate(sub.path)}
-              className="w-full pl-8 py-2.5 text-sm rounded-md transition-all duration-200"
+              className="w-full pl-8 py-2.5 text-sm rounded-md transition-all duration-200 cursor-pointer"
               style={{
                 backgroundColor: isSubActive
                   ? colors.primaryLight
