@@ -1,7 +1,7 @@
 import Table from "../../components/ui/table/Table";
 import ColorKitchenForm from "../../components/features/color-kitchen/ColorKitchenForm";
 import ImportColorKitchenModal from "../../components/features/color-kitchen/ImportColorKitchenModal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Edit2, Trash2, Eye, Upload, BookOpen } from "lucide-react";
 import { formatDate } from "../../utils/helpers";
 import {
@@ -22,7 +22,6 @@ export default function ColorKitchensPage() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [refresh, setRefresh] = useState(0);
-  const [designs, setDesigns] = useState([]);
 
   //filter global
   // const { dateRange } = useGlobalFilter();
@@ -37,38 +36,27 @@ export default function ColorKitchensPage() {
 
   const dateRange = useDateFilterStore((state) => state.dateRange);
 
-  useEffect(() => {
-    setRefresh((prev) => prev + 1);
-  }, [dateRange]);
+  // useEffect(() => {
+  //   setRefresh((prev) => prev + 1);
+  // }, [dateRange]);
 
-  const fetchDataWithDateFilter = async (params) => {
-    try {
-      const queryParams = { ...params };
-
-      if (dateRange?.dateFrom && dateRange?.dateTo) {
-        queryParams.start_date = dateRange.dateFrom;
-        queryParams.end_date = dateRange.dateTo;
-      }
-
-      const response = await searchColorKitchen(queryParams);
-      return response;
-    } catch (error) {
-      console.error("Failed to fetch stock movements:", error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    const fetchDesigns = async () => {
+  const fetchDataWithDateFilter = useCallback(
+    async (params) => {
       try {
-        const response = await searchDesign({});
-        setDesigns(response.data?.data || []);
+        const queryParams = { ...params };
+        if (dateRange?.dateFrom && dateRange?.dateTo) {
+          queryParams.start_date = dateRange.dateFrom;
+          queryParams.end_date = dateRange.dateTo;
+        }
+        const response = await searchColorKitchen(queryParams);
+        return response;
       } catch (error) {
-        console.error("Failed to fetch designs:", error);
+        console.error("Failed to fetch stock movements:", error);
+        throw error;
       }
-    };
-    fetchDesigns();
-  }, []);
+    },
+    [dateRange]
+  );
 
   const columns = [
     {

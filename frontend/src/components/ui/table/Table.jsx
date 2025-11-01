@@ -129,10 +129,8 @@ export default function Table({
 
   // Fetch mode (fetchRef.current exists)
   useEffect(() => {
-    if (fetchRef.current) {
-      loadData();
-    }
-  }, [loadData]);
+    loadData();
+  }, [loadData, fetchData]);
 
   // Static mode (explicit array passed)
   useEffect(() => {

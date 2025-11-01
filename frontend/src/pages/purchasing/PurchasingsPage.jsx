@@ -4,7 +4,7 @@ import PurchasingForm from "../../components/features/purchasing/PurchasingForm"
 import ImportPurchasingModal from "../../components/features/purchasing/ImportPurchasingModal";
 import ImportPurchasingTransactionModal from "../../components/features/purchasing/ImportPurchasingTransactionModal";
 import GuideImportPurchasingModal from "../../components/features/purchasing/GuideImportPurchasingModal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Edit2, Trash2, Eye, Upload, Database, BookOpen } from "lucide-react";
 import { formatCurrency, formatDate } from "../../utils/helpers";
 import {
@@ -30,7 +30,6 @@ export default function PurchasingsPage() {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [selectedPurchasing, setSelectedPurchasing] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [suppliers, setSuppliers] = useState([]);
 
   //filter global
   // const { dateRange } = useGlobalFilter();
@@ -42,38 +41,29 @@ export default function PurchasingsPage() {
 
   const dateRange = useDateFilterStore((state) => state.dateRange);
 
-  useEffect(() => {
-    setRefreshKey((prev) => prev + 1);
-  }, [dateRange]);
+  // useEffect(() => {
+  //   setRefreshKey((prev) => prev + 1);
+  // }, [dateRange]);
 
-  const fetchDataWithDateFilter = async (params) => {
-    try {
-      const queryParams = { ...params };
-
-      if (dateRange?.dateFrom && dateRange?.dateTo) {
-        queryParams.start_date = dateRange.dateFrom;
-        queryParams.end_date = dateRange.dateTo;
-      }
-
-      const response = await searchPurchasing(queryParams);
-      return response;
-    } catch (error) {
-      console.error("Failed to fetch stock movements:", error);
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    const fetchSuppliers = async () => {
+  const fetchDataWithDateFilter = useCallback(
+    async (params) => {
       try {
-        const response = await searchSupplier({});
-        setSuppliers(response.data?.data || []);
+        const queryParams = { ...params };
+
+        if (dateRange?.dateFrom && dateRange?.dateTo) {
+          queryParams.start_date = dateRange.dateFrom;
+          queryParams.end_date = dateRange.dateTo;
+        }
+
+        const response = await searchPurchasing(queryParams);
+        return response;
       } catch (error) {
-        console.error("Failed to fetch suppliers:", error);
+        console.error("Failed to fetch stock movements:", error);
+        throw error;
       }
-    };
-    fetchSuppliers();
-  }, []);
+    },
+    [dateRange]
+  );
 
   const columns = [
     {

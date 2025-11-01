@@ -1,5 +1,5 @@
 import { Edit2, Eye, Trash2, Upload } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ImportStockOpnameModal from "../../components/features/stock-opname/ImportStockOpnameModal";
 import StockOpnameForm from "../../components/features/stock-opname/StockOpnameForm";
 import Table from "../../components/ui/table/Table";
@@ -30,26 +30,29 @@ export default function StockOpnamePage() {
 
   const dateRange = useDateFilterStore((state) => state.dateRange);
 
-  useEffect(() => {
-    setRefresh((prev) => prev + 1);
-  }, [dateRange]);
+  // useEffect(() => {
+  //   setRefresh((prev) => prev + 1);
+  // }, [dateRange]);
 
-  const fetchDataWithDateFilter = async (params) => {
-    try {
-      const queryParams = { ...params };
+  const fetchDataWithDateFilter = useCallback(
+    async (params) => {
+      try {
+        const queryParams = { ...params };
 
-      if (dateRange?.dateFrom && dateRange?.dateTo) {
-        queryParams.start_date = dateRange.dateFrom;
-        queryParams.end_date = dateRange.dateTo;
+        if (dateRange?.dateFrom && dateRange?.dateTo) {
+          queryParams.start_date = dateRange.dateFrom;
+          queryParams.end_date = dateRange.dateTo;
+        }
+
+        const response = await searchStockOpname(queryParams);
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch stock movements:", error);
+        throw error;
       }
-
-      const response = await searchStockOpname(queryParams);
-      return response;
-    } catch (error) {
-      console.error("Failed to fetch stock movements:", error);
-      throw error;
-    }
-  };
+    },
+    [dateRange]
+  );
 
   const columns = [
     {

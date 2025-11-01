@@ -2,7 +2,6 @@ import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import SupplierForm from "../../components/features/supplier/SupplierForm";
 import Table from "../../components/ui/table/Table";
-import MainLayout from "../../layouts/MainLayout/MainLayout";
 import {
   createSupplier,
   deleteSupplier,

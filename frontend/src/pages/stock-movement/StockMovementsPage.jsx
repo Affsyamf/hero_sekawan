@@ -1,5 +1,5 @@
 import { BookOpen, Edit2, Eye, Trash2, Upload } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ImportStockMovementModal from "../../components/features/stock-movement/ImportStockMovementModal";
 import StockMovementForm from "../../components/features/stock-movement/StockMovementForm";
 import Button from "../../components/ui/button/Button";
@@ -22,26 +22,29 @@ export default function StockMovementsPage() {
 
   const dateRange = useDateFilterStore((state) => state.dateRange);
 
-  useEffect(() => {
-    setRefresh((prev) => prev + 1);
-  }, [dateRange]);
+  // useEffect(() => {
+  //   setRefresh((prev) => prev + 1);
+  // }, [dateRange]);
 
-  const fetchDataWithDateFilter = async (params) => {
-    try {
-      const queryParams = { ...params };
+  const fetchDataWithDateFilter = useCallback(
+    async (params) => {
+      try {
+        const queryParams = { ...params };
 
-      if (dateRange?.dateFrom && dateRange?.dateTo) {
-        queryParams.start_date = dateRange.dateFrom;
-        queryParams.end_date = dateRange.dateTo;
+        if (dateRange?.dateFrom && dateRange?.dateTo) {
+          queryParams.start_date = dateRange.dateFrom;
+          queryParams.end_date = dateRange.dateTo;
+        }
+
+        const response = await searchStockMovement(queryParams);
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch stock movements:", error);
+        throw error;
       }
-
-      const response = await searchStockMovement(queryParams);
-      return response;
-    } catch (error) {
-      console.error("Failed to fetch stock movements:", error);
-      throw error;
-    }
-  };
+    },
+    [dateRange]
+  );
 
   const columns = [
     {
