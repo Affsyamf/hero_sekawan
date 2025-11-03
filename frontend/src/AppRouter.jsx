@@ -44,6 +44,10 @@ export default function AppRouter() {
             <Route path="/suppliers" element={<SuppliersPage />} />
 
             <Route path="/accounts" element={<AccountsPage />} />
+            <Route
+              path="/accounts/category-board"
+              element={<AccountCategoryBoard />}
+            />
 
             <Route path="/designs" element={<DesignsPage />} />
             <Route path="/design-types" element={<DesignTypesPage />} />

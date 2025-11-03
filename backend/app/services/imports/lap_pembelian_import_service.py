@@ -129,14 +129,14 @@ class LapPembelianImportService(BaseImportService):
 
                     # --- detail insert ---
                     detail = PurchasingDetail(
-                        quantity=row.get("QTY") or 0,
-                        price=row.get("HARGA SAT") or 0,
-                        discount=row.get("POT.") or 0.0,
-                        ppn=row.get("PPN") / row.get("QTY") or 0.0,
-                        dpp=row.get("DPP") or 0.0,
-                        pph=row.get("PPH") / row.get("QTY") or 0.0,
+                        quantity=safe_number(row.get("QTY")) or 0,
+                        price=safe_number(row.get("HARGA SAT")) or 0,
+                        discount=safe_number(row.get("POT.")) or 0.0,
+                        ppn=safe_number((row.get("PPN") or 0) / (row.get("QTY") or 1)) or 0.0,
+                        dpp=safe_number(row.get("DPP")) or 0.0,
+                        pph=safe_number((row.get("PPH")) or 0 / (row.get("QTY") or 1)) or 0.0,
                         tax_no=safe_str(row.get("FAKTUR PAJAK")),
-                        exchange_rate=row.get("KURS") or 0.0,
+                        exchange_rate=safe_number(row.get("KURS")) or 1,
                         product_id=product.id,
                         purchasing_id=purchasing.id
                     )

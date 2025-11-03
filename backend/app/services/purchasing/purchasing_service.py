@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException
 from fastapi.params import Depends
-from sqlalchemy import or_, func, and_
+from sqlalchemy import or_, func, and_, cast, Numeric
 from sqlalchemy.orm import joinedload
 
 from app.schemas.input_models.purchasing_input_models import PurchasingCreate, PurchasingUpdate
@@ -19,7 +19,14 @@ class PurchasingService:
         purchasing = self.db.query(
             Purchasing,
             func.count(PurchasingDetail.id).label('item_count'),
-            func.sum(PurchasingDetail.quantity * PurchasingDetail.price + PurchasingDetail.ppn + PurchasingDetail.pph).label('total_amount')
+            func.sum(
+                cast(
+                    (func.coalesce(PurchasingDetail.quantity, 0) * func.coalesce(PurchasingDetail.price, 0))
+                    + func.coalesce(PurchasingDetail.ppn, 0)
+                    + func.coalesce(PurchasingDetail.pph, 0),
+                    Numeric(18, 2)
+                )
+            ).label("total_amount")
         ).outerjoin(Purchasing.details)\
          .outerjoin(Purchasing.supplier)\
          .group_by(Purchasing.id)
