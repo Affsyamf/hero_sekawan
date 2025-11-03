@@ -4,7 +4,7 @@ from sqlalchemy import func
 
 from app.utils.response import APIResponse
 
-from app.models import Purchasing, PurchasingDetail, Product, Account
+from app.models import Purchasing, PurchasingDetail, Product, Account, AccountParent
 from app.services.reporting.base_reporting_service import BaseReportService
 
 
@@ -34,15 +34,14 @@ class PurchasingBreakdownService(BaseReportService):
 
         q = (
             db.query(
-                Account.name.label("type"),
-                func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
+                AccountParent.account_type,
+                func.coalesce(func.sum(PurchasingDetail.quantity * PurchasingDetail.price), 0).label("total_value")
             )
             .select_from(PurchasingDetail)
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            .group_by(Account.name)
-            .order_by(Account.name)
         )
 
         if start_date:
@@ -50,15 +49,13 @@ class PurchasingBreakdownService(BaseReportService):
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
 
-        rows = q.all()
+        rows = q.group_by(AccountParent.account_type).all()
 
-        # Ensure both goods and service are always present
-        values = {r.type: float(r.total_value or 0) for r in rows}
         data = []
-        for t in ["goods", "service"]:
+        for r in rows:
             data.append({
-                "label": t,
-                "value": values.get(t, 0.0),
+                "label": r.account_type,
+                "value": float(r.total_value or 0),
             })
 
         total = sum(d["value"] for d in data)
@@ -82,15 +79,17 @@ class PurchasingBreakdownService(BaseReportService):
             # Drilldown: account_type → account_name
             q = (
                 db.query(
+                    AccountParent.account_no.label("account_no"),
                     Account.id.label("account_id"),
                     Account.name.label("account_name"),
                     func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
                 )
                 .join(Product, Product.id == PurchasingDetail.product_id)
                 .join(Account, Account.id == Product.account_id)
+                .join(AccountParent, AccountParent.id == Account.parent_id)
                 .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-                .filter(Account.account_type == parent_type)
-                .group_by(Account.id, Account.name)
+                .filter(AccountParent.account_type == parent_type)
+                .group_by(AccountParent.account_no, Account.id, Account.name)
                 .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             )
 
@@ -124,7 +123,7 @@ class PurchasingBreakdownService(BaseReportService):
             # Aggregation by account (child of goods/service)
             data = [
                 {
-                    "account_id": r.account_id,
+                    "account_id": int(r.account_id),
                     "label": r.account_name,
                     "value": float(r.total_value or 0),
                 }

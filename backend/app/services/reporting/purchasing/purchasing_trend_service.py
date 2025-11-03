@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 from datetime import timedelta
-from app.models import Purchasing, PurchasingDetail, Product, Account
+from app.models import Purchasing, PurchasingDetail, Product, Account, AccountParent
 from app.services.reporting.base_reporting_service import BaseReportService
 
 from app.utils.response import APIResponse
@@ -54,14 +54,15 @@ class PurchasingTrendService(BaseReportService):
         q = (
             db.query(
                 period_expr.label("period"),
-                Account.name.label("account_name"),
+                AccountParent.account_type.label("account_type"),
                 func.sum(PurchasingDetail.quantity * PurchasingDetail.price).label("total_value"),
             )
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
-            .group_by(period_expr, Account.name)
-            .order_by(period_expr, Account.name)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
+            .group_by(period_expr, AccountParent.account_type)
+            .order_by(period_expr, AccountParent.account_type)
         )
 
         # Filters
@@ -95,7 +96,7 @@ class PurchasingTrendService(BaseReportService):
 
             val = float(r.total_value or 0)
             # grouped[period_label]["accounts"][r.account_name] = val
-            grouped[period_label][r.account_name] = val
+            grouped[period_label][r.account_type.capitalize()] = val
             grouped[period_label]["total"] += val
 
         # Convert to list

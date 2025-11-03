@@ -173,8 +173,6 @@ export default function DashboardPurchasing() {
         displayPeriod = formatPeriod(item.period);
       }
 
-      console.log(item);
-
       return {
         key: displayPeriod,
         ...item,
@@ -219,12 +217,12 @@ export default function DashboardPurchasing() {
         value: summary.total_purchases || 0,
         trend: 0,
       },
-      total_goods: {
-        value: summary.total_goods || 0,
+      total_chemical: {
+        value: summary.total_chemical || 0,
         trend: 0,
       },
-      total_jasa: {
-        value: summary.total_services || 0,
+      total_sparepart: {
+        value: summary.total_sparepart || 0,
         trend: 0,
       },
     };
@@ -232,7 +230,7 @@ export default function DashboardPurchasing() {
     const trendData = transformTrendData(trend);
 
     const donutData = (breakdown || []).map((item) => ({
-      key: item.label === "goods" ? "Goods (Product)" : "Jasa (Services)",
+      key: item.label.charAt(0).toUpperCase() + item.label.slice(1),
       value: item.value || 0,
       drilldown: true,
       context: item.label,
@@ -455,15 +453,15 @@ export default function DashboardPurchasing() {
         />
         <Chart.Metric
           title="Total Goods"
-          value={formatCompactCurrency(metrics.total_goods.value)}
-          trend={metrics.total_goods.trend}
+          value={formatCompactCurrency(metrics.total_chemical.value)}
+          trend={metrics.total_chemical.trend}
           icon={Package}
           color="success"
         />
         <Chart.Metric
           title="Total Jasa"
-          value={formatCompactCurrency(metrics.total_jasa.value)}
-          trend={metrics.total_jasa.trend}
+          value={formatCompactCurrency(metrics.total_sparepart.value)}
+          trend={metrics.total_sparepart.trend}
           icon={Wrench}
           color="warning"
         />
@@ -478,9 +476,7 @@ export default function DashboardPurchasing() {
                 <h3 className="text-sm font-semibold text-gray-900 md:text-base">
                   Trend Purchasing
                 </h3>
-                <p className="text-xs text-gray-600">
-                  Perbandingan pembelian goods dan jasa
-                </p>
+                <p className="text-xs text-gray-600">Trend pembelian</p>
               </div>
               <select
                 value={trendGranularity}
@@ -521,9 +517,9 @@ export default function DashboardPurchasing() {
               //   label: "Total",
               // }}
               title="Breakdown Purchasing"
-              subtitle="Goods vs Jasa"
+              subtitle=""
               className="w-full h-full"
-              showSummary={true}
+              showSummary={false}
               onDrilldownRequest={async ({ _, context, depth }) => {
                 return onDrilldown(context, depth);
               }}
@@ -561,7 +557,7 @@ export default function DashboardPurchasing() {
             showSummary={false}
           />
 
-          {top_suppliers.length > 0 && (
+          {/* {top_suppliers.length > 0 && (
             <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
               <div className="p-2 rounded-lg bg-purple-50">
                 <p className="text-xs text-purple-600">Total dari Top 5</p>
@@ -581,7 +577,7 @@ export default function DashboardPurchasing() {
                 </p>
               </div>
             </div>
-          )}
+          )} */}
         </Card>
 
         {/* Top 5 Product Values */}
@@ -611,7 +607,7 @@ export default function DashboardPurchasing() {
             showSummary={false}
           />
 
-          {top_purchases.length > 0 && (
+          {/* {top_purchases.length > 0 && (
             <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-gray-200">
               <div className="p-2 rounded-lg bg-green-50">
                 <p className="text-xs text-green-600">Total dari Top 5</p>
@@ -630,7 +626,7 @@ export default function DashboardPurchasing() {
                 </p>
               </div>
             </div>
-          )}
+          )} */}
         </Card>
       </div>
 

@@ -1,7 +1,7 @@
 # app/services/reporting/purchasing/purchasing_summary_service.py
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models import Product, Account, Purchasing, PurchasingDetail, ProductAvgCostCache
+from app.models import Product, Account, Purchasing, PurchasingDetail, ProductAvgCostCache, AccountParent
 from app.services.reporting.base_reporting_service import BaseReportService
 
 from app.utils.response import APIResponse
@@ -55,29 +55,31 @@ class PurchasingSummaryService(BaseReportService):
         # --------------------------------------------------
         # Goods / Service split
         # --------------------------------------------------
-        goods_total = (
+        chemical_total = (
             db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            # .filter(Account.account_type == AccountType.Goods.value)
+            .filter(AccountParent.account_type == "chemical")
         )
-        jasa_total = (
+        sparepart_total = (
             db.query(func.sum(PurchasingDetail.quantity * PurchasingDetail.price))
             .join(Product, Product.id == PurchasingDetail.product_id)
             .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
-            # .filter(Account.account_type == AccountType.Service.value)
+            .filter(AccountParent.account_type == "sparepart")
         )
         if start_date:
-            goods_total = goods_total.filter(Purchasing.date >= start_date)
-            jasa_total = jasa_total.filter(Purchasing.date >= start_date)
+            chemical_total = chemical_total.filter(Purchasing.date >= start_date)
+            sparepart_total = sparepart_total.filter(Purchasing.date >= start_date)
         if end_date:
-            goods_total = goods_total.filter(Purchasing.date <= end_date)
-            jasa_total = jasa_total.filter(Purchasing.date <= end_date)
+            chemical_total = chemical_total.filter(Purchasing.date <= end_date)
+            sparepart_total = sparepart_total.filter(Purchasing.date <= end_date)
 
-        total_goods = float(goods_total.scalar() or 0)
-        total_services = float(jasa_total.scalar() or 0)
+        total_chemical = float(chemical_total.scalar() or 0)
+        total_sparepart = float(sparepart_total.scalar() or 0)
 
         # --------------------------------------------------
         # Highest Purchase (by invoice total)
@@ -118,8 +120,8 @@ class PurchasingSummaryService(BaseReportService):
             meta=filters,
             data={
                 "total_purchases": total_value,
-                "total_goods": total_goods,
-                "total_services": total_services,
+                "total_chemical": total_chemical,
+                "total_sparepart": total_sparepart,
                 "avg_unit_cost": avg_unit_cost,
                 "highest_purchase_value": float(highest_purchase_value or 0),
                 "highest_avg_cost": top_avg_cost_products,

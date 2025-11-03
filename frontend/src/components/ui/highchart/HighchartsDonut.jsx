@@ -84,11 +84,12 @@ const HighchartsDonut = ({
           try {
             let depth = chart.drilldownLevels?.length || 0;
 
+            console.log(depth);
+
             let frozen = false;
 
             for (const lvl of chart.drilldownLevels || []) {
               const context = lvl.pointOptions?.context?.toLowerCase?.();
-              console.log(lvl);
               if (context === "others") {
                 // Once we hit "others", stop increasing depth
                 frozen = true;
@@ -149,6 +150,10 @@ const HighchartsDonut = ({
           }
         },
         drillup() {
+          const chart = this;
+          let depth = chart.drilldownLevels?.length || 0;
+
+          console.log(depth);
           console.log("Drilled up");
         },
       },
