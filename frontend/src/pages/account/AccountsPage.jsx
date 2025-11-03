@@ -1,4 +1,4 @@
-import { Edit2, Eye, Trash2 } from "lucide-react";
+import { Edit2, Eye, Map, Trash2 } from "lucide-react";
 import { useState } from "react";
 import AccountForm from "../../components/features/account/AccountForm";
 import Table from "../../components/ui/table/Table";
@@ -8,8 +8,12 @@ import {
   searchAccount,
   updateAccount,
 } from "../../services/account_service";
+import Button from "../../components/ui/button/Button";
+import { useNavigate } from "react-router-dom";
 
 export default function AccountsPage() {
+  const navigate = useNavigate();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -162,6 +166,17 @@ export default function AccountsPage() {
           Account Management
         </h1>
         <p className="mb-6 text-secondary-text">Manage accounts</p>
+
+        <div className="flex items-center">
+          <Button
+            icon={Map}
+            label="Account Mapping"
+            onClick={() => navigate(`/accounts/category-board`)}
+            variant="secondary"
+          >
+            Account Mapping
+          </Button>
+        </div>
 
         <Table
           key={refreshKey}

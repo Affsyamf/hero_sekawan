@@ -4,8 +4,12 @@ import {
   updateAccountParent,
 } from "../../services/account_service";
 import KanbanBoard from "../../components/ui/kanban-board/KanbanBoard";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 
 export default function AccountCategoryBoard() {
+  const navigate = useNavigate();
+
   const [columns, setColumns] = useState(null);
 
   useEffect(() => {
@@ -46,9 +50,18 @@ export default function AccountCategoryBoard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-lg font-bold mb-2 text-gray-900">
-        Account Category Mapping
-      </h1>
+      <div className="flex items-center gap-2 mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-surface transition-all cursor-pointer"
+          title="Back"
+        >
+          <ChevronLeft size={22} className="text-secondary-text" />
+        </button>
+        <h1 className="text-lg font-bold mb-2 text-gray-900">
+          Account Category Mapping
+        </h1>
+      </div>
       <p className="text-sm text-gray-500 mb-6">
         Drag accounts into the correct bucket below.
       </p>
