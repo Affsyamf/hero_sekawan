@@ -12,6 +12,7 @@ class AccountParent(Base):
     id = Column(Integer, primary_key=True)
     account_no = Column(Numeric, nullable=False, unique=True, index=True)
     name = Column(String, nullable=True)
+    account_type = Column(String, nullable=True)
 
     accounts = relationship("Account", back_populates="parent", lazy='selectin', cascade="all, delete-orphan")
 
