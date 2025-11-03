@@ -39,9 +39,9 @@ class LapPembelianImportService(BaseImportService):
         affected_product_ids = set()
 
         with skip_cost_cache_updates():
-
+            EXCLUDE_SHEETS = {"JANUARI 2025", "FEB 2025", "MARET", "APRIL", "MEI", "JUNI", "JULI"}
             for sheet in wb.sheetnames:
-                if sheet != "AGUSTUS":
+                if EXCLUDE_SHEETS.__contains__(sheet):
                     continue # TODO: only import AGUSTUS for now
 
                 df = pd.read_excel(BytesIO(contents), sheet_name=sheet, header=HEADER_ROW)
