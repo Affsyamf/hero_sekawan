@@ -8,16 +8,27 @@ from pydantic import BaseModel
 # ===============================
 class AccountCreate(BaseModel):
     name: str
-    account_no: Decimal
+    parent_id: int
     # account_type: AccountType
-    alias: Optional[str] = None
 
 
 class AccountUpdate(BaseModel):
     name: Optional[str] = None
+    parent_id: int
+
+class AccountParentCreate(BaseModel):
+    name: str
+    account_no: Decimal
+    name: Optional[str] = None
+    account_type: Optional[str] = None
+    accounts: Optional[list[int]] = None
+
+class AccountParentUpdate(BaseModel):
+    name: Optional[str] = None
     account_no: Optional[Decimal] = None
-    # account_type: Optional[AccountType] = None
-    alias: Optional[str] = None
+    name: Optional[str] = None
+    account_type: Optional[str] = None
+    accounts: Optional[list[int]] = None
 
 
 # ===============================
