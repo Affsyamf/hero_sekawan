@@ -19,14 +19,12 @@ class AccountUpdate(BaseModel):
 class AccountParentCreate(BaseModel):
     name: str
     account_no: Decimal
-    name: Optional[str] = None
     account_type: Optional[str] = None
     accounts: Optional[list[int]] = None
 
 class AccountParentUpdate(BaseModel):
     name: Optional[str] = None
     account_no: Optional[Decimal] = None
-    name: Optional[str] = None
     account_type: Optional[str] = None
     accounts: Optional[list[int]] = None
 

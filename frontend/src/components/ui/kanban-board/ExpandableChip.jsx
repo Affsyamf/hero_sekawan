@@ -11,7 +11,7 @@ import { ChevronDown } from "lucide-react";
  */
 export default function ExpandableChip({
   title,
-  items = ["a", "b", "c"],
+  items,
   dragging = false,
   renderItem,
 }) {
@@ -48,10 +48,10 @@ export default function ExpandableChip({
       {hasItems && (
         <div
           className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-            open ? "max-h-48" : "max-h-0"
+            open ? "max-h-40" : "max-h-0"
           }`}
         >
-          <div className="px-3 pb-2 text-xs text-gray-600 space-y-0.5">
+          <div className="px-3 max-h-40 overflow-y-auto pb-2 text-xs text-gray-600 space-y-0.5">
             {items.map((item, i) =>
               renderItem ? (
                 renderItem(item, i)

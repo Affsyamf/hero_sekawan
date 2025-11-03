@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from app.schemas.input_models.types_input_models import AccountCreate, AccountUpdate
+from app.schemas.input_models.types_input_models import AccountParentCreate, AccountParentUpdate
 from app.utils.datatable.request import ListRequest
 from app.services.types.account_parent_service import AccountParentService
 from app.utils.response import APIResponse
@@ -16,14 +16,14 @@ def get_account_parent_by_id(account_id: int, service: AccountParentService = De
     return service.get_account_parent(account_id=account_id)
 
 @account_parent_router.post("/")
-def create_account_parent(request: AccountCreate, service: AccountParentService = Depends()):
+def create_account_parent(request: AccountParentCreate, service: AccountParentService = Depends()):
     try:
         return service.create_account_parent(request)
     except Exception as e:
         return APIResponse.internal_error(message="Failed to create account", error_detail=str(e))
 
 @account_parent_router.put("/{account_id}")
-def update_account_parent_by_id(account_id: int, request: AccountUpdate, service: AccountParentService = Depends()):
+def update_account_parent_by_id(account_id: int, request: AccountParentUpdate, service: AccountParentService = Depends()):
     try:
         return service.update_account_parent(account_id, request)
     except Exception as e:

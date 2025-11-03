@@ -181,7 +181,7 @@ const SortableItem = ({ id, item, renderItem }) => {
       ) : (
         <ExpandableChip
           title={item.name || item.label}
-          items={item.children || item.accounts || []}
+          items={item.children || []}
           dragging={isDragging}
         />
       )}

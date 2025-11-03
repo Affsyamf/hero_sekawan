@@ -11,13 +11,14 @@ from app.utils.datatable.request import ListRequest
 from app.utils.deps import DB
 from app.utils.response import APIResponse
 
+from app.utils.safe_parse import sanitize
 
 class AccountParentService:
     def __init__(self, db = Depends(get_db)):
         self.db = db
 
     def list_account_parent(self, request: ListRequest):
-        account_parent = self.db.query(AccountParent).join(AccountParent.parent)
+        account_parent = self.db.query(AccountParent)
 
         if request.q:
             like = f"%{request.q}%"
@@ -27,16 +28,18 @@ class AccountParentService:
                 )
             ).order_by(AccountParent.id)
 
-        return APIResponse.paginated(account_parent, request, lambda account_parent: {
-                "id": account_parent.id,
-                "name": account_parent.name,
-                "account_no": account_parent.account_no,
-                "account_type": account_parent.account_type,
+        return APIResponse.paginated(
+            account_parent, request,
+            lambda ap: sanitize({
+                "id": ap.id,
+                "name": ap.name,
+                "account_no": ap.account_no,
+                "account_type": ap.account_type,
                 "accounts": [{
-                    "id": account.id,
-                    "name": account.name,
-                } for account in account_parent.accounts] if account_parent.accounts else []
-            }
+                    "id": a.id,
+                    "name": a.name,
+                } for a in ap.accounts] if ap.accounts else []
+            })
         )
 
     def get_account_parent(self, account_id: int):
@@ -98,7 +101,7 @@ class AccountParentService:
 
         if result == 0:
             return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
-
+        
         return APIResponse.ok(f"Account ID '{account_id}' updated.")
 
     def delete_account_parent(self, account_id: int):

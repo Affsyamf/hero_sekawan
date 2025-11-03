@@ -10,6 +10,7 @@ from app.models import *
 
 from app.routers.dashboard.routes import dashboard_router as dashboard_router
 from app.routers.product.routes import product_router
+from app.routers.account_parent.routes import account_parent_router
 from app.routers.account.routes import account_router
 from app.routers.supplier.routes import supplier_router
 from app.routers.design_type.routes import design_type_router
@@ -49,12 +50,15 @@ app.include_router(import_lap_pembelian_router)
 app.include_router(purchasing_report_router)
 app.include_router(color_kitchen_report_router)
 
-app.include_router(dashboard_router)
 app.include_router(product_router)
+app.include_router(account_parent_router)
 app.include_router(account_router)
 app.include_router(supplier_router)
 app.include_router(design_type_router)
 app.include_router(design_router)
+
+app.include_router(dashboard_router)
+
 app.include_router(purchasing_router)
 app.include_router(color_kitchen_batch_router)
 app.include_router(color_kitchen_entry_router)
