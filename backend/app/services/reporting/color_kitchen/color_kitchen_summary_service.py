@@ -91,15 +91,13 @@ class ColorKitchenSummaryService(BaseReportService):
         # ----------------------------------------------
         avg_cost_per_batch = total_cost / total_batches if total_batches else 0
         avg_cost_per_entry = total_cost / total_entries if total_entries else 0
+        avg_cost_per_roll = total_cost / total_rolls_processed if total_rolls_processed else 0
 
         # ----------------------------------------------
         # Final result
         # ----------------------------------------------
         return {
-            "total_batches": int(total_batches),
-            "total_entries": int(total_entries),
-            "total_rolls_processed": int(total_rolls_processed),
-            "avg_cost_per_batch": round(avg_cost_per_batch, 2),
-            "avg_cost_per_entry": round(avg_cost_per_entry, 2),
             "total_cost": round(total_cost, 2),
+            "total_rolls_processed": int(total_rolls_processed),
+            "avg_cost_per_roll": round(avg_cost_per_roll, 2),
         }

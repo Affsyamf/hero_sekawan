@@ -15,6 +15,8 @@ import {
   TrendingUp,
   Building2,
   X,
+  Cylinder,
+  HandCoins,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -30,6 +32,7 @@ import {
 } from "../../services/report_color_kitchen_service";
 import { formatPeriod, formatWeeklyPeriod } from "../../utils/dateHelper";
 import useDateFilterStore from "../../stores/useDateFilterStore";
+import { MetricGrid } from "../../components/ui/chart/MetricCard";
 
 export default function DashboardColorKitchen() {
   const [ckData, setCkData] = useState(null);
@@ -95,6 +98,8 @@ export default function DashboardColorKitchen() {
         auxData.data
       );
 
+      console.log(transformedData);
+
       setCkData(transformedData);
     } catch (error) {
       console.error("Error fetching Color Kitchen data:", error);
@@ -137,25 +142,14 @@ export default function DashboardColorKitchen() {
 
   const transformApiData = (summary, chemicalSummary, dyesData, auxData) => {
     // Transform metrics
+    console.log(summary);
     const metrics = {
-      total_batch: {
-        value: summary.total_batches || 0,
-        trend: 0,
-      },
-      total_entries: {
-        value: summary.total_entries || 0,
-        trend: 0,
-      },
       total_rolls: {
         value: summary.total_rolls_processed || 0,
         trend: 0,
       },
-      avg_cost_per_batch: {
-        value: summary.avg_cost_per_batch || 0,
-        trend: 0,
-      },
-      avg_cost_per_entry: {
-        value: summary.avg_cost_per_entry || 0,
+      avg_cost_per_roll: {
+        value: summary.avg_cost_per_roll || 0,
         trend: 0,
       },
       total_cost: {
@@ -381,106 +375,29 @@ export default function DashboardColorKitchen() {
       )}
 
       {/* KPI Cards - Row 1 */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-        <Card className="relative overflow-hidden border-l-4 border-l-primary">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-lg md:w-12 md:h-12 bg-primary/10">
-              <Layers className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 truncate md:text-sm">
-                Total Batch
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                {formatNumber(metrics.total_batch.value)}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg md:w-12 md:h-12">
-              <FileText className="w-5 h-5 text-blue-600 md:w-6 md:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 truncate md:text-sm">
-                Total Entries
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                {formatNumber(metrics.total_entries.value)}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="relative overflow-hidden border-l-4 border-l-purple-500">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-purple-100 rounded-lg md:w-12 md:h-12">
-              <Package2 className="w-5 h-5 text-purple-600 md:w-6 md:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 truncate md:text-sm">
-                Total Rolls
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                {formatNumber(metrics.total_rolls.value)}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* KPI Cards - Row 2 */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
-        <Card className="relative overflow-hidden border-l-4 border-l-green-500">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg md:w-12 md:h-12">
-              <DollarSign className="w-5 h-5 text-green-600 md:w-6 md:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 truncate md:text-sm">
-                Avg Cost/Batch
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                {formatCompactCurrency(metrics.avg_cost_per_batch.value)}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="relative overflow-hidden border-l-4 border-l-orange-500">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-orange-100 rounded-lg md:w-12 md:h-12">
-              <TrendingUp className="w-5 h-5 text-orange-600 md:w-6 md:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 truncate md:text-sm">
-                Avg Cost/Entry
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                {formatCompactCurrency(metrics.avg_cost_per_entry.value)}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="relative overflow-hidden border-l-4 border-l-red-500">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg md:w-12 md:h-12">
-              <DollarSign className="w-5 h-5 text-red-600 md:w-6 md:h-6" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-600 truncate md:text-sm">
-                Total Cost
-              </p>
-              <p className="text-base font-bold text-gray-900 truncate md:text-xl">
-                {formatCompactCurrency(metrics.total_cost.value)}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
+      <MetricGrid>
+        <Chart.Metric
+          title="Total Cost"
+          value={formatCompactCurrency(metrics.total_cost?.value)}
+          // trend={metrics.total_cost.trend}
+          icon={HandCoins}
+          color="primary"
+        />
+        <Chart.Metric
+          title="Total Rolls"
+          value={metrics.total_rolls?.value}
+          // trend={metrics.total_chemical.trend}
+          icon={Cylinder}
+          color="success"
+        />
+        <Chart.Metric
+          title="Average Cost Per Roll"
+          value={formatCompactCurrency(metrics.avg_cost_per_roll?.value)}
+          // trend={metrics.avg_cost_per_roll.trend}
+          icon={DollarSign}
+          color="warning"
+        />
+      </MetricGrid>
 
       {/* Main Charts Row */}
       <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">

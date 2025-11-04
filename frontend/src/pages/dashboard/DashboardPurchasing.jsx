@@ -2,6 +2,7 @@
 import {
   Building2,
   Download,
+  FlaskConical,
   Package,
   ShoppingCart,
   TrendingUp,
@@ -447,21 +448,21 @@ export default function DashboardPurchasing() {
         <Chart.Metric
           title="Total Purchases"
           value={formatCompactCurrency(metrics.total_purchases.value)}
-          trend={metrics.total_purchases.trend}
+          // trend={metrics.total_purchases.trend}
           icon={ShoppingCart}
           color="primary"
         />
         <Chart.Metric
-          title="Total Goods"
+          title="Total Chemical"
           value={formatCompactCurrency(metrics.total_chemical.value)}
-          trend={metrics.total_chemical.trend}
-          icon={Package}
+          // trend={metrics.total_chemical.trend}
+          icon={FlaskConical}
           color="success"
         />
         <Chart.Metric
-          title="Total Jasa"
+          title="Total Sparepart"
           value={formatCompactCurrency(metrics.total_sparepart.value)}
-          trend={metrics.total_sparepart.trend}
+          // trend={metrics.total_sparepart.trend}
           icon={Wrench}
           color="warning"
         />

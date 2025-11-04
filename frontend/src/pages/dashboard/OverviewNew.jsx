@@ -206,25 +206,25 @@ export default function OverviewNew() {
         <Chart.Metric
           title="Total Purchasing"
           value={formatCompactCurrency(metrics.total_purchasing.value)}
-          trend={formatTrend(metrics.total_purchasing.trend)}
+          // trend={formatTrend(metrics.total_purchasing.trend)}
           icon={ShoppingCart}
         />
         <Chart.Metric
           title="Total Stock Terpakai"
           value={formatCompactCurrency(metrics.total_stock_terpakai.value)}
-          trend={formatTrend(metrics.total_stock_terpakai.trend)}
+          // trend={formatTrend(metrics.total_stock_terpakai.trend)}
           icon={TrendingDown}
         />
         <Chart.Metric
           title="Total Cost Produksi"
           value={formatCompactCurrency(metrics.total_cost_produksi.value)}
-          trend={formatTrend(metrics.total_cost_produksi.trend)}
+          // trend={formatTrend(metrics.total_cost_produksi.trend)}
           icon={DollarSign}
         />
         <Chart.Metric
           title="Avg Cost per Job"
           value={formatCompactCurrency(metrics.avg_cost_per_job.value)}
-          trend={formatTrend(metrics.avg_cost_per_job.trend)}
+          // trend={formatTrend(metrics.avg_cost_per_job.trend)}
           icon={Palette}
         />
       </div>
