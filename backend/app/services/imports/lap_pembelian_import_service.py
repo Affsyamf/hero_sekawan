@@ -39,9 +39,9 @@ class LapPembelianImportService(BaseImportService):
         affected_product_ids = set()
 
         with skip_cost_cache_updates():
-            EXCLUDE_SHEETS = {"JANUARI 2025", "FEB 2025", "MARET", "APRIL", "MEI", "JUNI", "JULI"}
+            EXCLUDE_SHEETS = ["JANUARI 2025", "FEB 2025", "MARET", "APRIL", "MEI", "JUNI", "JULI"]
             for sheet in wb.sheetnames:
-                if EXCLUDE_SHEETS.__contains__(sheet):
+                if sheet in EXCLUDE_SHEETS:
                     continue # TODO: only import AGUSTUS for now
 
                 df = pd.read_excel(BytesIO(contents), sheet_name=sheet, header=HEADER_ROW)
@@ -176,10 +176,10 @@ class LapPembelianImportService(BaseImportService):
         ROW_OFFSET = HEADER_ROW + 1
 
         summary = {"sheets": {}, "missing_products": set(), "missing_suppliers": set(), "skipped": []}
-
+        EXCLUDE_SHEETS = ["JANUARI 2025", "FEB 2025", "MARET", "APRIL", "MEI", "JUNI", "JULI"]
         for sheet in wb.sheetnames:
-            if sheet != "AGUSTUS":
-                continue  # TODO: only preview AGUSTUS for now
+            if sheet in EXCLUDE_SHEETS:
+                continue  
 
             df = pd.read_excel(BytesIO(contents), sheet_name=sheet, header=HEADER_ROW)
             df = df.iloc[:, :-2]
