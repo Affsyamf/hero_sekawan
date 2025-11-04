@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.utils.response import APIResponse
+from app.utils.filters import apply_common_report_filters
 
 from app.models import Purchasing, PurchasingDetail, Product, Account, AccountParent
 from app.services.reporting.base_reporting_service import BaseReportService
@@ -48,6 +49,8 @@ class PurchasingBreakdownService(BaseReportService):
             q = q.filter(Purchasing.date >= start_date)
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
+
+        q = apply_common_report_filters(q, filters)
 
         rows = q.group_by(AccountParent.account_type).all()
 
@@ -115,6 +118,8 @@ class PurchasingBreakdownService(BaseReportService):
             q = q.filter(Purchasing.date >= start_date)
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
+
+        q = apply_common_report_filters(q, filters)
 
         rows = q.all()
         data = []

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from pydantic import BaseModel, Field
 
 class BaseReportFilter(BaseModel):
@@ -20,6 +20,18 @@ class PurchasingReportFilter(BaseReportFilter):
             "'both' = chemical + sparepart, "
             "None = all"
         ),
+    )
+    product_ids: Optional[List[int]] = Field(
+        None, description="Filter by list of Product IDs"
+    )
+    supplier_ids: Optional[List[int]] = Field(
+        None, description="Filter by list of Supplier IDs"
+    )
+    account_parent_codes: Optional[List[int]] = Field(
+        None, description="Filter by list of AccountParent codes (e.g. 1105201)"
+    )
+    account_names: Optional[List[str]] = Field(
+        None, description="Filter by Account.name list or partial matches"
     )
 
 class ColorKitchenReportFilter(BaseReportFilter):

@@ -5,6 +5,7 @@ from app.models import Product, Account, Purchasing, PurchasingDetail, ProductAv
 from app.services.reporting.base_reporting_service import BaseReportService
 
 from app.utils.response import APIResponse
+from app.utils.filters import apply_common_report_filters
 
 class PurchasingSummaryService(BaseReportService):
     """
@@ -46,6 +47,8 @@ class PurchasingSummaryService(BaseReportService):
             q = q.filter(Purchasing.date <= end_date)
         # if account_type and isinstance(account_type, AccountType):
         #     q = q.filter(Account.account_type == account_type.value)
+       
+        q = apply_common_report_filters(q, filters)
 
         total_row = q.one_or_none()
         total_value = float(total_row.total_value or 0) if total_row else 0
@@ -77,6 +80,9 @@ class PurchasingSummaryService(BaseReportService):
         if end_date:
             chemical_total = chemical_total.filter(Purchasing.date <= end_date)
             sparepart_total = sparepart_total.filter(Purchasing.date <= end_date)
+
+        chemical_total = apply_common_report_filters(chemical_total, filters)
+        sparepart_total = apply_common_report_filters(sparepart_total, filters)
 
         total_chemical = float(chemical_total.scalar() or 0)
         total_sparepart = float(sparepart_total.scalar() or 0)
