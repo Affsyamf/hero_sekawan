@@ -22,9 +22,7 @@ export default function AccountCategoryBoard() {
         name: `${item.account_no} ${item.name ? " (" + item.name + ")" : ""}`,
       }));
 
-      console.log(data);
-
-      const grouped = { chemical: [], sparepart: [], others: [], none: [] };
+      const grouped = { chemical: [], sparepart: [], other: [], none: [] };
 
       data.forEach((acc) => {
         const type = acc.account_type || "none";
@@ -40,7 +38,7 @@ export default function AccountCategoryBoard() {
     () => ({
       chemical: { title: "Chemical", tint: "bg-blue-50" },
       sparepart: { title: "Sparepart", tint: "bg-emerald-50" },
-      others: { title: "Others", tint: "bg-lime-50" },
+      other: { title: "Other", tint: "bg-lime-50" },
       none: { title: "None", tint: "bg-gray-100" },
     }),
     []
