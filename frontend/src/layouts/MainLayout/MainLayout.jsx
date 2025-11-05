@@ -33,7 +33,7 @@ export default function MainLayout({ children }) {
       {/* Main Column */}
       <div
         className={cn(
-          "relative flex flex-col flex-1 min-h-screen transition-all duration-300",
+          "relative flex flex-col flex-1 min-h-screen transition-all duration-300 overflow-x-hidden",
           sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
         )}
         style={{

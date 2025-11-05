@@ -35,8 +35,8 @@ const getActiveItem = (columns, activeId) => {
 export default function KanbanBoard({
   columns: initialColumns,
   columnMeta,
-  onMove, // async handler when item moved to a new column
-  renderItem, // optional custom item renderer
+  onMove,
+  renderItem,
 }) {
   const [columns, setColumns] = useState(initialColumns);
   const [activeId, setActiveId] = useState(null);
@@ -56,12 +56,10 @@ export default function KanbanBoard({
     const to = findContainer(columns, over.id);
     if (!from || !to) return;
 
-    // Same column reorder
     if (from === to) {
       const oldIndex = columns[from].findIndex((i) => i.id === active.id);
       const newIndex = columns[to].findIndex((i) => i.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
-
       setColumns((prev) => ({
         ...prev,
         [to]: arrayMove(prev[to], oldIndex, newIndex),
@@ -69,7 +67,6 @@ export default function KanbanBoard({
       return;
     }
 
-    // Move between columns
     const movedItem = columns[from].find((i) => i.id === active.id);
     if (!movedItem) return;
 
@@ -79,9 +76,7 @@ export default function KanbanBoard({
       [to]: [movedItem, ...prev[to]],
     }));
 
-    if (onMove) {
-      await onMove(movedItem, from, to);
-    }
+    if (onMove) await onMove(movedItem, from, to);
   };
 
   const activeItem = getActiveItem(columns, activeId);
@@ -93,16 +88,18 @@ export default function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* ✅ Only the grid itself, no overflow styling here */}
+      <div className="flex gap-6 min-w-max px-1">
         {Object.keys(columns).map((id) => (
-          <DroppableColumn
-            key={id}
-            id={id}
-            title={columnMeta[id]?.title || id}
-            tint={columnMeta[id]?.tint || "bg-gray-50"}
-            items={columns[id]}
-            renderItem={renderItem}
-          />
+          <div key={id} className="flex-shrink-0 w-[260px]">
+            <DroppableColumn
+              id={id}
+              title={columnMeta[id]?.title || id}
+              tint={columnMeta[id]?.tint || "bg-gray-50"}
+              items={columns[id]}
+              renderItem={renderItem}
+            />
+          </div>
         ))}
       </div>
 
@@ -131,7 +128,6 @@ const DroppableColumn = ({ id, title, tint, items, renderItem }) => {
       style={{ minHeight: 280 }}
     >
       <h2 className="font-semibold text-gray-800 mb-3">{title}</h2>
-
       <SortableContext
         id={id}
         items={items.map((i) => i.id)}
