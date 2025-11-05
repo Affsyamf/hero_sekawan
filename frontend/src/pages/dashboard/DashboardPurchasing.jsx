@@ -35,6 +35,8 @@ import {
 } from "../../utils/chartHelper";
 import { useFilterService } from "../../contexts/FilterServiceContext";
 import ProductFilter from "../../components/ui/filter/ProductFilter";
+import SupplierFilter from "../../components/ui/filter/SupplierFilter";
+import CategoryFilter from "../../components/ui/filter/CategoryFilter";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -51,20 +53,19 @@ export default function DashboardPurchasing() {
 
   useEffect(() => {
     registerFilters([
-      <ProductFilter
-        key="product-filter"
-        value={filters.product_ids || []}
-        onChange={(v) => setFilter("product_ids", v)}
+      <CategoryFilter
+        value={filters.category ?? null}
+        onChange={(val) => setFilter("category", val)}
       />,
       <ProductFilter
         key="product-filter"
         value={filters.product_ids || []}
         onChange={(v) => setFilter("product_ids", v)}
       />,
-      <ProductFilter
-        key="product-filter"
-        value={filters.product_ids || []}
-        onChange={(v) => setFilter("product_ids", v)}
+      <SupplierFilter
+        key="supplier-filter"
+        value={filters.supplier_ids || []}
+        onChange={(v) => setFilter("supplier_ids", v)}
       />,
     ]);
   }, [registerFilters, setFilter, JSON.stringify(filters)]);
@@ -86,6 +87,10 @@ export default function DashboardPurchasing() {
         product_ids: filters.product_ids?.length
           ? filters.product_ids
           : undefined,
+        supplier_ids: filters.supplier_ids?.length
+          ? filters.supplier_ids
+          : undefined,
+        category: filters.category,
       };
 
       // Skip fetch if no date range yet
@@ -138,6 +143,10 @@ export default function DashboardPurchasing() {
         product_ids: filters.product_ids?.length
           ? filters.product_ids
           : undefined,
+        supplier_ids: filters.supplier_ids?.length
+          ? filters.supplier_ids
+          : undefined,
+        category: filters.category,
       };
 
       const trend = await reportsPurchasingTrend(params);
@@ -372,6 +381,10 @@ export default function DashboardPurchasing() {
       product_ids: filters.product_ids?.length
         ? filters.product_ids
         : undefined,
+      supplier_ids: filters.supplier_ids?.length
+        ? filters.supplier_ids
+        : undefined,
+      category: filters.category,
     };
 
     // level 1 → Goods vs Jasa

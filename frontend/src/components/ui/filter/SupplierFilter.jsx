@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "../../../utils/cn";
-import { searchProduct } from "../../../services/product_service";
+import { searchSupplier } from "../../../services/supplier_service";
 import { useTheme } from "../../../contexts/ThemeContext";
 
-export default function ProductFilter({ value = [], onChange }) {
+export default function SupplierFilter({ value = [], onChange }) {
   const { colors } = useTheme();
 
-  const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,10 +15,14 @@ export default function ProductFilter({ value = [], onChange }) {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await searchProduct({ q: search, page: 1, page_size: 100 });
-        setProducts(res.data.data || []);
+        const res = await searchSupplier({
+          q: search,
+          page: 1,
+          page_size: 100,
+        });
+        setSuppliers(res.data.data || []);
       } catch (err) {
-        console.error("Failed to load products", err);
+        console.error("Failed to load suppliers", err);
       } finally {
         setLoading(false);
       }
@@ -35,14 +39,14 @@ export default function ProductFilter({ value = [], onChange }) {
 
   return (
     <div>
-      <h3 className="font-semibold text-gray-800 mb-3">Products</h3>
+      <h3 className="font-semibold text-gray-800 mb-2 text-sm">Suppliers</h3>
 
       {/* Search bar */}
       <div className="relative mb-3">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search products..."
+          placeholder="Search suppliers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-8 pr-2 py-1.5 w-full text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
@@ -59,24 +63,24 @@ export default function ProductFilter({ value = [], onChange }) {
           borderColor: colors.border.secondary,
         }}
       >
-        {products.length === 0 && !loading ? (
-          <div className="p-3 text-xs text-gray-500 italic">
-            No products found
+        {suppliers.length === 0 && !loading ? (
+          <div className="p-2 text-xs text-gray-500 italic">
+            No suppliers found
           </div>
         ) : (
-          products.map((p) => (
+          suppliers.map((s) => (
             <label
-              key={p.id}
-              className="flex items-center gap-2 p-2.5 text-xs cursor-pointer hover:bg-gray-100"
-              title={p.name}
+              key={s.id}
+              className="flex items-center gap-2 p-2 text-xs cursor-pointer hover:bg-gray-100"
+              title={s.name}
             >
               <input
                 type="checkbox"
-                checked={value.includes(p.id)}
-                onChange={() => toggle(p.id)}
+                checked={value.includes(s.id)}
+                onChange={() => toggle(s.id)}
                 className="flex-shrink-0 accent-blue-600"
               />
-              <span className="text-gray-700 truncate">{p.name}</span>
+              <span className="text-gray-700 truncate">{s.name}</span>
             </label>
           ))
         )}
@@ -84,8 +88,8 @@ export default function ProductFilter({ value = [], onChange }) {
 
       {/* Selected count */}
       {value.length > 0 && (
-        <p className="text-xs text-gray-500 mt-2">
-          {value.length} product{value.length > 1 ? "s" : ""} selected
+        <p className="text-[11px] text-gray-500 mt-1.5">
+          {value.length} supplier{value.length > 1 ? "s" : ""} selected
         </p>
       )}
     </div>
