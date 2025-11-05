@@ -1,5 +1,3 @@
-import { useTheme } from "../../../contexts/ThemeContext";
-import { cn } from "../../../utils/cn";
 import Button from "../button/Button";
 
 export default function CategoryFilter({ value = null, onChange }) {

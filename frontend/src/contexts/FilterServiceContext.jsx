@@ -20,10 +20,25 @@ export function FilterServiceProvider({ children }) {
   // === Filter CRUD (per route) ===
   const setFilter = useCallback(
     (key, value) => {
-      setFiltersByPage((prev) => ({
-        ...prev,
-        [currentPage]: { ...(prev[currentPage] || {}), [key]: value },
-      }));
+      setFiltersByPage((prev) => {
+        const pageFilters = { ...(prev[currentPage] || {}) };
+
+        const shouldDelete =
+          value === undefined ||
+          value === null ||
+          (Array.isArray(value) && value.length === 0);
+
+        if (shouldDelete) {
+          delete pageFilters[key];
+        } else {
+          pageFilters[key] = value;
+        }
+
+        return {
+          ...prev,
+          [currentPage]: pageFilters,
+        };
+      });
     },
     [currentPage]
   );
