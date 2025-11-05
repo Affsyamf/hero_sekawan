@@ -77,7 +77,7 @@ export default function Sidebar({
       )}
 
       <aside
-        className={` top-0 left-0 z-50 relative flex flex-col justify-between h-screen border-r transform transition-all duration-300 overflow-visible lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 flex flex-col justify-between h-screen border-r transform transition-all duration-300 overflow-visible lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } ${collapsed ? "w-20" : "w-64"}`}
         style={{
@@ -144,7 +144,7 @@ export default function Sidebar({
         /> */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex items-center justify-center absolute top-[2rem] -right-3 shadow-md transition-all duration-300"
+          className="hidden lg:flex items-center justify-center absolute top-[2rem] -right-3 shadow-md transition-all duration-300 cursor-pointer"
           style={{
             width: "1.75rem",
             height: "1.75rem",

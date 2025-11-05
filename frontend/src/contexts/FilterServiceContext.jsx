@@ -56,6 +56,9 @@ export function FilterServiceProvider({ children }) {
     });
   }, [currentPage]);
 
+  const hasActiveFilters =
+    Object.keys(filtersByPage[currentPage] || {}).length > 0;
+
   return (
     <FilterServiceContext.Provider
       value={{
@@ -64,6 +67,7 @@ export function FilterServiceProvider({ children }) {
         registerFilters,
         clearFilters,
         registeredComponents: registeredComponents[currentPage] || [],
+        hasActiveFilters,
       }}
     >
       {children}

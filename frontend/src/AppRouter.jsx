@@ -27,10 +27,10 @@ import { FilterServiceProvider } from "./contexts/FilterServiceContext.jsx";
 export default function AppRouter() {
   return (
     <BrowserRouter>
-      <MainLayout>
-        <GlobalFilterProvider>
-          <FilterServiceProvider>
-            <GlobalFilterDrawer />
+      <GlobalFilterProvider>
+        <FilterServiceProvider>
+          <MainLayout>
+            {/* <GlobalFilterDrawer /> */}
             <Routes>
               <Route path="/dashboard/overview" element={<OverviewNew />} />
               <Route
@@ -75,9 +75,9 @@ export default function AppRouter() {
                 element={<PurchasingReportsPage />}
               />
             </Routes>
-          </FilterServiceProvider>
-        </GlobalFilterProvider>
-      </MainLayout>
+          </MainLayout>
+        </FilterServiceProvider>
+      </GlobalFilterProvider>
     </BrowserRouter>
   );
 }

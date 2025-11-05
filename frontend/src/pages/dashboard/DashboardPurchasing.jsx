@@ -56,6 +56,16 @@ export default function DashboardPurchasing() {
         value={filters.product_ids || []}
         onChange={(v) => setFilter("product_ids", v)}
       />,
+      <ProductFilter
+        key="product-filter"
+        value={filters.product_ids || []}
+        onChange={(v) => setFilter("product_ids", v)}
+      />,
+      <ProductFilter
+        key="product-filter"
+        value={filters.product_ids || []}
+        onChange={(v) => setFilter("product_ids", v)}
+      />,
     ]);
   }, [registerFilters, setFilter, JSON.stringify(filters)]);
 
@@ -69,7 +79,7 @@ export default function DashboardPurchasing() {
     try {
       setLoading(true);
 
-      // ✅ Use dateRange from useDateFilterStore with fallback
+      // Use dateRange from useDateFilterStore with fallback
       const params = {
         start_date: dateRange?.dateFrom,
         end_date: dateRange?.dateTo,
@@ -408,7 +418,7 @@ export default function DashboardPurchasing() {
           <p className="mt-0.5 text-xs text-gray-600 md:text-sm">
             Monitor pembelian, supplier, dan trend purchasing
           </p>
-          {/* ✅ Show active filter info */}
+          {/* Show active filter info */}
           {dateRange.startDate && dateRange.endDate && (
             <p className="mt-1 text-xs text-blue-600">
               📅 Filtered: {formatDate(dateRange.startDate)} to{" "}
