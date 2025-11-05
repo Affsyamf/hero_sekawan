@@ -6,6 +6,7 @@ from app.models import Purchasing, PurchasingDetail, Product, Account, AccountPa
 from app.services.reporting.base_reporting_service import BaseReportService
 
 from app.utils.response import APIResponse
+from app.utils.filters import apply_common_report_filters
 
 class PurchasingTrendService(BaseReportService):
     """
@@ -72,6 +73,8 @@ class PurchasingTrendService(BaseReportService):
             q = q.filter(Purchasing.date <= end_date)
         if account_name:
             q = q.filter(Account.name == account_name)
+
+        q = apply_common_report_filters(q, filters)
 
         rows = q.all()
 

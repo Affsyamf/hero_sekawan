@@ -1,10 +1,11 @@
 # app/services/reporting/purchasing/purchasing_supplier_insights_service.py
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models import Purchasing, PurchasingDetail, Product, Supplier
+from app.models import Purchasing, PurchasingDetail, Product, Supplier, Account, AccountParent
 from app.services.reporting.base_reporting_service import BaseReportService
 
 from app.utils.response import APIResponse
+from app.utils.filters import apply_common_report_filters
 
 class PurchasingSupplierInsightsService(BaseReportService):
     """
@@ -43,19 +44,25 @@ class PurchasingSupplierInsightsService(BaseReportService):
             )
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Supplier, Supplier.id == Purchasing.supplier_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
+            .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
         )
 
         if start_date:
             q = q.filter(Purchasing.date >= start_date)
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
+        
+        q = apply_common_report_filters(q, filters)
 
-        results = (
+        q = (
             q.group_by(Supplier.id, Supplier.name)
             .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(5)
-            .all()
         )
+
+        results = q.all()
         total = sum(float(r.total_spent or 0) for r in results)
 
         return [
@@ -84,7 +91,8 @@ class PurchasingSupplierInsightsService(BaseReportService):
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Supplier, Supplier.id == Purchasing.supplier_id)
             .join(Product, Product.id == PurchasingDetail.product_id)
-
+            .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
         )
 
         if start_date:
@@ -141,6 +149,9 @@ class PurchasingSupplierInsightsService(BaseReportService):
             )
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Supplier, Supplier.id == Purchasing.supplier_id)
+            .join(Product, Product.id == PurchasingDetail.product_id)
+            .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
             .group_by(Supplier.id, Supplier.name)
             .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .filter(Supplier.name != "System Opening Balance")

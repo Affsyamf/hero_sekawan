@@ -4,18 +4,18 @@ import api from "./api";
 /**
  * Utility: normalize filters to ensure correct defaults and structure
  */
-const normalizeFilters = (filters = {}) => ({
-  start_date: filters.start_date || null,
-  end_date: filters.end_date || null,
-  account_type: filters.account_type || null,
-  granularity: filters.granularity || "monthly",
-});
+// const =(filters = {}) => ({
+//   start_date: filters.start_date || null,
+//   end_date: filters.end_date || null,
+//   account_type: filters.account_type || null,
+//   granularity: filters.granularity || "monthly",
+// });
 
 /**
  * Purchasing Summary — top-level KPIs
  */
 export const reportsPurchasingSummary = async (filters = {}) => {
-  const payload = normalizeFilters(filters);
+  const payload = filters;
   const response = await api.post("reports/purchasing/summary", payload);
   return response.data;
 };
@@ -24,7 +24,7 @@ export const reportsPurchasingSummary = async (filters = {}) => {
  * Purchasing Trend — time-based trend (daily, weekly, monthly, yearly)
  */
 export const reportsPurchasingTrend = async (filters = {}) => {
-  const payload = normalizeFilters(filters);
+  const payload = filters;
   const response = await api.post("reports/purchasing/trend", payload);
   return response.data;
 };
@@ -33,7 +33,7 @@ export const reportsPurchasingTrend = async (filters = {}) => {
  * Purchasing Products — product-level insights
  */
 export const reportsPurchasingProducts = async (filters = {}) => {
-  const payload = normalizeFilters(filters);
+  const payload = filters;
   const response = await api.post("reports/purchasing/products", payload);
   return response.data;
 };
@@ -42,7 +42,7 @@ export const reportsPurchasingProducts = async (filters = {}) => {
  * Purchasing Suppliers — supplier-level analytics
  */
 export const reportsPurchasingSuppliers = async (filters = {}) => {
-  const payload = normalizeFilters(filters);
+  const payload = filters;
   const response = await api.post("reports/purchasing/suppliers", payload);
   return response.data;
 };
@@ -51,7 +51,7 @@ export const reportsPurchasingSuppliers = async (filters = {}) => {
  * Purchasing Breakdown Summary — goods vs services distribution
  */
 export const reportsPurchasingBreakdownSummary = async (filters = {}) => {
-  const payload = normalizeFilters(filters);
+  const payload = filters;
   const response = await api.post(
     "reports/purchasing/breakdown/summary",
     payload
@@ -68,7 +68,7 @@ export const reportsPurchasingBreakdown = async (
   parent_account_id = 0,
   filters = {}
 ) => {
-  const payload = normalizeFilters(filters);
+  const payload = filters;
   const response = await api.post(
     `reports/purchasing/breakdown?level=${level}&parent_type=${parent_type}&parent_account_id=${parent_account_id}`,
     payload

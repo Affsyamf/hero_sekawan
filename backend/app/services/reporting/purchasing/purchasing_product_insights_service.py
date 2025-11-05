@@ -11,9 +11,13 @@ from app.models import (
     PurchasingDetail,
     StockMovementDetail,
     ProductAvgCostCache,
+    Account,
+    AccountParent,
+    Supplier
 )
 from app.services.reporting.base_reporting_service import BaseReportService
 
+from app.utils.filters import apply_common_report_filters
 
 class PurchasingProductInsightsService(BaseReportService):
     """
@@ -34,8 +38,8 @@ class PurchasingProductInsightsService(BaseReportService):
                 "most_purchased": self._get_most_purchased(filters),
                 # "rising_costs": self._get_rising_cost_products(filters),
                 # "avg_unit_costs": self._get_avg_unit_cost_per_product(filters),
-                "purchase_to_consumption": self._get_purchase_to_consumption_ratio(filters),
-                "highest_avg_cost": self._get_highest_avg_cost_products(),
+                # "purchase_to_consumption": self._get_purchase_to_consumption_ratio(filters),
+                # "highest_avg_cost": self._get_highest_avg_cost_products(filters),
             }
         )
 
@@ -55,7 +59,9 @@ class PurchasingProductInsightsService(BaseReportService):
             )
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Product, Product.id == PurchasingDetail.product_id)
-            .join(ProductAvgCostCache, ProductAvgCostCache.product_id == Product.id)
+            .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
+            .join(Supplier, Supplier.id == Purchasing.supplier_id)
         )
 
         if start_date:
@@ -63,12 +69,15 @@ class PurchasingProductInsightsService(BaseReportService):
         if end_date:
             q = q.filter(Purchasing.date <= end_date)
 
+        q = apply_common_report_filters(q, filters)
+
         q = (
             q.group_by(Product.name)
             .order_by(func.sum(PurchasingDetail.quantity * PurchasingDetail.price).desc())
             .limit(5)
-            .all()
         )
+
+        q = q.all()
 
         return [
             {
@@ -198,6 +207,9 @@ class PurchasingProductInsightsService(BaseReportService):
             )
             .join(Purchasing, Purchasing.id == PurchasingDetail.purchasing_id)
             .join(Product, Product.id == PurchasingDetail.product_id)
+            .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
+            .join(Supplier, Supplier.id == Purchasing.supplier_id)
             .group_by(Product.id, Product.name)
         ).subquery()
 
@@ -220,12 +232,14 @@ class PurchasingProductInsightsService(BaseReportService):
             .outerjoin(consumed_q, consumed_q.c.product_id == purchased_q.c.product_id)
         )
 
+        q = apply_common_report_filters(q, filters)
+
         q = (
             q.order_by((purchased_q.c.total_purchased / func.nullif(consumed_q.c.total_consumed, 0)).desc())
             .limit(10)
-            .all()
         )
 
+        q = q.all()
         return [
             {
                 "product": r.product,
@@ -239,18 +253,26 @@ class PurchasingProductInsightsService(BaseReportService):
     # ------------------------------------------------------
     # Highest Average Cost Product
     # ------------------------------------------------------
-    def _get_highest_avg_cost_products(self):
+    def _get_highest_avg_cost_products(self, filters):
         db: Session = self.db
         q = (
             db.query(Product.name, ProductAvgCostCache.avg_cost)
+            .select_from(Product)
             .join(ProductAvgCostCache, ProductAvgCostCache.product_id == Product.id)
+            .join(Account, Account.id == Product.account_id)
+            .join(AccountParent, AccountParent.id == Account.parent_id)
+            .join(Supplier, Supplier.id == Purchasing.supplier_id)
             .order_by(ProductAvgCostCache.avg_cost.desc())
-            .limit(5)
         )
+
+        q = apply_common_report_filters(q, filters)
+
+        q = q.limit(5).all()
+
         return [
             {
                 "product": name, 
                 "avg_cost": float(avg or 0)
             }
-            for name, avg in q.all()
+            for name, avg in q
         ]

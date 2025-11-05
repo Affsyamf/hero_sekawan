@@ -33,6 +33,8 @@ import {
   buildDatasetsFromData,
   hydrateDataForChart,
 } from "../../utils/chartHelper";
+import { useFilterService } from "../../contexts/FilterServiceContext";
+import ProductFilter from "../../components/ui/filter/ProductFilter";
 
 export default function DashboardPurchasing() {
   const [purchasingData, setPurchasingData] = useState(null);
@@ -45,19 +47,23 @@ export default function DashboardPurchasing() {
 
   // Granularity per chart
   const [trendGranularity, setTrendGranularity] = useState("monthly");
-  const [productsGranularity, setProductsGranularity] = useState("monthly");
+  const { filters, setFilter, registerFilters } = useFilterService();
 
-  // ✅ Fetch data saat mount pertama kali
-  // useEffect(() => {
-  //   fetchPurchasingData();
-  // }, []);
+  useEffect(() => {
+    registerFilters([
+      <ProductFilter
+        key="product-filter"
+        value={filters.product_ids || []}
+        onChange={(v) => setFilter("product_ids", v)}
+      />,
+    ]);
+  }, [registerFilters, setFilter, JSON.stringify(filters)]);
 
-  // ✅ Auto refresh when dateRange changes
   useEffect(() => {
     if (dateRange?.dateFrom && dateRange?.dateTo) {
       fetchPurchasingData();
     }
-  }, [dateRange]);
+  }, [dateRange, JSON.stringify(filters)]);
 
   const fetchPurchasingData = async () => {
     try {
@@ -67,6 +73,9 @@ export default function DashboardPurchasing() {
       const params = {
         start_date: dateRange?.dateFrom,
         end_date: dateRange?.dateTo,
+        product_ids: filters.product_ids?.length
+          ? filters.product_ids
+          : undefined,
       };
 
       // Skip fetch if no date range yet
@@ -87,7 +96,6 @@ export default function DashboardPurchasing() {
         reportsPurchasingTrend({ ...params, granularity: trendGranularity }),
         reportsPurchasingProducts({
           ...params,
-          granularity: productsGranularity,
         }),
       ]);
 
@@ -117,6 +125,9 @@ export default function DashboardPurchasing() {
         start_date: dateRange.dateFrom,
         end_date: dateRange.dateTo,
         granularity: trendGranularity,
+        product_ids: filters.product_ids?.length
+          ? filters.product_ids
+          : undefined,
       };
 
       const trend = await reportsPurchasingTrend(params);
@@ -130,39 +141,11 @@ export default function DashboardPurchasing() {
     }
   };
 
-  // Fetch products data when granularity changes
-  const fetchProductsData = async () => {
-    if (!dateRange?.dateFrom || !dateRange?.dateTo) return;
-
-    try {
-      const params = {
-        start_date: dateRange.dateFrom,
-        end_date: dateRange.dateTo,
-        granularity: productsGranularity,
-      };
-
-      const response = await reportsPurchasingProducts(params);
-
-      setPurchasingData((prev) => ({
-        ...prev,
-        most_purchased: transformProductsData(response.data),
-      }));
-    } catch (error) {
-      console.error("Error fetching products data:", error);
-    }
-  };
-
   useEffect(() => {
     if (purchasingData) {
       fetchTrendData();
     }
   }, [trendGranularity]);
-
-  useEffect(() => {
-    if (purchasingData) {
-      fetchProductsData();
-    }
-  }, [productsGranularity]);
 
   const transformTrendData = (trend) => {
     return (trend || []).map((item) => {
@@ -209,8 +192,6 @@ export default function DashboardPurchasing() {
       value: purchase.value,
     }));
   };
-
-  const getTrendDatasets = (data) => {};
 
   const transformApiData = (summary, trend, breakdown, suppliers, products) => {
     const metrics = {
@@ -378,6 +359,9 @@ export default function DashboardPurchasing() {
     const params = {
       start_date: dateRange?.dateFrom,
       end_date: dateRange?.dateTo,
+      product_ids: filters.product_ids?.length
+        ? filters.product_ids
+        : undefined,
     };
 
     // level 1 → Goods vs Jasa
