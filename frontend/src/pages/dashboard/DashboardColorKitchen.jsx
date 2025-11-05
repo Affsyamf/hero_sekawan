@@ -450,7 +450,7 @@ export default function DashboardColorKitchen() {
                 },
               ]}
               onFetchData={() => trendData}
-              showSummary={true}
+              showSummary={false}
             />
           </Card>
         </div>
@@ -468,7 +468,7 @@ export default function DashboardColorKitchen() {
               onDrilldownRequest={async ({ _, context, depth }) => {
                 return onDrilldown(context, depth);
               }}
-              showSummary={true}
+              showSummary={false}
             />
           </Card>
         </div>

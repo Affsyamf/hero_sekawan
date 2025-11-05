@@ -172,7 +172,7 @@ export default function AccountsPage() {
             icon={Map}
             label="Account Mapping"
             onClick={() => navigate(`/accounts/category-board`)}
-            variant="secondary"
+            variant="success"
           >
             Account Mapping
           </Button>
