@@ -34,35 +34,56 @@ const HighchartsDonut = ({
     });
 
   const getMaxN = (data) => {
-    const MAX_SLICES = 2;
-    const BUFFER = 2;
+    if (!data || data.length === 0) return [];
 
-    const sortedData = [...(data || [])].sort((a, b) => b.value - a.value);
-    const topSlices = sortedData.slice(0, MAX_SLICES + BUFFER);
-    const others = sortedData.slice(MAX_SLICES + BUFFER);
+    // Sort descending
+    const sortedData = [...data].sort((a, b) => b.value - a.value);
+    const total = sortedData.reduce((sum, d) => sum + (d.value || 0), 0);
+    if (total === 0) return [];
 
-    let finalData = topSlices.map((item) => ({
+    // Target: Others ≤ 10 % of total
+    const MAX_OTHER_RATIO = 0.1;
+
+    let cumulative = 0;
+    let cutoffIndex = sortedData.length; // assume all visible
+
+    for (let i = 0; i < sortedData.length; i++) {
+      cumulative += sortedData[i].value || 0;
+      const remaining = total - cumulative;
+
+      // stop when remaining ≤ 10 %
+      if (remaining / total <= MAX_OTHER_RATIO) {
+        cutoffIndex = i + 1;
+        break;
+      }
+    }
+
+    const visible = sortedData.slice(0, cutoffIndex);
+    const others = sortedData.slice(cutoffIndex);
+
+    const finalData = visible.map((item) => ({
       name: item.key,
       y: item.value,
       drilldown: item.drilldown ?? false,
       context: item.context,
     }));
 
+    // Add "Others" only if there’s something left beyond 10 %
     if (others.length > 0) {
       othersCache.current = others;
       finalData.push({
         id: "Others",
         name: "Others",
-        y: others.reduce((sum, d) => sum + d.value, 0),
+        y: others.reduce((sum, d) => sum + (d.value || 0), 0),
         drilldown: true,
-        context: "others",
+        context: "__others__",
       });
     }
 
     return finalData;
   };
 
-  const finalData = getMaxN(data);
+  const finalData = useMemo(() => getMaxN(data), [data]);
 
   const options = useMemo(
     () => ({
@@ -81,7 +102,7 @@ const HighchartsDonut = ({
         height: 320,
         events: {
           load() {
-            setVisibleData(finalData);
+            setVisibleData(data);
           },
           async drilldown(e) {
             if (!onDrilldownRequest) return;
@@ -90,20 +111,18 @@ const HighchartsDonut = ({
             chart.showLoading("Loading...");
 
             try {
-              let depth = chart.drilldownLevels?.length || 0;
-              let frozen = false;
+              let depth = 0;
 
               for (const lvl of chart.drilldownLevels || []) {
                 const context = lvl.pointOptions?.context?.toLowerCase?.();
-                if (context === "others") {
-                  frozen = true;
-                } else if (!frozen) {
-                  depth = lvl.levelNumber + 1;
-                } else if (context !== "others") {
-                  frozen = false;
+                if (context === "__others__") {
+                  depth += 0;
+                } else {
                   depth += 1;
                 }
               }
+
+              console.log(e.point.id);
 
               if (e.point.name === "Others") {
                 const othersData = othersCache.current || [];
@@ -120,7 +139,6 @@ const HighchartsDonut = ({
                     })),
                   });
                   chart.applyDrilldown();
-                  setVisibleData(drillData);
                 }
                 return;
               }
@@ -296,33 +314,42 @@ const HighchartsDonut = ({
               </tr>
             </thead>
             <tbody>
-              {visibleData.map((item, idx) => {
+              {(() => {
                 const total = visibleData.reduce(
                   (sum, d) => sum + (d.y || d.value || 0),
                   0
                 );
-                console.log(item);
-                const percentage =
-                  total > 0
-                    ? (((item.y || item.value) / total) * 100).toFixed(1)
-                    : "0.0";
-                return (
-                  <tr
-                    key={idx}
-                    className="border-b border-gray-100 hover:bg-gray-100 transition"
-                  >
-                    <td className="py-1 text-gray-800">
-                      {item.key || item.name}
-                    </td>
-                    <td className="py-1 text-right text-gray-700">
-                      {formatValue(item.y || item.value || 0)}
-                    </td>
-                    <td className="py-1 text-right text-gray-500">
-                      {percentage}%
-                    </td>
-                  </tr>
+
+                // Sort by percentage descending
+                const sortedData = [...visibleData].sort(
+                  (a, b) =>
+                    (b.y || b.value || 0) / total -
+                    (a.y || a.value || 0) / total
                 );
-              })}
+
+                return sortedData.map((item, idx) => {
+                  const percentage =
+                    total > 0
+                      ? (((item.y || item.value) / total) * 100).toFixed(1)
+                      : "0.0";
+                  return (
+                    <tr
+                      key={idx}
+                      className="border-b border-gray-100 hover:bg-gray-100 transition"
+                    >
+                      <td className="py-1 text-gray-800">
+                        {item.key || item.name}
+                      </td>
+                      <td className="py-1 text-right text-gray-700">
+                        {formatValue(item.y || item.value || 0)}
+                      </td>
+                      <td className="py-1 text-right text-gray-500">
+                        {percentage}%
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
             </tbody>
           </table>
         </div>
