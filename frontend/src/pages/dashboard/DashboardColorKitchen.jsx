@@ -468,7 +468,7 @@ export default function DashboardColorKitchen() {
               onDrilldownRequest={async ({ _, context, depth }) => {
                 return onDrilldown(context, depth);
               }}
-              showSummary={false}
+              valueFormatter={formatCompactCurrency}
             />
           </Card>
         </div>

@@ -521,17 +521,13 @@ export default function DashboardPurchasing() {
           <Card className="h-full ">
             <Highchart.HighchartsDonut
               data={donutData}
-              // centerText={{
-              //   value: formatCompactCurrency(metrics.total_purchases.value),
-              //   label: "Total",
-              // }}
               title="Breakdown Purchasing"
-              subtitle=""
               className="w-full h-full"
               showSummary={false}
               onDrilldownRequest={async ({ _, context, depth }) => {
                 return onDrilldown(context, depth);
               }}
+              valueFormatter={formatCompactCurrency}
             />
           </Card>
         </div>
