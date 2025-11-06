@@ -12,7 +12,7 @@ export default function ProductFilter({ value = [], onChange }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
+    const timeout = setTimeout(async () => {
       setLoading(true);
       try {
         const res = await searchProduct({ q: search, page: 1, page_size: 100 });
@@ -22,8 +22,10 @@ export default function ProductFilter({ value = [], onChange }) {
       } finally {
         setLoading(false);
       }
-    };
-    load();
+    }, 600);
+
+    // cleanup: cancel previous timeout when user types again
+    return () => clearTimeout(timeout);
   }, [search]);
 
   const toggle = (id) => {

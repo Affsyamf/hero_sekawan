@@ -54,6 +54,7 @@ export default function DashboardPurchasing() {
   useEffect(() => {
     registerFilters([
       <CategoryFilter
+        key="category-filter"
         value={filters.category ?? null}
         onChange={(val) => setFilter("category", val)}
       />,

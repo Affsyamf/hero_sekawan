@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.utils.deps import get_db
 from app.services.reporting.color_kitchen import (ColorKitchenSummaryService, ColorKitchenChemicalUsageService, ColorKitchenTrendService)
-from app.schemas.report_filters import ColorKitchenReportFilter
+from app.schemas.filter_models.report_filters import ColorKitchenReportFilter
 from typing import Optional
 
 router = APIRouter(prefix="/reports/color-kitchen", tags=["Reports/Color-Kitchen"])

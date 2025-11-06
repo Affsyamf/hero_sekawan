@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.utils.deps import get_db
 from app.services.reporting.purchasing import (PurchasingSummaryService, PurchasingTrendService, PurchasingBreakdownService,
                                                PurchasingProductInsightsService, PurchasingSupplierInsightsService)
-from app.schemas.report_filters import PurchasingReportFilter
+from app.schemas.filter_models.report_filters import PurchasingReportFilter
 from typing import Optional
 
 router = APIRouter(prefix="/reports/purchasing", tags=["Reports/Purchasing"])
