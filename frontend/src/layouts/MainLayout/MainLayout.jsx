@@ -42,7 +42,7 @@ export default function MainLayout({ children }) {
         }}
       >
         {/* Fixed Navbar */}
-        <div className="fixed top-0 left-0 right-0 z-40 h-16 bg-white border-b border-gray-200">
+        <div className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200">
           <Navbar onMenuClick={() => setSidebarOpen(true)} />
         </div>
 
@@ -70,7 +70,7 @@ export default function MainLayout({ children }) {
         <button
           onClick={() => setFilterOpen((p) => !p)}
           className={cn(
-            "fixed flex items-center gap-2 px-4 py-3 text-sm font-medium text-white transition-all duration-300 rounded-l-xl shadow-lg hover:pr-6 group bg-blue-600 z-50"
+            "fixed flex items-center gap-2 px-4 py-3 text-sm font-medium text-white transition-all duration-300 rounded-l-xl shadow-lg hover:pr-6 group bg-blue-600 z-40"
           )}
           style={{
             top: "50%",
