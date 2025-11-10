@@ -13,6 +13,8 @@ export const getStockMovementById = async (id) => {
 };
 
 export const createStockMovement = async (data) => {
+  console.log("Payload dikirim ke backend:", data);
+  console.log(JSON.stringify(data, null, 2));
   const response = await api.post("/stock-movement", data);
   return response;
 };

@@ -131,6 +131,17 @@ export const darkTheme = {
   secondaryLight: "#2c3e50",
   secondaryDark: "#ffffff",
 
+neutral: {
+  base: "#2d3748",
+  light: "#4a5568",
+  lighter: "#718096",
+  dark: "#1a202c",
+  darker: "#171923",
+  border: "#4a5568",
+  hover: "#3b4252",
+  disabled: "#2d3748",
+},
+
   // Background Colors
   background: {
     primary: "#1a202c",

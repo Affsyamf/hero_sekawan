@@ -15,6 +15,10 @@ def search_accounts(request: ListRequest = Depends(), service: AccountService = 
 def get_account_by_id(account_id: int, service: AccountService = Depends()):
     return service.get_account(account_id=account_id)
 
+# fungsi untuk mnegambil semua account tanpa query
+def get_all_accounts(service: AccountService = Depends()):
+    return service.list_account()
+
 @account_router.post("/")
 def create_account(request: AccountCreate, service: AccountService = Depends()):
     try:
