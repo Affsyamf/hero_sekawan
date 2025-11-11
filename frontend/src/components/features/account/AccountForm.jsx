@@ -16,22 +16,28 @@ function AccountPickerModal({ isOpen, onClose, onSelect }) {
   ];
 
   // aksi pilih
-  const renderActions = (row) => (
-    <Button
-      onClick={() => onSelect(row)}
-      label="Pilih"
-      className="!py-1 !px-2"
-    />
-  );
-
-  return (
+ const renderActions = (row) => (
+  <Button
+    onClick={() => {
+      console.log("Row selected:", row);
+      onSelect({
+        id: row.parent_id,        
+        account_no: row.account_no,
+        name: row.name,
+      });
+    }}
+    label="Pilih"
+    className="!py-1 !px-2"
+  />
+);
+   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Pilih Induk Akun" size="lg">
       <div style={{ minHeight: "60vh" }}>
         <Table
           columns={columns}
-          fetchData={searchAccount} 
+          fetchData={searchAccount}
           actions={renderActions}
-          pageSizeOptions={[5, 10, 25]} 
+          pageSizeOptions={[5, 10, 25]}
           showDateRangeFilter={false}
         />
       </div>
@@ -81,19 +87,23 @@ export default function AccountForm({
   }, [isOpen, account]);
 
   const findAndSetParentDisplay = async (id) => {
-     try {
-        const response = await searchAccount({ page: 1, pageSize: 1000 });
-        const parent = response.rows.find(a => a.id === id);
-        if (parent) {
-          setParentAccountDisplay(`${parent.account_no} - ${parent.name}`);
-        } else {
-          setParentAccountDisplay(id); 
-        }
-     } catch (e) {
-        console.error("Gagal mencari nama parent:", e);
-        setParentAccountDisplay(id);
-     }
+  try {
+    const response = await searchAccount({ page: 1, pageSize: 1000 });
+    console.log("🔍 searchAccount response:", response);
+
+    const rows = response?.data?.data || []; // ✅ ambil array akun dari response.data.data
+    const parent = rows.find(a => a.id === id);
+
+    if (parent) {
+      setParentAccountDisplay(`${parent.account_no} - ${parent.name}`);
+    } else {
+      setParentAccountDisplay(id);
+    }
+  } catch (e) {
+    console.error("Gagal mencari nama parent:", e);
+    setParentAccountDisplay(id);
   }
+};
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -134,9 +144,11 @@ export default function AccountForm({
 
     const dataToSave = {
       ...formData,
-      id: account?.id,
-      parent_id: parseFloat(formData.parent_id)
+      id: account?.id ? parseInt(account.id.toString().split("_")[0]) : undefined,
+      parent_id: parseInt(formData.parent_id),
     }
+
+      console.log("🛰️ Data to send:", dataToSave);
 
     if (isNaN(dataToSave.parent_id)) {
       setErrors((prev) => ({
