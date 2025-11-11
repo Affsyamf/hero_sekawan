@@ -8,8 +8,10 @@ import {
   searchAccount,
   updateAccount,
 } from "../../services/account_service";
+
 import Button from "../../components/ui/button/Button";
 import { useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 export default function AccountsPage() {
   const navigate = useNavigate();
@@ -96,16 +98,40 @@ export default function AccountsPage() {
   };
 
   const handleDelete = async (row) => {
-    if (
-      window.confirm(`Are you sure you want to delete product ${row.name}?`)
-    ) {
-      try {
-        await deleteAccount(row.id);
-        setRefreshKey((prev) => prev + 1);
-      } catch (error) {
-        alert("Failed to delete: " + error.message);
+    // ganti dengan swal
+    Swal.fire({
+      title: 'Apakah Anda yakin?',
+      text: `Anda akan menghapus ${row.name}. Tindakan ini tidak dapat dibatalkan!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, hapus!',
+      cancelButtonText: 'Batal'
+    }).then(async (result) => {
+    
+      if (result.isConfirmed) {
+        try {
+          await deleteAccount(row.id);
+          setRefreshKey((prev) => prev + 1);
+          
+          // beri notifikasi sukses
+          Swal.fire(
+            'Dihapus!',
+            'Akun telah berhasil dihapus.',
+            'success'
+          );
+
+        } catch (error) {
+          // beri notifikasi error 
+          Swal.fire(
+            'Gagal Hapus!',
+            `Gagal menghapus: Kemungkinan data ini terhubung ke tabel lain.`,
+            'error'
+          );
+        }
       }
-    }
+    });
   };
 
   const handleCloseModal = () => {
@@ -114,22 +140,34 @@ export default function AccountsPage() {
   };
 
   const handleSave = async (productData) => {
+    const isEdit = !!productData.id;
     try {
       const payload = Object.fromEntries(
         Object.entries(productData).filter(
-          ([_, value]) => value != null && value !== ""
+          ([_, value]) => value != null
         )
       );
 
-      if (payload.id) {
+      if (isEdit) { // Gunakan isEdit
         await updateAccount(payload.id, payload);
       } else {
         await createAccount(payload);
       }
       setRefreshKey((prev) => prev + 1);
       handleCloseModal();
+          
+      // menampilkan notifikasi sukses 
+      Swal.fire(
+        isEdit ? 'Diperbarui!' : 'Disimpan!',
+        `Akun telah berhasil ${isEdit ? 'diperbarui' : 'disimpan'}.`,
+        'success'
+      );
     } catch (error) {
-      alert("Failed to save product: " + error.message);
+      Swal.fire(
+        'Gagal Menyimpan!',
+        `Gagal menyimpan: ${error.message}.`,
+        'error'
+      );
     }
   };
 
@@ -188,12 +226,12 @@ export default function AccountsPage() {
           showDateRangeFilter={false}
         />
 
-        {/* <AccountForm
+        <AccountForm
             account={selectedAccount}
             isOpen={isModalOpen}
             onClose={handleCloseModal}
             onSave={handleSave}
-          /> */}
+          />
       </div>
     </div>
   );

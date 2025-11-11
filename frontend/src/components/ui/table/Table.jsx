@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -32,6 +32,8 @@ export default function Table({
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [isClientSide, setIsClientSide] = useState(false);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({});
@@ -79,16 +81,16 @@ export default function Table({
       const params = Object.fromEntries(
         Object.entries({
           page,
-          page_size: pageSize,
+          limit: pageSize,
           ...(search ? { q: search } : {}),
           filters,
           sort_by: sortConfig.key,
           sort_dir: sortConfig.direction,
-          ...(showDateRangeFilter && { dateRange }), // Only include dateRange if filter is enabled
+          ...(showDateRangeFilter && { dateRange }),
         }).filter(([, v]) => v !== null && v !== undefined && v !== "")
       );
 
-      const response = await fetchRef.current(params); // 👈 use ref here
+      const response = await fetchRef.current(params);
 
       if (response.status === 200) {
         const result = response.data;
@@ -98,8 +100,9 @@ export default function Table({
           setTotal(totalRecords || 0);
           setTotalPages(total_pages || 0);
         } else {
-          setTotal(result.data?.length || 0);
-          setTotalPages(1);
+          const totalRecords = result.data?.length || 0;
+          setTotal(totalRecords);
+          setTotalPages(Math.ceil(totalRecords / pageSize));
         }
       } else {
         setError(response.message || "Failed to fetch data");
@@ -129,17 +132,33 @@ export default function Table({
 
   // Fetch mode (fetchRef.current exists)
   useEffect(() => {
-    loadData();
+    if (typeof fetchRef.current === "function") {
+      setIsClientSide(false);
+      loadData();
+    }
   }, [loadData, fetchData]);
 
   // Static mode (explicit array passed)
   useEffect(() => {
     if (!fetchRef.current && Array.isArray(data)) {
+      setIsClientSide(true);
       setRows(data);
       setTotal(data.length);
-      setTotalPages(1);
+      setTotalPages(Math.ceil(data.length / pageSize));
     }
-  }, [data]);
+  }, [data, pageSize]);
+
+  const paginatedRows = useMemo(() => {
+  if (!pagination) return rows;
+  if (!isClientSide && rows.length > pageSize) {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return rows.slice(start, end);
+  }
+
+ 
+  return rows;
+}, [rows, page, pageSize, pagination, isClientSide]);
 
   const clearDateRange = () => {
     setDateRange({ start: "", end: "" });
@@ -445,14 +464,12 @@ export default function Table({
                   </div>
                 </td>
               </tr>
-            ) : rows.length > 0 ? (
-              rows.map((row, i) => (
+            ) : paginatedRows.length > 0 ? (
+              paginatedRows.map((row, i) => (
                 <tr
                   key={row.id || i}
                   className="transition-all duration-150 border-b"
-                  style={{
-                    borderColor: colors.border.primary,
-                  }}
+                  style={{ borderColor: colors.border.primary }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background =
                       colors.background.primary + "20";
@@ -475,7 +492,6 @@ export default function Table({
                               (acc, key) => (acc ? acc[key] : undefined),
                               obj
                             );
-
                         const value = getNestedValue(row, col.key);
                         return col.render
                           ? col.render(value, row, i)
