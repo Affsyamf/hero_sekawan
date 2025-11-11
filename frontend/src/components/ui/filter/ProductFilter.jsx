@@ -44,7 +44,7 @@ export default function ProductFilter({ value = [], onChange }) {
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search products..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-8 pr-2 py-1.5 w-full text-xs border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500"

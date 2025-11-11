@@ -1,8 +1,10 @@
 from datetime import datetime
-
+# manual import or_ dan string
+from sqlalchemy import or_, String
 # manual afif
 from app.models.types import AccountParent
 from app.models import AccountParent
+from app.models import Account, Product, AccountParent
 
 from fastapi import HTTPException
 from fastapi.params import Depends
@@ -20,6 +22,7 @@ class AccountService:
     def __init__(self, db = Depends(get_db)):
         self.db = db
 
+# manual agar bisa search by nama akun
     def list_account(self, request: ListRequest):
         account = self.db.query(Account).join(Account.parent)
 
@@ -28,6 +31,7 @@ class AccountService:
             account = account.filter(
                 or_(
                     Account.name.ilike(like),
+                    AccountParent.account_no.cast(String).ilike(like)
                 )
             ).order_by(Account.id)
 
