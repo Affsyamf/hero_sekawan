@@ -40,6 +40,7 @@ class AccountService:
                 "id": a.id,
                 "name": a.name,
                 "account_no": str(a.parent.account_no) if a.parent and a.parent.account_no else None,
+                "parent_id": a.parent_id,
             }
             for a in account.all()
         ])
@@ -53,6 +54,7 @@ class AccountService:
         response = {
             "id": account.id,
             "name": account.name,
+            "parent_id": account.parent_id,
             "account_no": str(account.parent.account_no) if account.parent.account_no else None,
             "account_type": account.account_type.value if account.account_type else None,
             "alias": account.alias,
@@ -95,6 +97,11 @@ class AccountService:
         account = self.db.query(Account).filter(Account.id == account_id).first()
         if not account:
             return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
+        
+        if "parent_id" in update_data:
+            parent = self.db.query(AccountParent).filter(AccountParent.id == update_data["parent_id"]).first()
+            if not parent:
+                return APIResponse.not_found(message=f"Parent account ID '{update_data['parent_id']}' not found.")
 
         if "account_no" in update_data:
             existing = self.db.query(Account).filter(
@@ -103,13 +110,17 @@ class AccountService:
             ).first()
             if existing:
                 return APIResponse.conflict(message=f"Account number '{update_data['account_no']}' already exists.")
-
-        result = (
-            self.db.query(Account)
-                .filter(Account.id == account_id)
-                .update(update_data, synchronize_session=False)
-        )
-
+        try:
+            result = (
+                self.db.query(Account)
+                    .filter(Account.id == account_id)
+                    .update(update_data, synchronize_session=False)
+            )
+            self.db.commit()
+        except Exception as e:
+            print("Error updating account:", e)
+            return APIResponse.internal_error(message="Failed to update account", error_detail=str(e))
+        
         if result == 0:
             return APIResponse.not_found(message=f"Account ID '{account_id}' not found.")
 
@@ -130,5 +141,5 @@ class AccountService:
             return APIResponse.conflict(message=msg)
 
         self.db.delete(account)
-
+        self.db.commit()
         return APIResponse.ok(f"Account ID '{account_id}' deleted.")

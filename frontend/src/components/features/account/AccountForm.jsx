@@ -6,36 +6,39 @@ import Input from "../../ui/input/Input";
 import Button from "../../ui/button/Button";
 import Table from "../../ui/table/Table";
 import { searchAccount } from "../../../services/account_service";
-
-
+import {
+  searchAccountParent,
+  getAccountParentById,
+} from "../../../services/account_service";
 
 function AccountPickerModal({ isOpen, onClose, onSelect }) {
   const columns = [
     { key: "account_no", label: "No. Akun", sortable: true },
     { key: "name", label: "Nama Akun", sortable: true },
+    { key: "account_type", label: "Tipe Akun", sortable: true },
   ];
 
   // aksi pilih
- const renderActions = (row) => (
-  <Button
-    onClick={() => {
-      console.log("Row selected:", row);
-      onSelect({
-        id: row.parent_id,        
-        account_no: row.account_no,
-        name: row.name,
-      });
-    }}
-    label="Pilih"
-    className="!py-1 !px-2"
-  />
-);
-   return (
+  const renderActions = (row) => (
+    <Button
+      onClick={() => {
+        console.log("Row selected:", row);
+        onSelect({
+          id: row.id,
+          account_no: row.account_no,
+          name: row.name,
+        });
+      }}
+      label="Pilih"
+      className="!py-1 !px-2"
+    />
+  );
+  return (
     <Modal isOpen={isOpen} onClose={onClose} title="Pilih Induk Akun" size="lg">
       <div style={{ minHeight: "60vh" }}>
         <Table
           columns={columns}
-          fetchData={searchAccount}
+          fetchData={searchAccountParent}
           actions={renderActions}
           pageSizeOptions={[5, 10, 25]}
           showDateRangeFilter={false}
@@ -75,7 +78,6 @@ export default function AccountForm({
         } else {
           setParentAccountDisplay("");
         }
-
       } else {
         setFormData({
           name: "",
@@ -87,23 +89,27 @@ export default function AccountForm({
   }, [isOpen, account]);
 
   const findAndSetParentDisplay = async (id) => {
-  try {
-    const response = await searchAccount({ page: 1, pageSize: 1000 });
-    console.log("🔍 searchAccount response:", response);
+    if (!id) {
+      setParentAccountDisplay("");
+      return;
+    }
+    try {
+      const response = await searchAccount({ page: 1, pageSize: 1000 });
+      console.log("🔍 searchAccount response:", response);
 
-    const rows = response?.data?.data || []; // ✅ ambil array akun dari response.data.data
-    const parent = rows.find(a => a.id === id);
+      const rows = response?.data?.data || []; // ✅ ambil array akun dari response.data.data
+      const parent = rows.find((a) => a.id === id);
 
-    if (parent) {
-      setParentAccountDisplay(`${parent.account_no} - ${parent.name}`);
-    } else {
+      if (parent) {
+        setParentAccountDisplay(`${parent.account_no} - ${parent.name}`);
+      } else {
+        setParentAccountDisplay(id);
+      }
+    } catch (e) {
+      console.error("Gagal mencari nama parent:", e);
       setParentAccountDisplay(id);
     }
-  } catch (e) {
-    console.error("Gagal mencari nama parent:", e);
-    setParentAccountDisplay(id);
-  }
-};
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -132,11 +138,11 @@ export default function AccountForm({
     setParentAccountDisplay(
       `${selectedAccount.account_no} - ${selectedAccount.name}`
     );
-    
+
     if (errors.parent_id) {
       setErrors((prev) => ({ ...prev, parent_id: null }));
     }
-    setIsPickerOpen(false); 
+    setIsPickerOpen(false);
   };
 
   const handleSubmit = async () => {
@@ -144,16 +150,20 @@ export default function AccountForm({
 
     const dataToSave = {
       ...formData,
-      id: account?.id ? parseInt(account.id.toString().split("_")[0]) : undefined,
+      id: account?.id
+        ? parseInt(account.id.toString().split("_")[0])
+        : undefined,
       parent_id: parseInt(formData.parent_id),
-    }
+    };
 
-      console.log("🛰️ Data to send:", dataToSave);
+    console.log("🛰️ Data to send:", dataToSave);
 
     if (isNaN(dataToSave.parent_id)) {
       setErrors((prev) => ({
-        ...prev, parent_id: "Nomor Akun harus memiliki nomor yang benar"}))
-      return
+        ...prev,
+        parent_id: "Nomor Akun harus memiliki nomor yang benar",
+      }));
+      return;
     }
 
     setLoading(true);
@@ -187,32 +197,31 @@ export default function AccountForm({
 
   return (
     <>
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={account ? "Edit Account" : "New Account"}
-      subtitle="Manage chart of accounts"
-      size="md"
-      actions={
-        <>
-          <Button
-            label="Cancel"
-            onClick={onClose}
-            disabled={loading}
-            className="bg-transparent border border-default text-secondary-text hover:bg-background hover:text-primary-text"
-          />
-          <Button
-            icon={Save}
-            label={loading ? "Saving..." : "Save Account"}
-            onClick={handleSubmit}
-            disabled={loading}
-          />
-        </>
-      }
-    >
-      <div className="space-y-4">
-        
-        {account && (
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={account ? "Edit Account" : "New Account"}
+        subtitle="Manage chart of accounts"
+        size="md"
+        actions={
+          <>
+            <Button
+              label="Cancel"
+              onClick={onClose}
+              disabled={loading}
+              className="bg-transparent border border-default text-secondary-text hover:bg-background hover:text-primary-text"
+            />
+            <Button
+              icon={Save}
+              label={loading ? "Saving..." : "Save Account"}
+              onClick={handleSubmit}
+              disabled={loading}
+            />
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {account && (
             <Form.Group>
               <Form.Label htmlFor="account_no">
                 <div className="flex items-center gap-2">
@@ -224,13 +233,13 @@ export default function AccountForm({
                 id="account_no"
                 type="text"
                 value={account.account_no || "N/A"}
-                disabled 
+                disabled
                 className="bg-surface-secondary"
               />
             </Form.Group>
           )}
 
-        <Form.Group>
+          <Form.Group>
             <Form.Label htmlFor="name" required>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-3.5 h-3.5 text-primary" />
@@ -248,8 +257,7 @@ export default function AccountForm({
             <Form.Error>{errors.name}</Form.Error>
           </Form.Group>
 
-
-         <Form.Group>
+          <Form.Group>
             <Form.Label htmlFor="parent_id_display" required>
               <div className="flex items-center gap-2">
                 <Users className="w-3.5 h-3.5 text-primary" />
@@ -276,14 +284,14 @@ export default function AccountForm({
             </div>
             <Form.Error>{errors.parent_id}</Form.Error>
           </Form.Group>
-      </div>
-    </Modal>
+        </div>
+      </Modal>
 
-    <AccountPickerModal
-      isOpen={isPickerOpen}
-      onClose={() => setIsPickerOpen(false)}
-      onSelect={handleSelectParent}
-    />
-  </>
+      <AccountPickerModal
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={handleSelectParent}
+      />
+    </>
   );
 }
