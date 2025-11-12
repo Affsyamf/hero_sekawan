@@ -41,6 +41,7 @@ class AccountService:
                 "name": a.name,
                 "account_no": str(a.parent.account_no) if a.parent and a.parent.account_no else None,
                 "parent_id": a.parent_id,
+                "account_type": a.parent.account_type if a.parent else None,
             }
             for a in account.all()
         ])
@@ -118,6 +119,7 @@ class AccountService:
             )
             self.db.commit()
         except Exception as e:
+            self.db.rollback()
             print("Error updating account:", e)
             return APIResponse.internal_error(message="Failed to update account", error_detail=str(e))
         
